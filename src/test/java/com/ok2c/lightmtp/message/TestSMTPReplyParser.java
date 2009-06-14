@@ -1,0 +1,407 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package com.ok2c.lightmtp.message;
+
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPExtensions;
+import com.ok2c.lightmtp.SMTPProtocolException;
+import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.message.SMTPMessageParser;
+import com.ok2c.lightmtp.message.SMTPReplyParser;
+import com.ok2c.lightmtp.mock.ReadableByteChannelMockup;
+import com.ok2c.lightnio.SessionInputBuffer;
+import com.ok2c.lightnio.impl.SessionInputBufferImpl;
+
+public class TestSMTPReplyParser {
+
+    private final static Charset ASCII = Charset.forName("ASCII");
+    private final static Set<String> EXTS = new HashSet<String>(
+            Arrays.asList(SMTPExtensions.ENHANCEDSTATUSCODES));
+    
+    @Test
+    public void testConstructor() throws Exception {
+        try {
+            new SMTPReplyParser(null);
+            Assert.fail("IllegalArgumentException should have been thrown");
+        } catch (IllegalArgumentException expected) {
+        }
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+    }
+
+    @Test
+    public void testBasicReplyParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        SMTPReply reply = parser.parse();
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+        Assert.assertEquals("OK", reply.getLine());
+    }
+    
+    @Test
+    public void testReplyParsingWithEnhancedCode() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 2.5.0 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        SMTPReply reply = parser.parse();
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertEquals(new SMTPCode(2, 5, 0), reply.getEnhancedCode());
+        Assert.assertEquals("OK", reply.getLine());
+    }
+    
+    @Test
+    public void testChunkedReplyParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "25",
+                "0 ",
+                "blah ",
+                "blah\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        SMTPReply reply = parser.parse();
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+        Assert.assertEquals("blah blah", reply.getLine());
+    }
+    
+    @Test
+    public void testReplyParsingWithLeadingBlanks() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "   250 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        SMTPReply reply = parser.parse();
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+        Assert.assertEquals("OK", reply.getLine());
+    }
+
+    @Test
+    public void testMultilineReplyParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250-whatever.com\r\n",
+                "250-PIPELINING\r\n",
+                "250-ENHANCEDSTATUSCODES\r\n",
+                "250 8BITMIME\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+
+        parser.fillBuffer(channel);
+        SMTPReply reply = parser.parse();
+        
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+        Assert.assertNotNull(reply.getLines());
+        Assert.assertEquals(4, reply.getLines().size());
+        Assert.assertEquals("whatever.com", reply.getLines().get(0));
+        Assert.assertEquals("PIPELINING", reply.getLines().get(1));
+        Assert.assertEquals("ENHANCEDSTATUSCODES", reply.getLines().get(2));
+        Assert.assertEquals("8BITMIME", reply.getLines().get(3));
+    }
+
+    @Test
+    public void testMultilineReplyParsingWithEnhancedCode() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250-2.5.0 whatever.com\r\n",
+                "250-2.5.0 PIPELINING\r\n",
+                "250-2.5.0 ENHANCEDSTATUSCODES\r\n",
+                "250 2.5.0 8BITMIME\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+        parser.fillBuffer(channel);
+        Assert.assertNull(parser.parse());
+
+        parser.fillBuffer(channel);
+        SMTPReply reply = parser.parse();
+        
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertEquals(new SMTPCode(2, 5, 0), reply.getEnhancedCode());
+        Assert.assertNotNull(reply.getLines());
+        Assert.assertEquals(4, reply.getLines().size());
+        Assert.assertEquals("whatever.com", reply.getLines().get(0));
+        Assert.assertEquals("PIPELINING", reply.getLines().get(1));
+        Assert.assertEquals("ENHANCEDSTATUSCODES", reply.getLines().get(2));
+        Assert.assertEquals("8BITMIME", reply.getLines().get(3));
+    }
+
+    @Test
+    public void testChunkedMultilineReplyParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "25",
+                "0-wha",
+                "tever.com",
+                "\r\n",
+                "250",
+                "-PIP",
+                "ELINING\r",
+                "\n",
+                "250",
+                "-",
+                "ENHANCEDSTATUSCODES\r\n",
+                "250",
+                " ",
+                "8BITMIME\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        SMTPReply reply = null;
+        while (reply == null) {
+            parser.fillBuffer(channel);
+            reply = parser.parse();
+        }
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+        Assert.assertNotNull(reply.getLines());
+        Assert.assertEquals(4, reply.getLines().size());
+        Assert.assertEquals("whatever.com", reply.getLines().get(0));
+        Assert.assertEquals("PIPELINING", reply.getLines().get(1));
+        Assert.assertEquals("ENHANCEDSTATUSCODES", reply.getLines().get(2));
+        Assert.assertEquals("8BITMIME", reply.getLines().get(3));
+    }
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidCode() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "2s0 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+    
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingNoCode() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "    OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidCodeDelimiter() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250=whatever.com\r\n",
+                "250 PIPELINING\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+    
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidEnhancedCode1() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 dddddd OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+    
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidEnhancedCode2() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 d.5.0 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+    
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidEnhancedCode3() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 2.dddd OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+    
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidEnhancedCode4() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 2.d.0 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidEnhancedCode5() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 2.5.d OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidEnhancedCode6() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 2.5.0\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testParsingInvalidCodeClassMismatch() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(inbuf);
+        parser.upgrade(EXTS);
+        Assert.assertNull(parser.parse());
+        
+        String[] input = new String[] {
+                "250 3.5.0 OK\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        parser.fillBuffer(channel);
+        parser.parse();
+    }
+
+}
