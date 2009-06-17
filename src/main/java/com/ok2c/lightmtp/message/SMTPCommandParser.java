@@ -14,11 +14,8 @@
  */
 package com.ok2c.lightmtp.message;
 
-import java.io.IOException;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.CharacterCodingException;
 import java.util.LinkedList;
-import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;
@@ -27,39 +24,23 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
 
-    private final SessionInputBuffer sessBuffer;
     private final CharArrayBuffer lineBuf;
-
-    private boolean endOfStream;
     
-    public SMTPCommandParser(final SessionInputBuffer sessBuffer) {
+    public SMTPCommandParser() {
         super();
-        if (sessBuffer == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        this.sessBuffer = sessBuffer;
         this.lineBuf = new CharArrayBuffer(1024);
-        this.endOfStream = false;
     }
     
-    public void upgrade(final Set<String> extensions) {
-    }
-
     public void reset() {
         this.lineBuf.clear();
-        this.endOfStream = false;
     }
     
-    public int fillBuffer(final ReadableByteChannel channel) throws IOException {
-        int bytesRead = this.sessBuffer.fill(channel);
-        if (bytesRead == -1) {
-            this.endOfStream = true;
+    public SMTPCommand parse(
+            final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
+        if (buf == null) {
+            throw new IllegalArgumentException("Session input buffer may not be null");
         }
-        return bytesRead;
-    }
-    
-    public SMTPCommand parse() throws SMTPProtocolException {
-        if (readLine()) {
+        if (readLine(buf, endOfStream)) {
             LinkedList<String> lines = new LinkedList<String>();
             int i = 0;
             int len = this.lineBuf.length();
@@ -96,9 +77,10 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
         }
     }
     
-    private boolean readLine() throws SMTPProtocolException {
+    private boolean readLine(
+            final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         try {
-            return this.sessBuffer.readLine(this.lineBuf, this.endOfStream);
+            return buf.readLine(this.lineBuf, endOfStream);
         } catch (CharacterCodingException ex) {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }

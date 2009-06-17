@@ -14,9 +14,8 @@
  */
 package com.ok2c.lightmtp.message;
 
-import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.util.List;
-import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;
@@ -25,28 +24,25 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
 
-    private final SessionOutputBuffer sessBuffer;
     private final CharArrayBuffer lineBuf;
     
-    public SMTPCommandWriter(final SessionOutputBuffer sessBuffer) {
+    public SMTPCommandWriter() {
         super();
-        if (sessBuffer == null) {
-            throw new IllegalArgumentException("Session output buffer may not be null");
-        }
-        this.sessBuffer = sessBuffer;
         this.lineBuf = new CharArrayBuffer(1024);
     }
     
-    public void upgrade(final Set<String> extensions) {
-    }
-
     public void reset() {
         this.lineBuf.clear();
     }
 
-    public void write(final SMTPCommand message) throws IOException, SMTPProtocolException {
+    public void write(
+            final SMTPCommand message, 
+            final SessionOutputBuffer buf) throws SMTPProtocolException {
         if (message == null) {
             throw new IllegalArgumentException("Command may not be null");
+        }
+        if (buf == null) {
+            throw new IllegalArgumentException("Session output buffer may not be null");
         }
         this.lineBuf.clear();
         this.lineBuf.append(message.getCode());
@@ -61,7 +57,15 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
                 }
             }
         }
-        this.sessBuffer.writeLine(this.lineBuf);
+        writeLine(buf);
+    }
+    
+    private void writeLine(final SessionOutputBuffer buf) throws SMTPProtocolException {
+        try {
+            buf.writeLine(this.lineBuf);
+        } catch (CharacterCodingException ex) {
+            throw new SMTPProtocolException("Invalid character coding", ex);
+        }
     }
     
 }

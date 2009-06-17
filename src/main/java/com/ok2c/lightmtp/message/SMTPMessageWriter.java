@@ -14,17 +14,13 @@
  */
 package com.ok2c.lightmtp.message;
 
-import java.io.IOException;
-import java.util.Set;
-
 import com.ok2c.lightmtp.SMTPProtocolException;
+import com.ok2c.lightnio.SessionOutputBuffer;
 
 public interface SMTPMessageWriter<T> {
 
-    void upgrade(Set<String> extensions);
-    
     void reset();
     
-    void write(T message) throws IOException, SMTPProtocolException;
+    void write(T message, SessionOutputBuffer buf) throws SMTPProtocolException;
     
 }

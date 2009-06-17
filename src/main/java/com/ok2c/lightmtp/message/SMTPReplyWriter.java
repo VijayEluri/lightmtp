@@ -14,12 +14,10 @@
  */
 package com.ok2c.lightmtp.message;
 
-import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.util.List;
-import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -27,34 +25,31 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
 
-    private final SessionOutputBuffer sessBuffer;
     private final CharArrayBuffer lineBuf;
-
-    private boolean useEnhancedCodes;
+    private final boolean useEnhancedCodes;
     
-    public SMTPReplyWriter(final SessionOutputBuffer sessBuffer) {
+    public SMTPReplyWriter(boolean useEnhancedCodes) {
         super();
-        if (sessBuffer == null) {
-            throw new IllegalArgumentException("Session output buffer may not be null");
-        }
-        this.sessBuffer = sessBuffer;
         this.lineBuf = new CharArrayBuffer(1024);
-        this.useEnhancedCodes = false;
+        this.useEnhancedCodes = useEnhancedCodes;
     }
     
-    public void upgrade(final Set<String> extensions) {
-        if (extensions != null) {
-            this.useEnhancedCodes = extensions.contains(SMTPExtensions.ENHANCEDSTATUSCODES);
-        }
+    public SMTPReplyWriter() {
+        this(false);
     }
-
+    
     public void reset() {
         this.lineBuf.clear();
     }
 
-    public void write(final SMTPReply message) throws IOException, SMTPProtocolException {
+    public void write(
+            final SMTPReply message,
+            final SessionOutputBuffer buf) throws SMTPProtocolException {
         if (message == null) {
             throw new IllegalArgumentException("Reply may not be null");
+        }
+        if (buf == null) {
+            throw new IllegalArgumentException("Session output buffer may not be null");
         }
         List<String> lines = message.getLines();
         for (int i = 0; i < lines.size(); i++) {
@@ -75,7 +70,15 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
                 this.lineBuf.append(' ');
             }
             this.lineBuf.append(lines.get(i));
-            this.sessBuffer.writeLine(this.lineBuf);
+            writeLine(buf);
+        }
+    }
+    
+    private void writeLine(final SessionOutputBuffer buf) throws SMTPProtocolException {
+        try {
+            buf.writeLine(this.lineBuf);
+        } catch (CharacterCodingException ex) {
+            throw new SMTPProtocolException("Invalid character coding", ex);
         }
     }
     

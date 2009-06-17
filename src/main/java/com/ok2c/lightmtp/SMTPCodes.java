@@ -16,6 +16,7 @@ package com.ok2c.lightmtp;
 
 public final class SMTPCodes {
 
-    public static final int SERVICE_READY = 220;
+    public static final int SERVICE_READY   = 220;
+    public static final int OK              = 250;
     
 }
