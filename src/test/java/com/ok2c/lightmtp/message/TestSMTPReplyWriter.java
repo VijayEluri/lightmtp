@@ -17,15 +17,12 @@ package com.ok2c.lightmtp.message;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.mock.WritableByteChannelMockup;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -34,28 +31,33 @@ import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 public class TestSMTPReplyWriter {
 
     private final static Charset ASCII = Charset.forName("ASCII");
-    private final static Set<String> EXTS = new HashSet<String>(
-            Arrays.asList(SMTPExtensions.ENHANCEDSTATUSCODES));
     
     @Test
     public void testConstructor() throws Exception {
-        try {
-            new SMTPCommandWriter(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
-        } catch (IllegalArgumentException expected) {
-        }
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(outbuf);
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
         writer.reset();
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidConstructorParam1() throws Exception {
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        writer.write(null, outbuf);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidConstructorParam2() throws Exception {
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
+        writer.write(new SMTPReply(250, "OK"), null);
     }
 
     @Test
     public void testBasicReplyWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(outbuf);
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
 
         SMTPReply reply = new SMTPReply(250, "OK");
-        writer.write(reply);
+        writer.write(reply, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
@@ -67,11 +69,10 @@ public class TestSMTPReplyWriter {
     @Test
     public void testReplyWithEnhancedCodeWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(outbuf);
-        writer.upgrade(EXTS);
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(true);
 
         SMTPReply reply = new SMTPReply(250, new SMTPCode(2, 5, 0), "OK");
-        writer.write(reply);
+        writer.write(reply, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
@@ -83,12 +84,12 @@ public class TestSMTPReplyWriter {
     @Test
     public void testMultilineReplyWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(outbuf);
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
 
         SMTPReply reply = new SMTPReply(250, null,
                 new ArrayList<String>(
                         Arrays.asList("whatever.com", "PIPELINING", "ENHANCEDSTATUSCODES")));
-        writer.write(reply);
+        writer.write(reply, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
@@ -103,13 +104,12 @@ public class TestSMTPReplyWriter {
     @Test
     public void testMultilineReplyWithEnhancedCodeWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(outbuf);
-        writer.upgrade(EXTS);
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(true);
 
         SMTPReply reply = new SMTPReply(250, new SMTPCode(2, 5, 0),
                 new ArrayList<String>(
                         Arrays.asList("whatever.com", "PIPELINING", "ENHANCEDSTATUSCODES")));
-        writer.write(reply);
+        writer.write(reply, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);

@@ -14,20 +14,13 @@
  */
 package com.ok2c.lightmtp.message;
 
-import java.io.IOException;
-import java.nio.channels.ReadableByteChannel;
-import java.util.Set;
-
 import com.ok2c.lightmtp.SMTPProtocolException;
+import com.ok2c.lightnio.SessionInputBuffer;
 
 public interface SMTPMessageParser<T> {
 
-    void upgrade(Set<String> extensions);
-    
     void reset();
     
-    int fillBuffer(ReadableByteChannel channel) throws IOException;
-    
-    T parse() throws SMTPProtocolException;
+    T parse(SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException;
     
 }

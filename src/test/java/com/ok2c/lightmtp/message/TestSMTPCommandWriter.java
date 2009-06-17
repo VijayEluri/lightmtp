@@ -33,23 +33,30 @@ public class TestSMTPCommandWriter {
     
     @Test
     public void testConstructor() throws Exception {
-        try {
-            new SMTPCommandWriter(null);
-            Assert.fail("IllegalArgumentException should have been thrown");
-        } catch (IllegalArgumentException expected) {
-        }
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter(outbuf);
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
         writer.reset();
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidConstructorParam1() throws Exception {
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        writer.write(null, outbuf);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidConstructorParam2() throws Exception {
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
+        writer.write(new SMTPCommand("NOOP"), null);
     }
 
     @Test
     public void testBasicCommandWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter(outbuf);
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
 
         SMTPCommand cmd = new SMTPCommand("NOOP");
-        writer.write(cmd);
+        writer.write(cmd, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
@@ -61,10 +68,10 @@ public class TestSMTPCommandWriter {
     @Test
     public void testCommandWithArgWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter(outbuf);
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
 
         SMTPCommand cmd = new SMTPCommand("MAIL", "FROM:<someone@pampa.com>");
-        writer.write(cmd);
+        writer.write(cmd, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
@@ -76,11 +83,11 @@ public class TestSMTPCommandWriter {
     @Test
     public void testCommandWithArgAndParamsWriting() throws Exception {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
-        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter(outbuf);
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
 
         SMTPCommand cmd = new SMTPCommand("MAIL", "FROM:<someone@pampa.com>",
                 new ArrayList<String>(Arrays.asList("THIS", "AND", "THAT")));
-        writer.write(cmd);
+        writer.write(cmd, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);

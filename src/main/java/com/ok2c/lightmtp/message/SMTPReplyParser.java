@@ -14,16 +14,12 @@
  */
 package com.ok2c.lightmtp.message;
 
-import java.io.IOException;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightnio.SessionInputBuffer;
@@ -31,47 +27,32 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
 
-    private final SessionInputBuffer sessBuffer;
     private final CharArrayBuffer lineBuf;
     private final LinkedList<ParsedLine> parsedLines;
-
-    private boolean endOfStream;
-    private boolean useEnhancedCodes;
+    private final boolean useEnhancedCodes;
     
-    public SMTPReplyParser(final SessionInputBuffer sessBuffer) {
+    public SMTPReplyParser(boolean useEnhancedCodes) {
         super();
-        if (sessBuffer == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
-        this.sessBuffer = sessBuffer;
         this.lineBuf = new CharArrayBuffer(1024);
         this.parsedLines = new LinkedList<ParsedLine>();
-        this.endOfStream = false;
-        this.useEnhancedCodes = false;
+        this.useEnhancedCodes = useEnhancedCodes;
     }
     
-    public void upgrade(final Set<String> extensions) {
-        if (extensions != null) {
-            this.useEnhancedCodes = extensions.contains(SMTPExtensions.ENHANCEDSTATUSCODES);
-        }
+    public SMTPReplyParser() {
+        this(false);
     }
-
+    
     public void reset() {
         this.parsedLines.clear();
         this.lineBuf.clear();
-        this.endOfStream = false;
     }
     
-    public int fillBuffer(final ReadableByteChannel channel) throws IOException {
-        int bytesRead = this.sessBuffer.fill(channel);
-        if (bytesRead == -1) {
-            this.endOfStream = true;
+    public SMTPReply parse(
+            final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
+        if (buf == null) {
+            throw new IllegalArgumentException("Session input buffer may not be null");
         }
-        return bytesRead;
-    }
-    
-    public SMTPReply parse() throws SMTPProtocolException {
-        if (readLine()) {
+        if (readLine(buf, endOfStream)) {
             ParsedLine current = parseLine(); 
             if (!this.parsedLines.isEmpty()) {
                 ParsedLine previous = this.parsedLines.getLast();
@@ -97,9 +78,10 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         return null;
     }
     
-    private boolean readLine() throws SMTPProtocolException {
+    private boolean readLine(
+            final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         try {
-            return this.sessBuffer.readLine(this.lineBuf, this.endOfStream);
+            return buf.readLine(this.lineBuf, endOfStream);
         } catch (CharacterCodingException ex) {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }
