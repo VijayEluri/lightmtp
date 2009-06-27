@@ -18,21 +18,21 @@ import java.io.IOException;
 
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
 
 public interface ProtocolHandler<T> {
 
+    void reset(
+            IOSession iosession, 
+            T state) throws IOException, SMTPProtocolException;
+    
     void produceData(
             IOSession iosession, 
-            SessionOutputBuffer buf) throws IOException, SMTPProtocolException;
+            T state) throws IOException, SMTPProtocolException;
 
-    void comsumeData(
+    void consumeData(
             IOSession iosession,
-            SessionInputBuffer buf) throws IOException, SMTPProtocolException;
-
-    boolean isCompleted();
+            T state) throws IOException, SMTPProtocolException;
     
-    T getResult();
+    boolean isCompleted();
     
 }
