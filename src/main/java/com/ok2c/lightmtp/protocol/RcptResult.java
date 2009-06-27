@@ -33,6 +33,14 @@ public final class RcptResult {
         this.recipient = recipient;
     }
 
+    public SMTPReply getReply() {
+        return this.reply;
+    }
+
+    public String getRecipient() {
+        return this.recipient;
+    }
+
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();

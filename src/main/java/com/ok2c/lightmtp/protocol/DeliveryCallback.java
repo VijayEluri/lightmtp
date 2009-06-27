@@ -12,16 +12,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp;
+package com.ok2c.lightmtp.protocol;
 
-public final class SMTPCodes {
+public interface DeliveryCallback {
 
-    public static final int SERVICE_READY               = 220;
-    public static final int OK                          = 250;
-    public static final int SYNTAX_ERR_COMMAND          = 500;
-    public static final int SYNTAX_ERR_PARAM            = 501;
-    public static final int COMMAND_NOT_IMPLEMENTED     = 502;
-    public static final int BAD_SEQUENCE                = 503;
-    public static final int PARAM_NOT_IMPLEMENTED       = 504;
-    
+	void completed(DeliveryJob job);
+	
+	void failed(DeliveryJob job);
+
+	void aborted(DeliveryJob job);
+
 }

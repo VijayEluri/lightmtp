@@ -12,16 +12,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp;
+package com.ok2c.lightmtp.protocol.impl;
 
-public final class SMTPCodes {
+import java.io.IOException;
 
-    public static final int SERVICE_READY               = 220;
-    public static final int OK                          = 250;
-    public static final int SYNTAX_ERR_COMMAND          = 500;
-    public static final int SYNTAX_ERR_PARAM            = 501;
-    public static final int COMMAND_NOT_IMPLEMENTED     = 502;
-    public static final int BAD_SEQUENCE                = 503;
-    public static final int PARAM_NOT_IMPLEMENTED       = 504;
-    
+public class UnexpectedEndOfStreamException extends IOException {
+
+	private static final long serialVersionUID = 5442285691786119128L;
+
+	public UnexpectedEndOfStreamException() {
+        super("Unexpected end of tream");
+    }
+
 }
