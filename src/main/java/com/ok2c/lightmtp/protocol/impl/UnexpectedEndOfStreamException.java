@@ -18,9 +18,9 @@ import java.io.IOException;
 
 public class UnexpectedEndOfStreamException extends IOException {
 
-	private static final long serialVersionUID = 5442285691786119128L;
+    private static final long serialVersionUID = 5442285691786119128L;
 
-	public UnexpectedEndOfStreamException() {
+    public UnexpectedEndOfStreamException() {
         super("Unexpected end of tream");
     }
 

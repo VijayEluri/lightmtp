@@ -20,8 +20,8 @@ import com.ok2c.lightmtp.SMTPReply;
 
 public interface DeliveryResult {
 
-	List<RcptResult> getRcptFailures();
+    List<RcptResult> getRcptFailures();
 
-	SMTPReply getReply();
-	
+    SMTPReply getReply();
+    
 }

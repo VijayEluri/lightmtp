@@ -21,44 +21,44 @@ import com.ok2c.lightmtp.protocol.DeliveryJob;
 
 class DeliveryJobImpl implements DeliveryJob {
 
-	private final DeliveryRequest request;
-	private final DeliveryCallback callback;
-	
+    private final DeliveryRequest request;
+    private final DeliveryCallback callback;
+    
     private volatile boolean completed;
     private volatile boolean aborted;
     private volatile Exception exception;
     private volatile DeliveryResult result;
-	
-	public DeliveryJobImpl(final DeliveryRequest request, final DeliveryCallback callback) {
-		super();
+    
+    public DeliveryJobImpl(final DeliveryRequest request, final DeliveryCallback callback) {
+        super();
         if (request == null) {
             throw new IllegalArgumentException("SMTP request may not be null");
         }
-		this.request = request;
-		this.callback = callback;
-	}
+        this.request = request;
+        this.callback = callback;
+    }
 
-	public DeliveryRequest getRequest() {
-		return this.request;
-	}
+    public DeliveryRequest getRequest() {
+        return this.request;
+    }
 
-	public DeliveryResult getResult() {
-		return this.result;
-	}
+    public DeliveryResult getResult() {
+        return this.result;
+    }
 
-	public Exception getException() {
-		return this.exception;
-	}
+    public Exception getException() {
+        return this.exception;
+    }
 
-	public boolean isCompleted() {
-		return this.completed;
-	}
+    public boolean isCompleted() {
+        return this.completed;
+    }
 
-	public boolean isAborted() {
-		return this.aborted;
-	}
+    public boolean isAborted() {
+        return this.aborted;
+    }
 
-	public void waitFor() throws InterruptedException {
+    public void waitFor() throws InterruptedException {
         if (this.completed) {
             return;
         }
@@ -67,8 +67,8 @@ class DeliveryJobImpl implements DeliveryJob {
                 wait();
             }
         }
-	}
-	
+    }
+    
     public void completed(final DeliveryResult result) {
         if (result == null) {
             throw new IllegalArgumentException("Delivery result may not be null");
@@ -120,7 +120,7 @@ class DeliveryJobImpl implements DeliveryJob {
             notifyAll();
         }
     }
-	
+    
     public void aborted() {
         if (this.completed) {
             return;
