@@ -19,7 +19,7 @@ import java.io.IOException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightnio.IOSession;
 
-public interface ProtocolHandler<T> {
+public interface ProtocolCodec<T> {
 
     void reset(
             IOSession iosession, 
@@ -34,5 +34,7 @@ public interface ProtocolHandler<T> {
             T state) throws IOException, SMTPProtocolException;
     
     boolean isCompleted();
+    
+    String next(ProtocolCodecs<T> codecs, T state);
     
 }
