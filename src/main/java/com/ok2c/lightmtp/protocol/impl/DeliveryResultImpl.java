@@ -25,27 +25,27 @@ import com.ok2c.lightmtp.protocol.RcptResult;
 class DeliveryResultImpl implements DeliveryResult {
 
     private final SMTPReply reply;
-	private final List<RcptResult> rcptFailures;
-	
-	public DeliveryResultImpl(final SMTPReply reply, List<RcptResult> rcptFailures) {
-		super();
+    private final List<RcptResult> rcptFailures;
+    
+    public DeliveryResultImpl(final SMTPReply reply, List<RcptResult> rcptFailures) {
+        super();
         if (reply == null) {
             throw new IllegalArgumentException("SMTP reply may not be null");
         }
         this.reply = reply;
         ArrayList<RcptResult> list = new ArrayList<RcptResult>();
         if (rcptFailures != null) {
-        	list.addAll(rcptFailures);
+            list.addAll(rcptFailures);
         }
-		this.rcptFailures = Collections.unmodifiableList(list);
-	}
+        this.rcptFailures = Collections.unmodifiableList(list);
+    }
 
-	public SMTPReply getReply() {
-		return this.reply;
-	}
-	
-	public List<RcptResult> getRcptFailures() {
-		return this.rcptFailures;
-	}
-	
+    public SMTPReply getReply() {
+        return this.reply;
+    }
+    
+    public List<RcptResult> getRcptFailures() {
+        return this.rcptFailures;
+    }
+    
 }

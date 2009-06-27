@@ -22,10 +22,10 @@ import com.ok2c.lightmtp.message.SMTPContent;
 
 public interface DeliveryRequest {
 
-	String getSender();
+    String getSender();
 
-	List<String> getRecipients();
-	
-	SMTPContent<ReadableByteChannel> getContent() throws IOException;
-	
+    List<String> getRecipients();
+    
+    SMTPContent<ReadableByteChannel> getContent() throws IOException;
+    
 }

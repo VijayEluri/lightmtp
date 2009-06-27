@@ -16,12 +16,12 @@ package com.ok2c.lightmtp.protocol;
 
 public interface DeliveryJob {
 
-	DeliveryRequest getRequest();
+    DeliveryRequest getRequest();
 
-	boolean isCompleted();
-	
-	void waitFor() throws InterruptedException;
+    boolean isCompleted();
+    
+    void waitFor() throws InterruptedException;
 
-	DeliveryResult getResult();
-	
+    DeliveryResult getResult();
+    
 }

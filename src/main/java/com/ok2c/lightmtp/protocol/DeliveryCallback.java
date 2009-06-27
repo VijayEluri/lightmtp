@@ -16,10 +16,10 @@ package com.ok2c.lightmtp.protocol;
 
 public interface DeliveryCallback {
 
-	void completed(DeliveryJob job);
-	
-	void failed(DeliveryJob job);
+    void completed(DeliveryJob job);
+    
+    void failed(DeliveryJob job);
 
-	void aborted(DeliveryJob job);
+    void aborted(DeliveryJob job);
 
 }
