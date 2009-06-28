@@ -129,6 +129,10 @@ public class SimpleHeloCodec implements ProtocolCodec<SessionState> {
         }
     }
     
+    public boolean isIdle() {
+        return this.codecState == CodecState.SERVICE_READY_EXPECTED; 
+    }
+
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED; 
     }

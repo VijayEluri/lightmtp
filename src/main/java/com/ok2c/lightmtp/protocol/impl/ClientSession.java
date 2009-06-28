@@ -147,4 +147,24 @@ public class ClientSession {
         }
     }
     
+    public void timeout() {
+        try {
+            doTimeout();
+        } catch (IOException ex) {
+            this.iosession.close();
+        } catch (SMTPProtocolException ex) {
+            this.iosession.close();
+        }
+    }
+    
+    private void doTimeout() throws IOException, SMTPProtocolException {
+        if (this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
+            this.currentCodec = this.codecs.getCodec(ProtocolState.QUIT.name());
+            this.currentCodec.reset(this.iosession, this.sessionState);
+            this.state = ProtocolState.QUIT;
+        } else {
+            this.iosession.close();
+        }
+    }
+    
 }
