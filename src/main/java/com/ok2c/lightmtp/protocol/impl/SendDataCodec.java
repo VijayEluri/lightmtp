@@ -80,6 +80,15 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
     public void reset(
             final IOSession iosession, 
             final SessionState sessionState) throws IOException, SMTPProtocolException {
+        if (iosession == null) {
+            throw new IllegalArgumentException("IO session may not be null");
+        }
+        if (sessionState == null) {
+            throw new IllegalArgumentException("Session state may not be null");
+        }
+        if (sessionState.getRequest() == null) {
+            throw new IllegalArgumentException("Delivery request may not be null");
+        }
         this.parser.reset();
         this.contentBuf.clear();
         this.lineBuf.clear();
