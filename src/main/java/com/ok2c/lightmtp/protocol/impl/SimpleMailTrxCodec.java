@@ -189,6 +189,10 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
         }
     }
     
+    public boolean isIdle() {
+        return this.codecState == CodecState.MAIL_REQUEST_READY; 
+    }
+
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED; 
     }

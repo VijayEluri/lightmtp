@@ -120,6 +120,10 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
         return this.codecState == CodecState.COMPLETED; 
     }
 
+    public boolean isIdle() {
+        return this.codecState == CodecState.QUIT_READY; 
+    }
+
     public String next(
             final ProtocolCodecs<SessionState> codecs, 
             final SessionState sessionState) {
