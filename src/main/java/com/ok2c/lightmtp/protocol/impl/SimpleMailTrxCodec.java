@@ -65,12 +65,22 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
     public void reset(
             final IOSession iosession, 
             final SessionState sessionState) throws IOException, SMTPProtocolException {
+        if (iosession == null) {
+            throw new IllegalArgumentException("IO session may not be null");
+        }
+        if (sessionState == null) {
+            throw new IllegalArgumentException("Session state may not be null");
+        }
         this.writer.reset();
         this.parser.reset();
         this.recipients.clear();
         this.codecState = CodecState.MAIL_REQUEST_READY; 
         
-        iosession.setEventMask(SelectionKey.OP_WRITE);
+        if (sessionState.getRequest() != null) {
+            iosession.setEventMask(SelectionKey.OP_WRITE);
+        } else {
+            iosession.setEventMask(SelectionKey.OP_READ);
+        }
     }
     
     public void produceData(
@@ -81,6 +91,9 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
         }
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
+        }
+        if (sessionState.getRequest() == null) {
+            throw new IllegalArgumentException("Delivery request may not be null");
         }
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
