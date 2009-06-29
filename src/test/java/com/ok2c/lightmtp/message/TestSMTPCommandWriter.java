@@ -23,6 +23,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.mock.WritableByteChannelMockup;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
@@ -94,6 +95,15 @@ public class TestSMTPCommandWriter {
 
         String content = channel.getContent();
         Assert.assertEquals("MAIL FROM:<someone@pampa.com> THIS AND THAT\r\n", content);
+    }
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testOverMaxLenCommandWriting() throws Exception {
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter(16);
+
+        SMTPCommand cmd = new SMTPCommand("BLAHBLAHBLAHBLAHBLAH");
+        writer.write(cmd, outbuf);
     }
 
 }

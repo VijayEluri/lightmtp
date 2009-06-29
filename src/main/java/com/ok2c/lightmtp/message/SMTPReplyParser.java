@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightnio.SessionInputBuffer;
@@ -29,13 +30,19 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
 
     private final CharArrayBuffer lineBuf;
     private final LinkedList<ParsedLine> parsedLines;
+    private final int maxLineLen;
     private final boolean useEnhancedCodes;
     
-    public SMTPReplyParser(boolean useEnhancedCodes) {
+    public SMTPReplyParser(int maxLineLen, boolean useEnhancedCodes) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.parsedLines = new LinkedList<ParsedLine>();
+        this.maxLineLen = maxLineLen;
         this.useEnhancedCodes = useEnhancedCodes;
+    }
+    
+    public SMTPReplyParser(boolean useEnhancedCodes) {
+        this(SMTPConsts.MAX_REPLY_LEN, useEnhancedCodes);
     }
     
     public SMTPReplyParser() {
@@ -81,7 +88,13 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
     private boolean readLine(
             final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         try {
-            return buf.readLine(this.lineBuf, endOfStream);
+        	boolean lineComplete = buf.readLine(this.lineBuf, endOfStream);
+            if (this.maxLineLen > 0 && 
+                    (this.lineBuf.length() > this.maxLineLen || 
+                            (!lineComplete && buf.length() > this.maxLineLen))) {
+                throw new SMTPProtocolException("Maximum reply length limit exceeded");
+            }
+            return lineComplete;
         } catch (CharacterCodingException ex) {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }

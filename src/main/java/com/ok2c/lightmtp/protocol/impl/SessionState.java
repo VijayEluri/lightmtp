@@ -14,12 +14,12 @@
  */
 package com.ok2c.lightmtp.protocol.impl;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.RcptResult;
@@ -33,7 +33,6 @@ public class SessionState implements SessionBufferStatus {
 
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
-    private final static Charset ASCII = Charset.forName("ASCII");
     
     private final SessionInputBuffer inbuf;
     private final SessionOutputBuffer outbuf;
@@ -45,8 +44,8 @@ public class SessionState implements SessionBufferStatus {
     
     public SessionState() {
         super();
-        this.inbuf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, ASCII);
-        this.outbuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, ASCII);
+        this.inbuf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+        this.outbuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
         this.rcptFailures = new ArrayList<RcptResult>();
         this.extensions = new HashSet<String>();
     }

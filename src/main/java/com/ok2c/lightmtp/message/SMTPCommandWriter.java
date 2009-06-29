@@ -18,6 +18,7 @@ import java.nio.charset.CharacterCodingException;
 import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
@@ -25,10 +26,16 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
 
     private final CharArrayBuffer lineBuf;
+    private final int maxLineLen;
     
-    public SMTPCommandWriter() {
+    public SMTPCommandWriter(int maxLineLen) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
+        this.maxLineLen = maxLineLen;
+    }
+    
+    public SMTPCommandWriter() {
+        this(SMTPConsts.MAX_COMMAND_LEN);
     }
     
     public void reset() {
@@ -62,6 +69,9 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
     
     private void writeLine(final SessionOutputBuffer buf) throws SMTPProtocolException {
         try {
+            if (this.maxLineLen > 0 && this.lineBuf.length() > this.maxLineLen) {
+                throw new SMTPProtocolException("Maximum command length limit exceeded");
+            }
             buf.writeLine(this.lineBuf);
         } catch (CharacterCodingException ex) {
             throw new SMTPProtocolException("Invalid character coding", ex);
