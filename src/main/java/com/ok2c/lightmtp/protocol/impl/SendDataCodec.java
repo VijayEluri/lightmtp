@@ -20,6 +20,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.Charset;
 
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPContent;
@@ -38,7 +39,6 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
     private final static int LIMIT = BUF_SIZE - LINE_SIZE;
-    private final static Charset ASCII = Charset.forName("ASCII");
     private final static ByteBuffer PERIOD = ByteBuffer.wrap(new byte[] { '.'} ); 
     
     private static class ContentBuffer extends SessionInputBufferImpl {
@@ -61,6 +61,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
         
     }
     
+    private final int maxLineLen;
     private final SMTPMessageParser<SMTPReply> parser;
     private final ContentBuffer contentBuf;
     private final CharArrayBuffer lineBuf;
@@ -69,12 +70,17 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
     private ReadableByteChannel contentChannel;
     private CodecState codecState;
     
-    public SendDataCodec(boolean enhancedCodes) {
+    public SendDataCodec(int maxLineLen, boolean enhancedCodes) {
         super();
+        this.maxLineLen = maxLineLen;
         this.parser = new SMTPReplyParser(enhancedCodes);
-        this.contentBuf = new ContentBuffer(ASCII);
+        this.contentBuf = new ContentBuffer(SMTPConsts.ASCII);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.codecState = CodecState.CONTENT_READY; 
+    }
+
+    public SendDataCodec(boolean enhancedCodes) {
+        this(SMTPConsts.MAX_LINE_LEN, enhancedCodes);
     }
 
     public void reset(
@@ -115,7 +121,14 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
         case CONTENT_READY:
             while (buf.length() < LIMIT) {
                 int bytesRead = this.contentBuf.fill(this.contentChannel);
-                if (this.contentBuf.readLine(this.lineBuf, bytesRead == -1)) {
+                
+                boolean lineComplete = this.contentBuf.readLine(this.lineBuf, bytesRead == -1);
+                if (this.maxLineLen > 0 && 
+                        (this.lineBuf.length() > this.maxLineLen || 
+                                (!lineComplete && buf.length() > this.maxLineLen))) {
+                    throw new SMTPProtocolException("Maximum line length limit exceeded");
+                }
+                if (lineComplete) {
                     if (this.lineBuf.length() > 0 && this.lineBuf.charAt(0) == '.') {
                         buf.write(PERIOD);
                     }

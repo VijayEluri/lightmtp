@@ -164,4 +164,19 @@ public class TestSMTPCommandParser {
         Assert.assertEquals("FROM:<someone@pampa.com>", command.getArgument());
     }
 
+
+    @Test(expected=SMTPProtocolException.class)
+    public void testOverMaxLenCommandParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser(16);
+        
+        String[] input = new String[] {
+                "BLAHBLAHBLAHBLAHBLAH\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        inbuf.fill(channel);
+        parser.parse(inbuf, false);
+    }
+
 }

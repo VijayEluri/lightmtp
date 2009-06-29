@@ -18,6 +18,7 @@ import java.nio.charset.CharacterCodingException;
 import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -26,12 +27,18 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
 
     private final CharArrayBuffer lineBuf;
+    private final int maxLineLen;
     private final boolean useEnhancedCodes;
     
-    public SMTPReplyWriter(boolean useEnhancedCodes) {
+    public SMTPReplyWriter(int maxLineLen, boolean useEnhancedCodes) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
+        this.maxLineLen = maxLineLen;
         this.useEnhancedCodes = useEnhancedCodes;
+    }
+    
+    public SMTPReplyWriter(boolean useEnhancedCodes) {
+        this(SMTPConsts.MAX_REPLY_LEN, useEnhancedCodes);
     }
     
     public SMTPReplyWriter() {
@@ -76,6 +83,9 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
     
     private void writeLine(final SessionOutputBuffer buf) throws SMTPProtocolException {
         try {
+            if (this.maxLineLen > 0 && this.lineBuf.length() > this.maxLineLen) {
+                throw new SMTPProtocolException("Maximum reply length limit exceeded");
+            }
             buf.writeLine(this.lineBuf);
         } catch (CharacterCodingException ex) {
             throw new SMTPProtocolException("Invalid character coding", ex);

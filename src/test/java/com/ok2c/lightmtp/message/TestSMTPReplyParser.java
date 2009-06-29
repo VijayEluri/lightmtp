@@ -408,4 +408,19 @@ public class TestSMTPReplyParser {
         parser.parse(inbuf, false);
     }
 
+    @Test(expected=SMTPProtocolException.class)
+    public void testOverMaxLenReplyParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser(16, false);
+        Assert.assertNull(parser.parse(inbuf, false));
+        
+        String[] input = new String[] {
+                "200 BLAHBLAHBLAHBLAH\r\n"
+        };
+        
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        inbuf.fill(channel);
+        parser.parse(inbuf, false);
+    }
+    
 }

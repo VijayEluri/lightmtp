@@ -23,6 +23,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.mock.WritableByteChannelMockup;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -121,4 +122,13 @@ public class TestSMTPReplyWriter {
                 "250 2.5.0 ENHANCEDSTATUSCODES\r\n", content);
     }
 
+    @Test(expected=SMTPProtocolException.class)
+    public void testOverMaxLenReplyWriting() throws Exception {
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(16, true);
+
+        SMTPReply reply = new SMTPReply(250, "BLAHBLAHBLAHBLAH");
+        writer.write(reply, outbuf);
+    }
+    
 }
