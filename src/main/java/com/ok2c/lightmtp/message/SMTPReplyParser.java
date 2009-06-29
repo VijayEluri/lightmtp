@@ -88,7 +88,7 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
     private boolean readLine(
             final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         try {
-        	boolean lineComplete = buf.readLine(this.lineBuf, endOfStream);
+            boolean lineComplete = buf.readLine(this.lineBuf, endOfStream);
             if (this.maxLineLen > 0 && 
                     (this.lineBuf.length() > this.maxLineLen || 
                             (!lineComplete && buf.length() > this.maxLineLen))) {
