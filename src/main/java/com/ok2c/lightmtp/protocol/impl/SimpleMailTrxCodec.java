@@ -167,7 +167,7 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
                 String recipient = this.recipients.removeFirst();
 
                 if (reply.getCode() != SMTPCodes.OK) {
-                    sessionState.getRcptFailures().add(new RcptResult(reply, recipient));
+                    sessionState.getFailures().add(new RcptResult(reply, recipient));
                 }
                 
                 if (this.recipients.isEmpty()) {

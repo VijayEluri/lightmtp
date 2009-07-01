@@ -14,7 +14,6 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 
@@ -26,6 +25,6 @@ public interface DeliveryRequest {
 
     List<String> getRecipients();
     
-    SMTPContent<ReadableByteChannel> getContent() throws IOException;
+    SMTPContent<ReadableByteChannel> getContent();
     
 }
