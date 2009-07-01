@@ -45,11 +45,11 @@ public final class RcptResult {
     public String toString() {
         StringBuilder buffer = new StringBuilder();
         buffer.append("[");
+        buffer.append(this.recipient);
+        buffer.append(": ");
         buffer.append(this.reply.getCode());
         buffer.append(" ");
         buffer.append(this.reply.getLine());
-        buffer.append("][");
-        buffer.append(this.recipient);
         buffer.append("]");
         return super.toString();
     }

@@ -83,14 +83,14 @@ public class ClientSession {
     private void signalFailedDelivery() {
         this.delivery.failed(new DeliveryResultImpl(
                 this.sessionState.getReply(), 
-                this.sessionState.getRcptFailures()));
+                this.sessionState.getFailures()));
         this.sessionState.reset(null);
     }
     
     private void signalSuccessfulDelivery() {
         this.delivery.failed(new DeliveryResultImpl(
                 this.sessionState.getReply(), 
-                this.sessionState.getRcptFailures()));
+                this.sessionState.getFailures()));
         this.sessionState.reset(null);
     }
     

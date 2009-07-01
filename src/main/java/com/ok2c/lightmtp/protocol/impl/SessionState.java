@@ -19,6 +19,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
@@ -37,19 +40,37 @@ public class SessionState implements SessionBufferStatus {
     private final SessionInputBuffer inbuf;
     private final SessionOutputBuffer outbuf;
     private final Set<String> extensions;
-    private final List<RcptResult> rcptFailures;
+    private final List<RcptResult> failures;
     
     private DeliveryRequest request;
     private SMTPReply reply;
     
     public SessionState() {
         super();
-        this.inbuf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-        this.outbuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-        this.rcptFailures = new ArrayList<RcptResult>();
+        this.inbuf = createSessionInputBuffer();
+        this.outbuf = createSessionOutputBuffer();
+        this.failures = new ArrayList<RcptResult>();
         this.extensions = new HashSet<String>();
     }
 
+    protected SessionInputBuffer createSessionInputBuffer() {
+        SessionInputBuffer buf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
+        if (wirelog.isDebugEnabled()) {
+            buf = new LoggingSessionInputBuffer(buf, new Wire(wirelog), SMTPConsts.ASCII);
+        }
+        return buf;
+    }
+    
+    protected SessionOutputBuffer createSessionOutputBuffer() {
+        SessionOutputBuffer buf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
+        if (wirelog.isDebugEnabled()) {
+            buf = new LoggingSessionOutputBuffer(buf, new Wire(wirelog), SMTPConsts.ASCII);
+        }
+        return buf;
+    }
+    
     public boolean hasBufferedInput() {
         return this.inbuf.hasData();
     }
@@ -68,7 +89,7 @@ public class SessionState implements SessionBufferStatus {
 
     public void reset(final DeliveryRequest request) {
         this.request = request;
-        this.rcptFailures.clear();
+        this.failures.clear();
         this.reply = null;
     }
     
@@ -79,8 +100,8 @@ public class SessionState implements SessionBufferStatus {
         return this.request;
     }
 
-    public List<RcptResult> getRcptFailures() {
-        return this.rcptFailures;
+    public List<RcptResult> getFailures() {
+        return this.failures;
     }
     
     public Set<String> getExtensions() {
@@ -93,6 +114,23 @@ public class SessionState implements SessionBufferStatus {
 
     public void setReply(final SMTPReply reply) {
         this.reply = reply;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("[in buf: ");
+        buffer.append(this.inbuf.length());
+        buffer.append("][out buf: ");
+        buffer.append(this.outbuf.length());
+        buffer.append("][extensions: ");
+        buffer.append(this.extensions);
+        buffer.append("][last reply: ");
+        buffer.append(this.reply);
+        buffer.append("][failures: ");
+        buffer.append(this.failures);
+        buffer.append("]");
+        return buffer.toString();
     }
     
 }
