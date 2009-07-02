@@ -13,7 +13,7 @@
  * under the License.
  */
 
-package com.ok2c.lightmtp.protocol.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
 import java.net.SocketAddress;

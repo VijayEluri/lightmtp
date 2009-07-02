@@ -12,14 +12,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
-public enum ProtocolState {
+import java.io.IOException;
 
-    INIT,
-    HELO,
-    MAIL,
-    DATA,
-    QUIT,
-    
+public class UnexpectedEndOfStreamException extends IOException {
+
+    private static final long serialVersionUID = 5442285691786119128L;
+
+    public UnexpectedEndOfStreamException() {
+        super("Unexpected end of tream");
+    }
+
 }

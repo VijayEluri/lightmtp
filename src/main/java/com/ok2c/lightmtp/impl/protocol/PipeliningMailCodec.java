@@ -12,17 +12,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.LinkedList;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
-import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -31,41 +28,57 @@ import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.protocol.RcptResult;
+import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
+public class PipeliningMailCodec implements ProtocolCodec<SessionState> {
     
     enum CodecState {
         
-        SERVICE_READY_EXPECTED,
-        EHLO_READY,
-        EHLO_RESPONSE_EXPECTED,
-        HELO_READY,
-        HELO_RESPONSE_EXPECTED,
+        MAIL_REQUEST_READY,
+        MAIL_RESPONSE_EXPECTED,
+        RCPT_RESPONSE_EXPECTED,
+        DATA_RESPONSE_EXPECTED,
         COMPLETED
         
     }
     
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
+    private final LinkedList<String> recipients;
     
     private CodecState codecState;
     
-    public ExtendedHeloCodec() {
+    public PipeliningMailCodec(boolean enhancedCodes) {
         super();
-        this.parser = new SMTPReplyParser();
+        this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();
-        this.codecState = CodecState.SERVICE_READY_EXPECTED; 
+        this.recipients = new LinkedList<String>();
+        this.codecState = CodecState.MAIL_REQUEST_READY; 
     }
 
     public void reset(
             final IOSession iosession, 
             final SessionState sessionState) throws IOException, SMTPProtocolException {
-        this.parser.reset();
+        if (iosession == null) {
+            throw new IllegalArgumentException("IO session may not be null");
+        }
+        if (sessionState == null) {
+            throw new IllegalArgumentException("Session state may not be null");
+        }
         this.writer.reset();
-        this.codecState = CodecState.SERVICE_READY_EXPECTED; 
+        this.parser.reset();
+        this.recipients.clear();
+        this.codecState = CodecState.MAIL_REQUEST_READY;
+        
+        if (sessionState.getRequest() != null) {
+            iosession.setEventMask(SelectionKey.OP_WRITE);
+        } else {
+            iosession.setEventMask(SelectionKey.OP_READ);
+        }
     }
     
     public void produceData(
@@ -77,17 +90,28 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
+        if (sessionState.getRequest() == null) {
+            throw new IllegalArgumentException("Delivery request may not be null");
+        }
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
+        DeliveryRequest request = sessionState.getRequest();
         
         switch (this.codecState) {
-        case EHLO_READY:
-            SMTPCommand ehlo = new SMTPCommand("EHLO");
-            this.writer.write(ehlo, buf);
-            break;
-        case HELO_READY:
-            SMTPCommand helo = new SMTPCommand("HELO");
-            this.writer.write(helo, buf);
+        case MAIL_REQUEST_READY:
+            SMTPCommand mailFrom = new SMTPCommand("MAIL", 
+                    "FROM:<" + request.getSender() + ">");
+            this.writer.write(mailFrom, buf);
+            
+            this.recipients.addAll(request.getRecipients());
+            
+            for (String recipient: request.getRecipients()) {
+                SMTPCommand rcptTo = new SMTPCommand("RCPT", "TO:<" + recipient + ">");
+                this.writer.write(rcptTo, buf);
+            }
+            SMTPCommand data = new SMTPCommand("DATA");
+            this.writer.write(data, buf);
+            this.codecState = CodecState.MAIL_RESPONSE_EXPECTED;
             break;
         }
 
@@ -111,62 +135,49 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
         
         SessionInputBuffer buf = sessionState.getInbuf();
         
-        int bytesRead = buf.fill(iosession.channel());
-        SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
+        while (this.codecState != CodecState.COMPLETED) {
+            int bytesRead = buf.fill(iosession.channel());
+            SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
+            
+            if (reply == null) {
+                break;
+            }
 
-        if (reply != null) {
             switch (this.codecState) {
-            case SERVICE_READY_EXPECTED:
-                if (reply.getCode() == SMTPCodes.SERVICE_READY) {
-                    this.codecState = CodecState.EHLO_READY;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
+            case MAIL_RESPONSE_EXPECTED:
+                if (reply.getCode() == SMTPCodes.OK) {
+                    this.codecState = CodecState.RCPT_RESPONSE_EXPECTED;
                 } else {
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
                 }
                 break;
-            case EHLO_RESPONSE_EXPECTED:
-                if (reply.getCode() == SMTPCodes.OK) {
+            case RCPT_RESPONSE_EXPECTED:
+                String recipient = this.recipients.removeFirst();
 
-                    Set<String> extensions = sessionState.getExtensions();
-                    
-                    List<String> lines = reply.getLines();
-                    if (lines.size() > 1) {
-                        for (int i = 1; i < lines.size(); i++) {
-                            String line = lines.get(i);
-                            extensions.add(line.toUpperCase(Locale.US));
-                        }
-                    }
-                    this.codecState = CodecState.COMPLETED;
-                } else if (reply.getCode() == SMTPCodes.SYNTAX_ERR_COMMAND) {
-                    this.codecState = CodecState.HELO_READY;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
-                } else {
-                    this.codecState = CodecState.COMPLETED;
-                    sessionState.setReply(reply);
+                if (reply.getCode() != SMTPCodes.OK) {
+                    sessionState.getFailures().add(new RcptResult(reply, recipient));
+                }
+                if (this.recipients.isEmpty()) {
+                    this.codecState = CodecState.DATA_RESPONSE_EXPECTED;
                 }
                 break;
-            case HELO_RESPONSE_EXPECTED:
-                if (reply.getCode() == SMTPCodes.OK) {
-                    this.codecState = CodecState.COMPLETED;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
-                } else {
-                    this.codecState = CodecState.COMPLETED;
-                    sessionState.setReply(reply);
-                }
+            case DATA_RESPONSE_EXPECTED:
+                this.codecState = CodecState.COMPLETED;
+                sessionState.setReply(reply);
                 break;
             default:
                 throw new SMTPProtocolException("Unexpected reply: " + reply);
             }
-        }
-
-        if (bytesRead == -1) {
-            throw new UnexpectedEndOfStreamException();
+            
+            if (bytesRead == -1) {
+                throw new UnexpectedEndOfStreamException();
+            }
         }
     }
- 
+
     public boolean isIdle() {
-        return this.codecState == CodecState.SERVICE_READY_EXPECTED; 
+        return this.codecState == CodecState.MAIL_REQUEST_READY; 
     }
 
     public boolean isCompleted() {
@@ -177,23 +188,10 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
             final ProtocolCodecs<SessionState> codecs, 
             final SessionState sessionState) {
         if (isCompleted()) {
-            
-            Set<String> exts = sessionState.getExtensions();
-            
-            boolean pipelining = exts.contains(SMTPExtensions.PIPELINING);
-            boolean enhancedCodes = exts.contains(SMTPExtensions.ENHANCEDSTATUSCODES);
-            
-            if (pipelining) {
-                codecs.register(ProtocolState.MAIL.name(), 
-                        new PipeliningMailCodec(enhancedCodes));
-                codecs.register(ProtocolState.DATA.name(), 
-                        new SendDataCodec(enhancedCodes));
-            }
-            
-            return ProtocolState.MAIL.name();
+            return ProtocolState.DATA.name();
         } else {
             return null;
         }
     }
-    
+        
 }

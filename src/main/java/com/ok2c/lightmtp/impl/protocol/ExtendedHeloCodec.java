@@ -12,14 +12,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -28,59 +31,41 @@ import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
-import com.ok2c.lightmtp.protocol.RcptResult;
-import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
+public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
     
     enum CodecState {
         
-        MAIL_REQUEST_READY,
-        MAIL_RESPONSE_EXPECTED,
-        RCPT_REQUEST_READY,
-        RCPT_RESPONSE_EXPECTED,
-        DATA_REQUEST_READY,
-        DATA_RESPONSE_EXPECTED,
+        SERVICE_READY_EXPECTED,
+        EHLO_READY,
+        EHLO_RESPONSE_EXPECTED,
+        HELO_READY,
+        HELO_RESPONSE_EXPECTED,
         COMPLETED
         
     }
     
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
-    private final LinkedList<String> recipients;
     
     private CodecState codecState;
     
-    public SimpleMailTrxCodec(boolean enhancedCodes) {
+    public ExtendedHeloCodec() {
         super();
-        this.parser = new SMTPReplyParser(enhancedCodes);
+        this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
-        this.recipients = new LinkedList<String>();
-        this.codecState = CodecState.MAIL_REQUEST_READY; 
+        this.codecState = CodecState.SERVICE_READY_EXPECTED; 
     }
 
     public void reset(
             final IOSession iosession, 
             final SessionState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
-        this.writer.reset();
         this.parser.reset();
-        this.recipients.clear();
-        this.codecState = CodecState.MAIL_REQUEST_READY; 
-        
-        if (sessionState.getRequest() != null) {
-            iosession.setEventMask(SelectionKey.OP_WRITE);
-        } else {
-            iosession.setEventMask(SelectionKey.OP_READ);
-        }
+        this.writer.reset();
+        this.codecState = CodecState.SERVICE_READY_EXPECTED; 
     }
     
     public void produceData(
@@ -92,34 +77,17 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
-        if (sessionState.getRequest() == null) {
-            throw new IllegalArgumentException("Delivery request may not be null");
-        }
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
-        DeliveryRequest request = sessionState.getRequest();
         
         switch (this.codecState) {
-        case MAIL_REQUEST_READY:
-            SMTPCommand mailFrom = new SMTPCommand("MAIL", 
-                    "FROM:<" + request.getSender() + ">");
-            this.writer.write(mailFrom, buf);
-            
-            this.codecState = CodecState.MAIL_RESPONSE_EXPECTED;
-            iosession.setEventMask(SelectionKey.OP_READ);
+        case EHLO_READY:
+            SMTPCommand ehlo = new SMTPCommand("EHLO");
+            this.writer.write(ehlo, buf);
             break;
-        case RCPT_REQUEST_READY:
-            String recipient = this.recipients.getFirst(); 
-            
-            SMTPCommand rcptTo = new SMTPCommand("RCPT", "TO:<" + recipient + ">");
-            this.writer.write(rcptTo, buf);
-            
-            this.codecState = CodecState.RCPT_RESPONSE_EXPECTED;
-            break;
-        case DATA_REQUEST_READY:
-            SMTPCommand data = new SMTPCommand("DATA");
-            this.writer.write(data, buf);
-            this.codecState = CodecState.DATA_RESPONSE_EXPECTED;
+        case HELO_READY:
+            SMTPCommand helo = new SMTPCommand("HELO");
+            this.writer.write(helo, buf);
             break;
         }
 
@@ -142,45 +110,53 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
         }
         
         SessionInputBuffer buf = sessionState.getInbuf();
-        DeliveryRequest request = sessionState.getRequest();
         
         int bytesRead = buf.fill(iosession.channel());
         SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
 
         if (reply != null) {
             switch (this.codecState) {
-            case MAIL_RESPONSE_EXPECTED:
-                if (reply.getCode() == SMTPCodes.OK) {
-                    this.codecState = CodecState.RCPT_REQUEST_READY;
-                    this.recipients.clear();
-                    this.recipients.addAll(request.getRecipients());
+            case SERVICE_READY_EXPECTED:
+                if (reply.getCode() == SMTPCodes.SERVICE_READY) {
+                    this.codecState = CodecState.EHLO_READY;
                     iosession.setEventMask(SelectionKey.OP_WRITE);
                 } else {
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
                 }
                 break;
-            case RCPT_RESPONSE_EXPECTED:
-                if (this.recipients.isEmpty()) {
-                    throw new IllegalStateException("Unexpected state: " + this.codecState);
-                }
-                String recipient = this.recipients.removeFirst();
+            case EHLO_RESPONSE_EXPECTED:
+                if (reply.getCode() == SMTPCodes.OK) {
 
-                if (reply.getCode() != SMTPCodes.OK) {
-                    sessionState.getFailures().add(new RcptResult(reply, recipient));
-                }
-                
-                if (this.recipients.isEmpty()) {
-                    this.codecState = CodecState.DATA_REQUEST_READY;
+                    Set<String> extensions = sessionState.getExtensions();
+                    
+                    List<String> lines = reply.getLines();
+                    if (lines.size() > 1) {
+                        for (int i = 1; i < lines.size(); i++) {
+                            String line = lines.get(i);
+                            extensions.add(line.toUpperCase(Locale.US));
+                        }
+                    }
+                    this.codecState = CodecState.COMPLETED;
+                } else if (reply.getCode() == SMTPCodes.SYNTAX_ERR_COMMAND) {
+                    this.codecState = CodecState.HELO_READY;
+                    iosession.setEventMask(SelectionKey.OP_WRITE);
                 } else {
-                    this.codecState = CodecState.RCPT_REQUEST_READY;
+                    this.codecState = CodecState.COMPLETED;
+                    sessionState.setReply(reply);
                 }
-                iosession.setEventMask(SelectionKey.OP_WRITE);
                 break;
-            case DATA_RESPONSE_EXPECTED:
-                this.codecState = CodecState.COMPLETED;
-                sessionState.setReply(reply);
+            case HELO_RESPONSE_EXPECTED:
+                if (reply.getCode() == SMTPCodes.OK) {
+                    this.codecState = CodecState.COMPLETED;
+                    iosession.setEventMask(SelectionKey.OP_WRITE);
+                } else {
+                    this.codecState = CodecState.COMPLETED;
+                    sessionState.setReply(reply);
+                }
                 break;
+            default:
+                throw new SMTPProtocolException("Unexpected reply: " + reply);
             }
         }
 
@@ -188,9 +164,9 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
             throw new UnexpectedEndOfStreamException();
         }
     }
-    
+ 
     public boolean isIdle() {
-        return this.codecState == CodecState.MAIL_REQUEST_READY; 
+        return this.codecState == CodecState.SERVICE_READY_EXPECTED; 
     }
 
     public boolean isCompleted() {
@@ -201,10 +177,23 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
             final ProtocolCodecs<SessionState> codecs, 
             final SessionState sessionState) {
         if (isCompleted()) {
-            return ProtocolState.DATA.name();
+            
+            Set<String> exts = sessionState.getExtensions();
+            
+            boolean pipelining = exts.contains(SMTPExtensions.PIPELINING);
+            boolean enhancedCodes = exts.contains(SMTPExtensions.ENHANCEDSTATUSCODES);
+            
+            if (pipelining) {
+                codecs.register(ProtocolState.MAIL.name(), 
+                        new PipeliningMailCodec(enhancedCodes));
+                codecs.register(ProtocolState.DATA.name(), 
+                        new SendDataCodec(enhancedCodes));
+            }
+            
+            return ProtocolState.MAIL.name();
         } else {
             return null;
         }
     }
-        
+    
 }

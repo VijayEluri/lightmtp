@@ -1,4 +1,4 @@
-package com.ok2c.lightmtp.protocol.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import java.nio.ByteBuffer;
 
