@@ -44,7 +44,7 @@ class DeliveryResultImpl implements DeliveryResult {
         return this.reply;
     }
     
-    public List<RcptResult> getRcptFailures() {
+    public List<RcptResult> getFailures() {
         return this.rcptFailures;
     }
     

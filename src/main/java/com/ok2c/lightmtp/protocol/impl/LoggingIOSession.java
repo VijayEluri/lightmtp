@@ -23,7 +23,6 @@ import java.nio.channels.SelectionKey;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionBufferStatus;
@@ -32,7 +31,7 @@ import com.ok2c.lightnio.SessionBufferStatus;
  * Decorator class intended to transparently extend an {@link IOSession} 
  * with basic event logging capabilities using Commons Logging. 
  */
-public class LoggingIOSession implements IOSession {
+class LoggingIOSession implements IOSession {
 
     private static AtomicLong COUNT = new AtomicLong(0);
     
@@ -41,7 +40,7 @@ public class LoggingIOSession implements IOSession {
     private final ByteChannel channel;
     private final String id;
     
-    public LoggingIOSession(final IOSession session, final String id) {
+    public LoggingIOSession(final IOSession session, final String id, final Log log) {
         super();
         if (session == null) {
             throw new IllegalArgumentException("I/O session may not be null");
@@ -49,7 +48,7 @@ public class LoggingIOSession implements IOSession {
         this.session = session;
         this.channel = new LoggingByteChannel();
         this.id = id + "-" + COUNT.incrementAndGet();
-        this.log = LogFactory.getLog(session.getClass());
+        this.log = log;
     }
 
     public ByteChannel channel() {
