@@ -24,31 +24,31 @@ import com.ok2c.lightmtp.message.SMTPContent;
 
 public class FileSource implements SMTPContent<ReadableByteChannel> {
 
-	private final File file;
+    private final File file;
 
-	private RandomAccessFile rafile;
-	
-	public FileSource(final File file) {
-		super();
-		this.file = file;
-		this.rafile = null;
-	}
-	
-	public ReadableByteChannel channel() throws FileNotFoundException {
-		if (this.rafile == null) {
-			this.rafile = new RandomAccessFile(this.file, "r");
-		}
-		return this.rafile.getChannel();
-	}
+    private RandomAccessFile rafile;
+    
+    public FileSource(final File file) {
+        super();
+        this.file = file;
+        this.rafile = null;
+    }
+    
+    public ReadableByteChannel channel() throws FileNotFoundException {
+        if (this.rafile == null) {
+            this.rafile = new RandomAccessFile(this.file, "r");
+        }
+        return this.rafile.getChannel();
+    }
 
-	public void finish() {
-		if (this.rafile != null) {
-			try {
-				this.rafile.close();
-			} catch (IOException ignore) {
-			}
-		}
-		this.rafile = null;
-	}
-	
+    public void finish() {
+        if (this.rafile != null) {
+            try {
+                this.rafile.close();
+            } catch (IOException ignore) {
+            }
+        }
+        this.rafile = null;
+    }
+    
 }

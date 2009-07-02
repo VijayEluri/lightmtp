@@ -23,25 +23,25 @@ import com.ok2c.lightmtp.message.SMTPContent;
 
 public class ByteArraySource implements SMTPContent<ReadableByteChannel> {
 
-	private final byte[] content;
-	
-	private InputStream stream;
-	
-	public ByteArraySource(final byte[] content) {
-		super();
-		this.content = content;
-		this.stream = null;
-	}
-	
-	public ReadableByteChannel channel() {
-		if (this.stream == null) {
-			this.stream = new ByteArrayInputStream(this.content);
-		}
-		return Channels.newChannel(this.stream);
-	}
+    private final byte[] content;
+    
+    private InputStream stream;
+    
+    public ByteArraySource(final byte[] content) {
+        super();
+        this.content = content;
+        this.stream = null;
+    }
+    
+    public ReadableByteChannel channel() {
+        if (this.stream == null) {
+            this.stream = new ByteArrayInputStream(this.content);
+        }
+        return Channels.newChannel(this.stream);
+    }
 
-	public void finish() {
-		this.stream = null;
-	}
-	
+    public void finish() {
+        this.stream = null;
+    }
+    
 }
