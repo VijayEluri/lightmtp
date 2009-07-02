@@ -14,14 +14,14 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import java.util.List;
+public interface DeliveryRequestHandler {
 
-import com.ok2c.lightmtp.SMTPReply;
+    DeliveryRequest submitRequest(SessionContext context);
 
-public interface DeliveryResult {
-
-    List<RcptResult> getFailures();
-
-    SMTPReply getReply();
+    void competed(DeliveryRequest request, DeliveryResult result, SessionContext context);
+    
+    void failed(DeliveryRequest request, DeliveryResult result, SessionContext context);
+    
+    void failed(DeliveryRequest request, Exception ex, SessionContext context);
     
 }

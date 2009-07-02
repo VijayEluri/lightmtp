@@ -14,14 +14,12 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import java.util.List;
+public interface SessionContext {
 
-import com.ok2c.lightmtp.SMTPReply;
+    void setAttribute(String name, Object obj);
+    
+    Object getAttribute(String name);
 
-public interface DeliveryResult {
-
-    List<RcptResult> getFailures();
-
-    SMTPReply getReply();
+    Object removeAttribute(String name);
     
 }
