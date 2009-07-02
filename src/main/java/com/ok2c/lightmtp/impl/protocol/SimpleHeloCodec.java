@@ -12,11 +12,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
+import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
@@ -30,12 +31,13 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class QuitCodec implements ProtocolCodec<SessionState> {
+public class SimpleHeloCodec implements ProtocolCodec<SessionState> {
     
     enum CodecState {
         
-        QUIT_READY,
-        QUIT_RESPONSE_EXPECTED,
+        SERVICE_READY_EXPECTED,
+        HELO_READY,
+        HELO_RESPONSE_EXPECTED,
         COMPLETED
         
     }
@@ -45,11 +47,11 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
     
     private CodecState codecState;
     
-    public QuitCodec() {
+    public SimpleHeloCodec() {
         super();
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
-        this.codecState = CodecState.QUIT_READY; 
+        this.codecState = CodecState.SERVICE_READY_EXPECTED; 
     }
 
     public void reset(
@@ -57,9 +59,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
             final SessionState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
-        this.codecState = CodecState.QUIT_READY;
-        
-        iosession.setEventMask(SelectionKey.OP_WRITE);
+        this.codecState = CodecState.SERVICE_READY_EXPECTED; 
     }
 
     public void produceData(
@@ -75,9 +75,9 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
         SessionOutputBuffer buf = sessionState.getOutbuf();
 
         switch (this.codecState) {
-        case QUIT_READY:
-            SMTPCommand quit = new SMTPCommand("QUIT");
-            this.writer.write(quit, buf);
+        case HELO_READY:
+            SMTPCommand helo = new SMTPCommand("HELO");
+            this.writer.write(helo, buf);
             break;
         }
         
@@ -106,28 +106,45 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
 
         if (reply != null) {
             switch (this.codecState) {
-            case QUIT_RESPONSE_EXPECTED:
-                iosession.close();
+            case SERVICE_READY_EXPECTED:
+                if (reply.getCode() == SMTPCodes.SERVICE_READY) {
+                    this.codecState = CodecState.HELO_READY;
+                    iosession.setEventMask(SelectionKey.OP_WRITE);
+                } else {
+                    this.codecState = CodecState.COMPLETED;
+                    sessionState.setReply(reply);
+                }
+                break;
+            case HELO_RESPONSE_EXPECTED:
                 this.codecState = CodecState.COMPLETED;
+                sessionState.setReply(reply);
                 break;
             default:
                 throw new SMTPProtocolException("Unexpected reply: " + reply);
             }
         }
+
+        if (bytesRead == -1) {
+            throw new UnexpectedEndOfStreamException();
+        }
     }
     
-    public boolean isCompleted() {
-        return this.codecState == CodecState.COMPLETED; 
+    public boolean isIdle() {
+        return this.codecState == CodecState.SERVICE_READY_EXPECTED; 
     }
 
-    public boolean isIdle() {
-        return this.codecState == CodecState.QUIT_READY; 
+    public boolean isCompleted() {
+        return this.codecState == CodecState.COMPLETED; 
     }
 
     public String next(
             final ProtocolCodecs<SessionState> codecs, 
             final SessionState sessionState) {
-        return null;
+        if (isCompleted()) {
+            return ProtocolState.MAIL.name();
+        } else {
+            return null;
+        }
     }
         
 }
