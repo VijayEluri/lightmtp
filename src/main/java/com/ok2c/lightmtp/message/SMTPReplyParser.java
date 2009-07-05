@@ -59,7 +59,7 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         if (buf == null) {
             throw new IllegalArgumentException("Session input buffer may not be null");
         }
-        if (readLine(buf, endOfStream)) {
+        while (readLine(buf, endOfStream)) {
             ParsedLine current = parseLine(); 
             if (!this.parsedLines.isEmpty()) {
                 ParsedLine previous = this.parsedLines.getLast();
