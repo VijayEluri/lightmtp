@@ -12,12 +12,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.impl.protocol;
 
+package com.ok2c.lightmtp.impl.client;
+
+import com.ok2c.lightmtp.client.DeliveryCallback;
+import com.ok2c.lightmtp.client.DeliveryJob;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
-import com.ok2c.lightmtp.protocol.DeliveryCallback;
-import com.ok2c.lightmtp.protocol.DeliveryJob;
 
 class DeliveryJobImpl implements DeliveryJob {
 
