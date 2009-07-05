@@ -73,6 +73,8 @@ public class ClientSession {
         this.codecs.register(ProtocolState.MAIL.name(), new SimpleMailTrxCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
         this.codecs.register(ProtocolState.QUIT.name(), new QuitCodec());
+        
+        iosession.setSocketTimeout(5000);
     }
     
     private void signalDeliveryReady() {
@@ -251,10 +253,14 @@ public class ClientSession {
     }
     
     private void doTimeout() throws IOException, SMTPProtocolException {
+        this.log.debug("Session timed out");
         if (this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
             this.currentCodec = this.codecs.getCodec(ProtocolState.QUIT.name());
             this.currentCodec.reset(this.iosession, this.sessionState);
             this.state = ProtocolState.QUIT;
+            if (this.log.isDebugEnabled()) {
+                this.log.debug("Next codec: " + this.state);
+            }
         } else {
             this.iosession.close();
         }
