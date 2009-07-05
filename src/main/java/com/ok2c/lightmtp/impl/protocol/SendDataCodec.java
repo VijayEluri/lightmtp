@@ -130,7 +130,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
                 boolean lineComplete = this.contentBuf.readLine(this.lineBuf, bytesRead == -1);
                 if (this.maxLineLen > 0 && 
                         (this.lineBuf.length() > this.maxLineLen || 
-                                (!lineComplete && buf.length() > this.maxLineLen))) {
+                                (!lineComplete && this.contentBuf.length() > this.maxLineLen))) {
                     throw new SMTPProtocolException("Maximum line length limit exceeded");
                 }
                 if (lineComplete) {
