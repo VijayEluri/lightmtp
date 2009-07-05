@@ -75,9 +75,9 @@ public class PipeliningMailCodec implements ProtocolCodec<SessionState> {
         this.codecState = CodecState.MAIL_REQUEST_READY;
         
         if (sessionState.getRequest() != null) {
-            iosession.setEventMask(SelectionKey.OP_WRITE);
+            iosession.setEvent(SelectionKey.OP_WRITE);
         } else {
-            iosession.setEventMask(SelectionKey.OP_READ);
+            iosession.setEvent(SelectionKey.OP_READ);
         }
     }
     

@@ -59,7 +59,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
         this.writer.reset();
         this.codecState = CodecState.QUIT_READY;
         
-        iosession.setEventMask(SelectionKey.OP_WRITE);
+        iosession.setEvent(SelectionKey.OP_WRITE);
     }
 
     public void produceData(
@@ -78,6 +78,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
         case QUIT_READY:
             SMTPCommand quit = new SMTPCommand("QUIT");
             this.writer.write(quit, buf);
+            this.codecState = CodecState.QUIT_RESPONSE_EXPECTED;
             break;
         }
         
@@ -109,6 +110,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
             case QUIT_RESPONSE_EXPECTED:
                 iosession.close();
                 this.codecState = CodecState.COMPLETED;
+                sessionState.setReply(reply);
                 break;
             default:
                 throw new SMTPProtocolException("Unexpected reply: " + reply);

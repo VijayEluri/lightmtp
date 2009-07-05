@@ -77,9 +77,9 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
         this.codecState = CodecState.MAIL_REQUEST_READY; 
         
         if (sessionState.getRequest() != null) {
-            iosession.setEventMask(SelectionKey.OP_WRITE);
+            iosession.setEvent(SelectionKey.OP_WRITE);
         } else {
-            iosession.setEventMask(SelectionKey.OP_READ);
+            iosession.setEvent(SelectionKey.OP_READ);
         }
     }
     
@@ -106,7 +106,7 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
             this.writer.write(mailFrom, buf);
             
             this.codecState = CodecState.MAIL_RESPONSE_EXPECTED;
-            iosession.setEventMask(SelectionKey.OP_READ);
+            iosession.setEvent(SelectionKey.OP_READ);
             break;
         case RCPT_REQUEST_READY:
             String recipient = this.recipients.getFirst(); 
@@ -154,7 +154,7 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
                     this.codecState = CodecState.RCPT_REQUEST_READY;
                     this.recipients.clear();
                     this.recipients.addAll(request.getRecipients());
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
+                    iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
@@ -175,7 +175,7 @@ public class SimpleMailTrxCodec implements ProtocolCodec<SessionState> {
                 } else {
                     this.codecState = CodecState.RCPT_REQUEST_READY;
                 }
-                iosession.setEventMask(SelectionKey.OP_WRITE);
+                iosession.setEvent(SelectionKey.OP_WRITE);
                 break;
             case DATA_RESPONSE_EXPECTED:
                 this.codecState = CodecState.COMPLETED;

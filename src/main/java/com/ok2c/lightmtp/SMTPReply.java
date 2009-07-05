@@ -82,8 +82,10 @@ public class SMTPReply {
         StringBuilder buffer = new StringBuilder();
         buffer.append(this.code);
         buffer.append(' ');
-        buffer.append(this.enhancedCode);
-        buffer.append(' ');
+        if (this.enhancedCode != null) {
+            buffer.append(this.enhancedCode);
+            buffer.append(' ');
+        }
         buffer.append(getLine());
         return buffer.toString();
     }

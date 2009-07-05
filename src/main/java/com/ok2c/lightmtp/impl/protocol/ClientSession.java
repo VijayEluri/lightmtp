@@ -28,6 +28,7 @@ import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.protocol.ServiceRefusedException;
 import com.ok2c.lightmtp.protocol.SessionContext;
 import com.ok2c.lightnio.IOSession;
 
@@ -73,33 +74,44 @@ public class ClientSession {
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
         this.codecs.register(ProtocolState.QUIT.name(), new QuitCodec());
     }
-
-    public void connected() throws IOException, SMTPProtocolException {
-        if (this.state != ProtocolState.INIT) {
-            throw new IllegalStateException("Unexpected state: " + this.state);
+    
+    private void signalDeliveryReady() {
+        if (this.sessionState.getRequest() != null) {
+            throw new IllegalStateException("Delivery request is not null");
         }
+        this.log.debug("Ready for delivery request");
         
-        if (this.log.isDebugEnabled()) {
-            this.log.debug("New client connection: " + this.iosession.getRemoteAddress());
+        DeliveryRequest request = this.handler.submitRequest(this.context);
+        this.sessionState.reset(request);
+        if (request == null) {
+            this.iosession.clearEvent(SelectionKey.OP_WRITE);
+            this.log.debug("No delivery request submitted");
+        } else {
+            this.iosession.setEvent(SelectionKey.OP_WRITE);
+            if (this.log.isDebugEnabled()) {
+                this.log.debug("Delivery request submitted: " + request);
+            }
         }
-        
-        this.currentCodec = this.codecs.getCodec(ProtocolState.HELO.name());
-        this.currentCodec.reset(this.iosession, this.sessionState);
-        
-        this.state = ProtocolState.HELO;
     }
     
-    private void signalFailedDelivery(final Exception ex) {
+    private void signalException(final Exception ex) {
+        this.handler.exception(ex, this.context);
+
         DeliveryRequest request = this.sessionState.getRequest();
         this.sessionState.reset(null);
-        this.handler.failed(request, ex, this.context);
-        if (this.log.isDebugEnabled()) {
-            this.log.debug("Delivery failed: " + request, ex);
+        if (request != null) {
+            this.handler.failed(request, null, this.context);
+            this.log.error("Delivery failed: " + request, ex);
+        } else {
+            this.log.error(ex.getMessage(), ex);
         }
     }
     
-    private void signalFailedDelivery() {
+    private void signalDeliveryFailure() {
         DeliveryRequest request = this.sessionState.getRequest();
+        if (request == null) {
+            throw new IllegalStateException("Delivery request is null"); 
+        }
         DeliveryResult result = new DeliveryResultImpl(
                 this.sessionState.getReply(), 
                 this.sessionState.getFailures());
@@ -110,26 +122,55 @@ public class ClientSession {
         }
     }
     
-    private void signalSuccessfulDelivery() {
+    private void signalDeliverySuccess() {
         DeliveryRequest request = this.sessionState.getRequest();
+        if (request == null) {
+            throw new IllegalStateException("Delivery request is null"); 
+        }
         DeliveryResult result = new DeliveryResultImpl(
                 this.sessionState.getReply(), 
                 this.sessionState.getFailures());
         this.sessionState.reset(null);
-        this.handler.failed(request, result, this.context);
+        this.handler.completed(request, result, this.context);
         if (this.log.isDebugEnabled()) {
             this.log.debug("Delivery succeeded: " + request + "; result: " + result);
         }
+    }
+    
+    public void connected() {
+        if (this.state != ProtocolState.INIT) {
+            throw new IllegalStateException("Unexpected state: " + this.state);
+        }
+        try {
+            doConnected();
+        } catch (IOException ex) {
+            signalException(ex);
+        } catch (SMTPProtocolException ex) {
+            signalException(ex);
+        }
+    }
+    
+    private void doConnected() throws IOException, SMTPProtocolException {
+        if (this.log.isDebugEnabled()) {
+            this.log.debug("New client connection: " + this.iosession.getRemoteAddress());
+        }
+        
+        this.currentCodec = this.codecs.getCodec(ProtocolState.HELO.name());
+        this.currentCodec.reset(this.iosession, this.sessionState);
+        
+        this.state = ProtocolState.HELO;
+        
+        this.handler.connected(this.context);
     }
     
     public void consumeData() {
         try {
             doConsumeData();
         } catch (IOException ex) {
-            signalFailedDelivery(ex);
+            signalException(ex);
         } catch (SMTPProtocolException ex) {
             this.state = ProtocolState.QUIT;
-            signalFailedDelivery(ex);
+            signalException(ex);
         }
     }
     
@@ -137,10 +178,10 @@ public class ClientSession {
         try {
             doProduceData();
         } catch (IOException ex) {
-            signalFailedDelivery(ex);
+            signalException(ex);
         } catch (SMTPProtocolException ex) {
             this.state = ProtocolState.QUIT;
-            signalFailedDelivery(ex);
+            signalException(ex);
         }
     }
 
@@ -156,18 +197,30 @@ public class ClientSession {
     
     private void updateSession() throws IOException, SMTPProtocolException {
         if (this.currentCodec.isCompleted()) {
-            SMTPReply reply = this.sessionState.getReply();
             
+            SMTPReply reply = this.sessionState.getReply();
             if (this.log.isDebugEnabled()) {
                 this.log.debug(this.state + " codec completed with reply: " + reply);
             }
             
-            if (reply.getCode() == SMTPCodes.OK) {
-                if (this.state == ProtocolState.DATA) {
-                    signalSuccessfulDelivery();
+            switch (this.state) {
+            case HELO:
+                if (reply.getCode() != SMTPCodes.OK) {
+                    throw new ServiceRefusedException(reply); 
                 }
-            } else {
-                signalFailedDelivery();
+                break;
+            case MAIL:
+                if (reply.getCode() != SMTPCodes.START_MAIL_INPUT) {
+                    signalDeliveryFailure();
+                }
+                break;
+            case DATA:
+                if (reply.getCode() == SMTPCodes.OK) {
+                    signalDeliverySuccess();
+                } else {
+                    signalDeliveryFailure();
+                }
+                break;
             }
         }
         
@@ -182,22 +235,7 @@ public class ClientSession {
             }
             
             if (this.state == ProtocolState.MAIL) {
-                if (this.sessionState.getRequest() != null) {
-                    throw new IllegalStateException("Delivery request is not null");
-                }
-                
-                this.log.debug("Ready for delivery request");
-                
-                DeliveryRequest request = this.handler.submitRequest(this.context);
-                this.sessionState.reset(request);
-                if (request == null) {
-                    this.iosession.clearEvent(SelectionKey.OP_WRITE);
-                    this.log.debug("No delivery request submitted");
-                } else {
-                    if (this.log.isDebugEnabled()) {
-                        this.log.debug("Delivery request submitted: " + request);
-                    }
-                }
+                signalDeliveryReady();
             }
         }
     }
@@ -220,6 +258,10 @@ public class ClientSession {
         } else {
             this.iosession.close();
         }
+    }
+    
+    public void disconneced() {
+        this.handler.disconnected(this.context);
     }
 
 }

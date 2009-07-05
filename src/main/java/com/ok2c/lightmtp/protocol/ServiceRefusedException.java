@@ -14,18 +14,22 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-public interface DeliveryRequestHandler {
+import com.ok2c.lightmtp.SMTPProtocolException;
+import com.ok2c.lightmtp.SMTPReply;
 
-    void connected(SessionContext context);
-    
-    void disconnected(SessionContext context);
-    
-    DeliveryRequest submitRequest(SessionContext context);
+public class ServiceRefusedException extends SMTPProtocolException {
 
-    void completed(DeliveryRequest request, DeliveryResult result, SessionContext context);
+    private static final long serialVersionUID = -3625373959884379256L;
+
+    private final SMTPReply reply;
     
-    void failed(DeliveryRequest request, DeliveryResult result, SessionContext context);
-    
-    void exception(Exception ex, SessionContext context);
-    
+    public ServiceRefusedException(final SMTPReply reply) {
+        super(reply.getLine());
+        this.reply = reply;
+    }
+
+    public SMTPReply getReply() {
+        return this.reply;
+    }
+
 }

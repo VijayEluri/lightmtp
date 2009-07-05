@@ -31,6 +31,7 @@ import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.util.DNSUtils;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -66,6 +67,8 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.SERVICE_READY_EXPECTED; 
+        
+        iosession.setEventMask(SelectionKey.OP_READ);
     }
     
     public void produceData(
@@ -82,12 +85,16 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
         
         switch (this.codecState) {
         case EHLO_READY:
-            SMTPCommand ehlo = new SMTPCommand("EHLO");
+            SMTPCommand ehlo = new SMTPCommand("EHLO", 
+                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
             this.writer.write(ehlo, buf);
+            this.codecState = CodecState.EHLO_RESPONSE_EXPECTED;
             break;
         case HELO_READY:
-            SMTPCommand helo = new SMTPCommand("HELO");
+            SMTPCommand helo = new SMTPCommand("HELO",
+                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
             this.writer.write(helo, buf);
+            this.codecState = CodecState.HELO_RESPONSE_EXPECTED;
             break;
         }
 
@@ -119,7 +126,7 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
             case SERVICE_READY_EXPECTED:
                 if (reply.getCode() == SMTPCodes.SERVICE_READY) {
                     this.codecState = CodecState.EHLO_READY;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
+                    iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
@@ -138,22 +145,18 @@ public class ExtendedHeloCodec implements ProtocolCodec<SessionState> {
                         }
                     }
                     this.codecState = CodecState.COMPLETED;
+                    sessionState.setReply(reply);
                 } else if (reply.getCode() == SMTPCodes.SYNTAX_ERR_COMMAND) {
                     this.codecState = CodecState.HELO_READY;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
+                    iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
                 }
                 break;
             case HELO_RESPONSE_EXPECTED:
-                if (reply.getCode() == SMTPCodes.OK) {
-                    this.codecState = CodecState.COMPLETED;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
-                } else {
-                    this.codecState = CodecState.COMPLETED;
-                    sessionState.setReply(reply);
-                }
+                this.codecState = CodecState.COMPLETED;
+                sessionState.setReply(reply);
                 break;
             default:
                 throw new SMTPProtocolException("Unexpected reply: " + reply);

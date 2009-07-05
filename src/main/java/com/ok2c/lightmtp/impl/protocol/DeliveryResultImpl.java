@@ -25,7 +25,7 @@ import com.ok2c.lightmtp.protocol.RcptResult;
 class DeliveryResultImpl implements DeliveryResult {
 
     private final SMTPReply reply;
-    private final List<RcptResult> rcptFailures;
+    private final List<RcptResult> failures;
     
     public DeliveryResultImpl(final SMTPReply reply, List<RcptResult> rcptFailures) {
         super();
@@ -37,7 +37,7 @@ class DeliveryResultImpl implements DeliveryResult {
         if (rcptFailures != null) {
             list.addAll(rcptFailures);
         }
-        this.rcptFailures = Collections.unmodifiableList(list);
+        this.failures = Collections.unmodifiableList(list);
     }
 
     public SMTPReply getReply() {
@@ -45,7 +45,18 @@ class DeliveryResultImpl implements DeliveryResult {
     }
     
     public List<RcptResult> getFailures() {
-        return this.rcptFailures;
+        return this.failures;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("[");
+        buffer.append(this.reply);
+        buffer.append("][failures: ");
+        buffer.append(this.failures);
+        buffer.append("]");
+        return buffer.toString();
     }
     
 }

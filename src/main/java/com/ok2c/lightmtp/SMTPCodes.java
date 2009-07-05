@@ -17,7 +17,11 @@ package com.ok2c.lightmtp;
 public final class SMTPCodes {
 
     public static final int SERVICE_READY               = 220;
+    public static final int SERVICE_TERMINATING         = 221;
     public static final int OK                          = 250;
+    
+    public static final int START_MAIL_INPUT            = 354;
+    
     public static final int SYNTAX_ERR_COMMAND          = 500;
     public static final int SYNTAX_ERR_PARAM            = 501;
     public static final int COMMAND_NOT_IMPLEMENTED     = 502;
