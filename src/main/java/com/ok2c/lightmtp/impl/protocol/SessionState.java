@@ -94,9 +94,6 @@ public class SessionState implements SessionBufferStatus {
     }
     
     public DeliveryRequest getRequest() {
-        if (this.request == null) {
-            throw new IllegalStateException("SMTP request is null");
-        }
         return this.request;
     }
 

@@ -27,6 +27,7 @@ import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.util.DNSUtils;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -60,6 +61,8 @@ public class SimpleHeloCodec implements ProtocolCodec<SessionState> {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.SERVICE_READY_EXPECTED; 
+        
+        iosession.setEvent(SelectionKey.OP_READ);
     }
 
     public void produceData(
@@ -76,8 +79,11 @@ public class SimpleHeloCodec implements ProtocolCodec<SessionState> {
 
         switch (this.codecState) {
         case HELO_READY:
-            SMTPCommand helo = new SMTPCommand("HELO");
+            SMTPCommand helo = new SMTPCommand("HELO", 
+                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
+            
             this.writer.write(helo, buf);
+            this.codecState = CodecState.HELO_RESPONSE_EXPECTED;
             break;
         }
         
@@ -109,7 +115,7 @@ public class SimpleHeloCodec implements ProtocolCodec<SessionState> {
             case SERVICE_READY_EXPECTED:
                 if (reply.getCode() == SMTPCodes.SERVICE_READY) {
                     this.codecState = CodecState.HELO_READY;
-                    iosession.setEventMask(SelectionKey.OP_WRITE);
+                    iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);

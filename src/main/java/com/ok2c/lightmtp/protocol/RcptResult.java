@@ -51,7 +51,7 @@ public final class RcptResult {
         buffer.append(" ");
         buffer.append(this.reply.getLine());
         buffer.append("]");
-        return super.toString();
+        return buffer.toString();
     }
     
 }

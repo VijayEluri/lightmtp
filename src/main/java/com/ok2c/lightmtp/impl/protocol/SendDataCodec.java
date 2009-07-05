@@ -68,6 +68,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
     
     private SMTPContent<ReadableByteChannel> content;
     private ReadableByteChannel contentChannel;
+    private boolean contentSent;
     private CodecState codecState;
     
     public SendDataCodec(int maxLineLen, boolean enhancedCodes) {
@@ -100,9 +101,10 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
         this.lineBuf.clear();
         this.content = sessionState.getRequest().getContent();
         this.contentChannel = this.content.channel();
+        this.contentSent = false;
         this.codecState = CodecState.CONTENT_READY;
         
-        iosession.setEventMask(SelectionKey.OP_WRITE);
+        iosession.setEvent(SelectionKey.OP_WRITE);
     }
 
     public void produceData(
@@ -120,7 +122,10 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
         switch (this.codecState) {
         case CONTENT_READY:
             while (buf.length() < LIMIT) {
-                int bytesRead = this.contentBuf.fill(this.contentChannel);
+                int bytesRead = 0;
+                if (!this.contentBuf.hasData()) {
+                    bytesRead = this.contentBuf.fill(this.contentChannel);
+                }
                 
                 boolean lineComplete = this.contentBuf.readLine(this.lineBuf, bytesRead == -1);
                 if (this.maxLineLen > 0 && 
@@ -134,18 +139,23 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
                     }
                     buf.writeLine(this.lineBuf);
                     this.lineBuf.clear();
+                } else {
+                    bytesRead = this.contentBuf.fill(this.contentChannel);
                 }
                 if (bytesRead == -1 && !this.contentBuf.hasData()) {
                     
+                    this.lineBuf.clear();
+                    buf.writeLine(this.lineBuf);
                     this.lineBuf.append('.');
                     buf.writeLine(this.lineBuf);
                     this.lineBuf.clear();
                     
                     this.content.finish();
+                    this.contentSent = true;
                     this.codecState = CodecState.CONTENT_RESPONSE_EXPECTED;
                     break;
                 }
-                if (bytesRead <= 0) {
+                if (bytesRead == 0 && !lineComplete) {
                     break;
                 }
             }
@@ -154,7 +164,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
         if (buf.hasData()) {
             buf.flush(iosession.channel());
         }
-        if (!buf.hasData()) {
+        if (!buf.hasData() && this.contentSent) {
             iosession.clearEvent(SelectionKey.OP_WRITE);
         }
     }
@@ -202,7 +212,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
             final ProtocolCodecs<SessionState> codecs, 
             final SessionState sessionState) {
         if (isCompleted()) {
-            return ProtocolState.QUIT.name();
+            return ProtocolState.MAIL.name();
         } else {
             return null;
         }
