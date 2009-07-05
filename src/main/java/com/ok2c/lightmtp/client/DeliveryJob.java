@@ -12,7 +12,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol;
+package com.ok2c.lightmtp.client;
+
+import com.ok2c.lightmtp.protocol.DeliveryRequest;
+import com.ok2c.lightmtp.protocol.DeliveryResult;
 
 public interface DeliveryJob {
 
