@@ -34,7 +34,7 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
 import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 
-public class SendDataCodec implements ProtocolCodec<SessionState> {
+public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
     
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
@@ -86,7 +86,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
 
     public void reset(
             final IOSession iosession, 
-            final SessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -109,7 +109,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
 
     public void produceData(
             final IOSession iosession, 
-            final SessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -171,7 +171,7 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
 
     public void consumeData(
             final IOSession iosession, 
-            final SessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -209,8 +209,8 @@ public class SendDataCodec implements ProtocolCodec<SessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<SessionState> codecs, 
-            final SessionState sessionState) {
+            final ProtocolCodecs<ClientSessionState> codecs, 
+            final ClientSessionState sessionState) {
         if (isCompleted()) {
             return ProtocolState.MAIL.name();
         } else {

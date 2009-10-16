@@ -30,7 +30,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class QuitCodec implements ProtocolCodec<SessionState> {
+public class ReceiveQuitCodec implements ProtocolCodec<ClientSessionState> {
     
     enum CodecState {
         
@@ -45,7 +45,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
     
     private CodecState codecState;
     
-    public QuitCodec() {
+    public ReceiveQuitCodec() {
         super();
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
@@ -54,7 +54,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
 
     public void reset(
             final IOSession iosession, 
-            final SessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.QUIT_READY;
@@ -64,7 +64,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
 
     public void produceData(
             final IOSession iosession, 
-            final SessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -92,7 +92,7 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
 
     public void consumeData(
             final IOSession iosession, 
-            final SessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -127,8 +127,8 @@ public class QuitCodec implements ProtocolCodec<SessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<SessionState> codecs, 
-            final SessionState sessionState) {
+            final ProtocolCodecs<ClientSessionState> codecs, 
+            final ClientSessionState sessionState) {
         return null;
     }
         
