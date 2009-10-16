@@ -35,14 +35,14 @@ import com.ok2c.lightnio.IOSession;
 public class ClientSession {
     
     private final IOSession iosession;
-    private final SessionState sessionState;
+    private final ClientSessionState sessionState;
     private final SessionContext context;
     private final DeliveryRequestHandler handler;
     
     private final Log log;
     
-    private ProtocolCodecs<SessionState> codecs;
-    private ProtocolCodec<SessionState> currentCodec;
+    private ProtocolCodecs<ClientSessionState> codecs;
+    private ProtocolCodec<ClientSessionState> currentCodec;
     
     private ProtocolState state;
     
@@ -60,19 +60,19 @@ public class ClientSession {
         } else {
             this.iosession = iosession;
         }
-        this.sessionState = new SessionState();
+        this.sessionState = new ClientSessionState();
         this.context = new SessionContextImpl(iosession);
         this.handler = handler;
         this.iosession.setBufferStatus(this.sessionState);
-        this.codecs = new ProtocolCodecRegistry<SessionState>();
+        this.codecs = new ProtocolCodecRegistry<ClientSessionState>();
         this.state = ProtocolState.INIT;
     
         this.log = LogFactory.getLog(getClass());
         
-        this.codecs.register(ProtocolState.HELO.name(), new ExtendedHeloCodec());
-        this.codecs.register(ProtocolState.MAIL.name(), new SimpleMailTrxCodec(false));
+        this.codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec());
+        this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendMailTrxCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
-        this.codecs.register(ProtocolState.QUIT.name(), new QuitCodec());
+        this.codecs.register(ProtocolState.QUIT.name(), new ReceiveQuitCodec());
         
         iosession.setSocketTimeout(5000);
     }

@@ -32,20 +32,20 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
-public class SessionState implements SessionBufferStatus {
+public class ClientSessionState implements SessionBufferStatus {
 
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
-    
+
     private final SessionInputBuffer inbuf;
     private final SessionOutputBuffer outbuf;
     private final Set<String> extensions;
     private final List<RcptResult> failures;
-    
+
     private DeliveryRequest request;
     private SMTPReply reply;
-    
-    public SessionState() {
+
+    public ClientSessionState() {
         super();
         this.inbuf = createSessionInputBuffer();
         this.outbuf = createSessionOutputBuffer();
@@ -61,7 +61,7 @@ public class SessionState implements SessionBufferStatus {
         }
         return buf;
     }
-    
+
     protected SessionOutputBuffer createSessionOutputBuffer() {
         SessionOutputBuffer buf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
         Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
@@ -70,7 +70,7 @@ public class SessionState implements SessionBufferStatus {
         }
         return buf;
     }
-    
+
     public boolean hasBufferedInput() {
         return this.inbuf.hasData();
     }
@@ -78,7 +78,7 @@ public class SessionState implements SessionBufferStatus {
     public boolean hasBufferedOutput() {
         return this.outbuf.hasData();
     }
-    
+
     public SessionInputBuffer getInbuf() {
         return this.inbuf;
     }
@@ -92,7 +92,7 @@ public class SessionState implements SessionBufferStatus {
         this.failures.clear();
         this.reply = null;
     }
-    
+
     public DeliveryRequest getRequest() {
         return this.request;
     }
@@ -100,7 +100,7 @@ public class SessionState implements SessionBufferStatus {
     public List<RcptResult> getFailures() {
         return this.failures;
     }
-    
+
     public Set<String> getExtensions() {
         return this.extensions;
     }
@@ -129,5 +129,5 @@ public class SessionState implements SessionBufferStatus {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
 }
