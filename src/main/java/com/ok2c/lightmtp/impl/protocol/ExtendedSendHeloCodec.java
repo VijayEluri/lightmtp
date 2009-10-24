@@ -146,7 +146,7 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientSessionState> 
                     }
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
-                } else if (reply.getCode() == SMTPCodes.SYNTAX_ERR_COMMAND) {
+                } else if (reply.getCode() == SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND) {
                     this.codecState = CodecState.HELO_READY;
                     iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
