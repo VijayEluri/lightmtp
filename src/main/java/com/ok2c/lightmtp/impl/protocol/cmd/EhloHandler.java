@@ -46,7 +46,7 @@ public class EhloHandler implements CommandHandler<ServerSessionState> {
             List<String> lines = new ArrayList<String>();
             lines.add("Welcome " + domain);
             lines.addAll(sessionState.getExtensions());
-            return new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 0, 0), lines);
+            return new SMTPReply(SMTPCodes.OK, null, lines);
         } else {
             sessionState.setClientType(null);
             sessionState.setClientDomain(null);

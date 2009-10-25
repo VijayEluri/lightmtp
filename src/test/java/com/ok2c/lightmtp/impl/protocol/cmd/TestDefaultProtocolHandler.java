@@ -80,7 +80,6 @@ public class TestDefaultProtocolHandler {
         SMTPReply reply1 = handler.handle(cmd1, state);
         Assert.assertNotNull(reply1);
         Assert.assertEquals(250, reply1.getCode());
-        Assert.assertEquals(new SMTPCode(2, 0, 0), reply1.getEnhancedCode());
         Assert.assertEquals(ClientType.EXTENDED, state.getClientType());
         Assert.assertEquals("somedomain.com", state.getClientDomain());
 
@@ -88,7 +87,6 @@ public class TestDefaultProtocolHandler {
 
         SMTPReply reply2 = handler.handle(cmd2, state);
         Assert.assertNotNull(reply2);
-        Assert.assertEquals(new SMTPCode(2, 0, 0), reply2.getEnhancedCode());
         Assert.assertEquals(250, reply2.getCode());
 
         SMTPCommand cmd3 = new SMTPCommand("WHATEVER");

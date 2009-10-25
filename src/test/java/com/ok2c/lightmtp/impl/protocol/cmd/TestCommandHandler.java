@@ -74,7 +74,7 @@ public class TestCommandHandler {
         SMTPReply reply = handler.handle("somedomain.com", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
-        Assert.assertEquals(new SMTPCode(2, 0, 0), reply.getEnhancedCode());
+        Assert.assertNull(reply.getEnhancedCode());
         Assert.assertEquals(ClientType.EXTENDED, state.getClientType());
         Assert.assertEquals("somedomain.com", state.getClientDomain());
     }
@@ -88,7 +88,7 @@ public class TestCommandHandler {
         SMTPReply reply = handler.handle("somedomain.com", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
-        Assert.assertEquals(new SMTPCode(2, 0, 0), reply.getEnhancedCode());
+        Assert.assertNull(reply.getEnhancedCode());
         Assert.assertEquals(ClientType.EXTENDED, state.getClientType());
         Assert.assertEquals("somedomain.com", state.getClientDomain());
         Assert.assertNull(state.getSender());

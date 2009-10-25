@@ -72,7 +72,7 @@ public class ClientSession {
         this.codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec());
         this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendMailTrxCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
-        this.codecs.register(ProtocolState.QUIT.name(), new ReceiveQuitCodec());
+        this.codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
         
         iosession.setSocketTimeout(5000);
     }

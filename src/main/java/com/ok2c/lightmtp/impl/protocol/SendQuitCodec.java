@@ -30,7 +30,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class ReceiveQuitCodec implements ProtocolCodec<ClientSessionState> {
+public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
     
     enum CodecState {
         
@@ -45,7 +45,7 @@ public class ReceiveQuitCodec implements ProtocolCodec<ClientSessionState> {
     
     private CodecState codecState;
     
-    public ReceiveQuitCodec() {
+    public SendQuitCodec() {
         super();
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
