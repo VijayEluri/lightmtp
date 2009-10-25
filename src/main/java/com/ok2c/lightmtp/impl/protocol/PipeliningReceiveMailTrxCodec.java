@@ -56,6 +56,9 @@ public class PipeliningReceiveMailTrxCodec implements ProtocolCodec<ServerSessio
         this.completed = false;
     }
 
+    public void cleanUp() {
+    }
+
     public void reset(
             final IOSession iosession,
             final ServerSessionState sessionState) throws IOException, SMTPProtocolException {

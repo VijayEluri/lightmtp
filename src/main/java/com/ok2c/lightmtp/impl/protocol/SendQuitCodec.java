@@ -31,39 +31,42 @@ import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
-    
+
     enum CodecState {
-        
+
         QUIT_READY,
         QUIT_RESPONSE_EXPECTED,
         COMPLETED
-        
+
     }
-    
+
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
-    
+
     private CodecState codecState;
-    
+
     public SendQuitCodec() {
         super();
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
-        this.codecState = CodecState.QUIT_READY; 
+        this.codecState = CodecState.QUIT_READY;
+    }
+
+    public void cleanUp() {
     }
 
     public void reset(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.QUIT_READY;
-        
+
         iosession.setEvent(SelectionKey.OP_WRITE);
     }
 
     public void produceData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -81,7 +84,7 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
             this.codecState = CodecState.QUIT_RESPONSE_EXPECTED;
             break;
         }
-        
+
         if (buf.hasData()) {
             buf.flush(iosession.channel());
         }
@@ -91,7 +94,7 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
     }
 
     public void consumeData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -101,7 +104,7 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
         }
 
         SessionInputBuffer buf = sessionState.getInbuf();
-        
+
         int bytesRead = buf.fill(iosession.channel());
         SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
 
@@ -117,19 +120,19 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
             }
         }
     }
-    
+
     public boolean isCompleted() {
-        return this.codecState == CodecState.COMPLETED; 
+        return this.codecState == CodecState.COMPLETED;
     }
 
     public boolean isIdle() {
-        return this.codecState == CodecState.QUIT_READY; 
+        return this.codecState == CodecState.QUIT_READY;
     }
 
     public String next(
-            final ProtocolCodecs<ClientSessionState> codecs, 
+            final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         return null;
     }
-        
+
 }

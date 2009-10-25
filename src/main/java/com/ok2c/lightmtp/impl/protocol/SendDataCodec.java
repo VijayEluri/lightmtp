@@ -35,57 +35,60 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 
 public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
-    
+
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
     private final static int LIMIT = BUF_SIZE - LINE_SIZE;
-    private final static ByteBuffer PERIOD = ByteBuffer.wrap(new byte[] { '.'} ); 
-    
+    private final static ByteBuffer PERIOD = ByteBuffer.wrap(new byte[] { '.'} );
+
     private static class ContentBuffer extends SessionInputBufferImpl {
-        
+
         ContentBuffer(final Charset charset) {
             super(BUF_SIZE, LINE_SIZE, charset);
         }
-        
+
         public void clear() {
             super.clear();
         }
-        
+
     }
-    
+
     enum CodecState {
-        
+
         CONTENT_READY,
         CONTENT_RESPONSE_EXPECTED,
         COMPLETED
-        
+
     }
-    
+
     private final int maxLineLen;
     private final SMTPMessageParser<SMTPReply> parser;
     private final ContentBuffer contentBuf;
     private final CharArrayBuffer lineBuf;
-    
+
     private SMTPContent<ReadableByteChannel> content;
     private ReadableByteChannel contentChannel;
     private boolean contentSent;
     private CodecState codecState;
-    
+
     public SendDataCodec(int maxLineLen, boolean enhancedCodes) {
         super();
         this.maxLineLen = maxLineLen;
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.contentBuf = new ContentBuffer(SMTPConsts.ASCII);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
-        this.codecState = CodecState.CONTENT_READY; 
+        this.codecState = CodecState.CONTENT_READY;
     }
 
     public SendDataCodec(boolean enhancedCodes) {
         this(SMTPConsts.MAX_LINE_LEN, enhancedCodes);
     }
 
+    public void cleanUp() {
+    }
+
     public void reset(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -103,12 +106,12 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
         this.contentChannel = this.content.channel();
         this.contentSent = false;
         this.codecState = CodecState.CONTENT_READY;
-        
+
         iosession.setEvent(SelectionKey.OP_WRITE);
     }
 
     public void produceData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -126,10 +129,10 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
                 if (!this.contentBuf.hasData()) {
                     bytesRead = this.contentBuf.fill(this.contentChannel);
                 }
-                
+
                 boolean lineComplete = this.contentBuf.readLine(this.lineBuf, bytesRead == -1);
-                if (this.maxLineLen > 0 && 
-                        (this.lineBuf.length() > this.maxLineLen || 
+                if (this.maxLineLen > 0 &&
+                        (this.lineBuf.length() > this.maxLineLen ||
                                 (!lineComplete && this.contentBuf.length() > this.maxLineLen))) {
                     throw new SMTPProtocolException("Maximum line length limit exceeded");
                 }
@@ -143,13 +146,13 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
                     bytesRead = this.contentBuf.fill(this.contentChannel);
                 }
                 if (bytesRead == -1 && !this.contentBuf.hasData()) {
-                    
+
                     this.lineBuf.clear();
                     buf.writeLine(this.lineBuf);
                     this.lineBuf.append('.');
                     buf.writeLine(this.lineBuf);
                     this.lineBuf.clear();
-                    
+
                     this.content.finish();
                     this.contentSent = true;
                     this.codecState = CodecState.CONTENT_RESPONSE_EXPECTED;
@@ -170,7 +173,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
     }
 
     public void consumeData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -178,9 +181,9 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
-        
+
         SessionInputBuffer buf = sessionState.getInbuf();
-        
+
         int bytesRead = buf.fill(iosession.channel());
         SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
 
@@ -199,17 +202,17 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
             throw new UnexpectedEndOfStreamException();
         }
     }
-    
+
     public boolean isIdle() {
-        return this.codecState == CodecState.CONTENT_READY; 
+        return this.codecState == CodecState.CONTENT_READY;
     }
 
     public boolean isCompleted() {
-        return this.codecState == CodecState.COMPLETED; 
+        return this.codecState == CodecState.COMPLETED;
     }
 
     public String next(
-            final ProtocolCodecs<ClientSessionState> codecs, 
+            final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (isCompleted()) {
             return ProtocolState.MAIL.name();
@@ -217,5 +220,5 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
             return null;
         }
     }
-        
+
 }

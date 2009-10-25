@@ -39,6 +39,9 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
         this.writer = new SMTPReplyWriter();
     }
 
+    public void cleanUp() {
+    }
+
     public void reset(
             final IOSession iosession,
             final ServerSessionState sessionState) throws IOException, SMTPProtocolException {

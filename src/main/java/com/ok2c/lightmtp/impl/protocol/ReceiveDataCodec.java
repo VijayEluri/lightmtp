@@ -116,7 +116,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         this.completed = false;
     }
 
-    private void cleanUp() throws IOException {
+    public void cleanUp() {
         if (this.fileStore != null) {
             this.fileStore.finish();
             this.fileStore = null;
