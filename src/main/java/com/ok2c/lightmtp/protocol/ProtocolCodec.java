@@ -22,21 +22,23 @@ import com.ok2c.lightnio.IOSession;
 public interface ProtocolCodec<T> {
 
     void reset(
-            IOSession iosession, 
+            IOSession iosession,
             T state) throws IOException, SMTPProtocolException;
-    
+
     void produceData(
-            IOSession iosession, 
+            IOSession iosession,
             T state) throws IOException, SMTPProtocolException;
 
     void consumeData(
             IOSession iosession,
             T state) throws IOException, SMTPProtocolException;
-    
+
     boolean isIdle();
-    
+
     boolean isCompleted();
-    
+
     String next(ProtocolCodecs<T> codecs, T state);
-    
+
+    void cleanUp();
+
 }

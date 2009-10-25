@@ -35,33 +35,36 @@ import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionState> {
-    
+
     enum CodecState {
-        
+
         MAIL_REQUEST_READY,
         MAIL_RESPONSE_EXPECTED,
         RCPT_RESPONSE_EXPECTED,
         DATA_RESPONSE_EXPECTED,
         COMPLETED
-        
+
     }
-    
+
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
     private final LinkedList<String> recipients;
-    
+
     private CodecState codecState;
-    
+
     public PipeliningSendMailTrxCodec(boolean enhancedCodes) {
         super();
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();
         this.recipients = new LinkedList<String>();
-        this.codecState = CodecState.MAIL_REQUEST_READY; 
+        this.codecState = CodecState.MAIL_REQUEST_READY;
+    }
+
+    public void cleanUp() {
     }
 
     public void reset(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -73,16 +76,16 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
         this.parser.reset();
         this.recipients.clear();
         this.codecState = CodecState.MAIL_REQUEST_READY;
-        
+
         if (sessionState.getRequest() != null) {
             iosession.setEvent(SelectionKey.OP_WRITE);
         } else {
             iosession.setEvent(SelectionKey.OP_READ);
         }
     }
-    
+
     public void produceData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -96,15 +99,15 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
         DeliveryRequest request = sessionState.getRequest();
-        
+
         switch (this.codecState) {
         case MAIL_REQUEST_READY:
-            SMTPCommand mailFrom = new SMTPCommand("MAIL", 
+            SMTPCommand mailFrom = new SMTPCommand("MAIL",
                     "FROM:<" + request.getSender() + ">");
             this.writer.write(mailFrom, buf);
-            
+
             this.recipients.addAll(request.getRecipients());
-            
+
             for (String recipient: request.getRecipients()) {
                 SMTPCommand rcptTo = new SMTPCommand("RCPT", "TO:<" + recipient + ">");
                 this.writer.write(rcptTo, buf);
@@ -124,7 +127,7 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
     }
 
     public void consumeData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -132,13 +135,13 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
-        
+
         SessionInputBuffer buf = sessionState.getInbuf();
-        
+
         while (this.codecState != CodecState.COMPLETED) {
             int bytesRead = buf.fill(iosession.channel());
             SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
-            
+
             if (reply == null) {
                 break;
             }
@@ -169,7 +172,7 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
             default:
                 throw new SMTPProtocolException("Unexpected reply: " + reply);
             }
-            
+
             if (bytesRead == -1) {
                 throw new UnexpectedEndOfStreamException();
             }
@@ -177,15 +180,15 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
     }
 
     public boolean isIdle() {
-        return this.codecState == CodecState.MAIL_REQUEST_READY; 
+        return this.codecState == CodecState.MAIL_REQUEST_READY;
     }
 
     public boolean isCompleted() {
-        return this.codecState == CodecState.COMPLETED; 
+        return this.codecState == CodecState.COMPLETED;
     }
 
     public String next(
-            final ProtocolCodecs<ClientSessionState> codecs, 
+            final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (isCompleted()) {
             return ProtocolState.DATA.name();
@@ -193,5 +196,5 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
             return null;
         }
     }
-        
+
 }

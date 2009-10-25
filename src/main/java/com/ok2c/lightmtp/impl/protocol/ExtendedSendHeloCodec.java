@@ -71,6 +71,9 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientSessionState> 
         iosession.setEventMask(SelectionKey.OP_READ);
     }
 
+    public void cleanUp() {
+    }
+
     public void produceData(
             final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {

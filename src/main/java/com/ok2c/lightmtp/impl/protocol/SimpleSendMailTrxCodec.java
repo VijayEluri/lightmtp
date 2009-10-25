@@ -35,9 +35,9 @@ import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState> {
-    
+
     enum CodecState {
-        
+
         MAIL_REQUEST_READY,
         MAIL_RESPONSE_EXPECTED,
         RCPT_REQUEST_READY,
@@ -45,25 +45,28 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
         DATA_REQUEST_READY,
         DATA_RESPONSE_EXPECTED,
         COMPLETED
-        
+
     }
-    
+
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
     private final LinkedList<String> recipients;
-    
+
     private CodecState codecState;
-    
+
     public SimpleSendMailTrxCodec(boolean enhancedCodes) {
         super();
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();
         this.recipients = new LinkedList<String>();
-        this.codecState = CodecState.MAIL_REQUEST_READY; 
+        this.codecState = CodecState.MAIL_REQUEST_READY;
+    }
+
+    public void cleanUp() {
     }
 
     public void reset(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -74,17 +77,17 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
         this.writer.reset();
         this.parser.reset();
         this.recipients.clear();
-        this.codecState = CodecState.MAIL_REQUEST_READY; 
-        
+        this.codecState = CodecState.MAIL_REQUEST_READY;
+
         if (sessionState.getRequest() != null) {
             iosession.setEvent(SelectionKey.OP_WRITE);
         } else {
             iosession.setEvent(SelectionKey.OP_READ);
         }
     }
-    
+
     public void produceData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -98,22 +101,22 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
         DeliveryRequest request = sessionState.getRequest();
-        
+
         switch (this.codecState) {
         case MAIL_REQUEST_READY:
-            SMTPCommand mailFrom = new SMTPCommand("MAIL", 
+            SMTPCommand mailFrom = new SMTPCommand("MAIL",
                     "FROM:<" + request.getSender() + ">");
             this.writer.write(mailFrom, buf);
-            
+
             this.codecState = CodecState.MAIL_RESPONSE_EXPECTED;
             iosession.setEvent(SelectionKey.OP_READ);
             break;
         case RCPT_REQUEST_READY:
-            String recipient = this.recipients.getFirst(); 
-            
+            String recipient = this.recipients.getFirst();
+
             SMTPCommand rcptTo = new SMTPCommand("RCPT", "TO:<" + recipient + ">");
             this.writer.write(rcptTo, buf);
-            
+
             this.codecState = CodecState.RCPT_RESPONSE_EXPECTED;
             break;
         case DATA_REQUEST_READY:
@@ -132,7 +135,7 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
     }
 
     public void consumeData(
-            final IOSession iosession, 
+            final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -140,10 +143,10 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
-        
+
         SessionInputBuffer buf = sessionState.getInbuf();
         DeliveryRequest request = sessionState.getRequest();
-        
+
         int bytesRead = buf.fill(iosession.channel());
         SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
 
@@ -169,7 +172,7 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
                 if (reply.getCode() != SMTPCodes.OK) {
                     sessionState.getFailures().add(new RcptResult(reply, recipient));
                 }
-                
+
                 if (this.recipients.isEmpty()) {
                     this.codecState = CodecState.DATA_REQUEST_READY;
                 } else {
@@ -188,17 +191,17 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
             throw new UnexpectedEndOfStreamException();
         }
     }
-    
+
     public boolean isIdle() {
-        return this.codecState == CodecState.MAIL_REQUEST_READY; 
+        return this.codecState == CodecState.MAIL_REQUEST_READY;
     }
 
     public boolean isCompleted() {
-        return this.codecState == CodecState.COMPLETED; 
+        return this.codecState == CodecState.COMPLETED;
     }
 
     public String next(
-            final ProtocolCodecs<ClientSessionState> codecs, 
+            final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (isCompleted()) {
             return ProtocolState.DATA.name();
@@ -206,5 +209,5 @@ public class SimpleSendMailTrxCodec implements ProtocolCodec<ClientSessionState>
             return null;
         }
     }
-        
+
 }

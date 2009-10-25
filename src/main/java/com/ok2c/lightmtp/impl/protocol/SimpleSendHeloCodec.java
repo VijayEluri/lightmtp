@@ -55,6 +55,9 @@ public class SimpleSendHeloCodec implements ProtocolCodec<ClientSessionState> {
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
     }
 
+    public void cleanUp() {
+    }
+
     public void reset(
             final IOSession iosession,
             final ClientSessionState sessionState) throws IOException, SMTPProtocolException {

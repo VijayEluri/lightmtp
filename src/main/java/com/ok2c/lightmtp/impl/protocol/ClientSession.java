@@ -33,19 +33,19 @@ import com.ok2c.lightmtp.protocol.SessionContext;
 import com.ok2c.lightnio.IOSession;
 
 public class ClientSession {
-    
+
     private final IOSession iosession;
     private final ClientSessionState sessionState;
     private final SessionContext context;
     private final DeliveryRequestHandler handler;
-    
+
     private final Log log;
-    
+
     private ProtocolCodecs<ClientSessionState> codecs;
     private ProtocolCodec<ClientSessionState> currentCodec;
-    
+
     private ProtocolState state;
-    
+
     public ClientSession(final IOSession iosession, final DeliveryRequestHandler handler) {
         super();
         if (iosession == null) {
@@ -66,23 +66,23 @@ public class ClientSession {
         this.iosession.setBufferStatus(this.sessionState);
         this.codecs = new ProtocolCodecRegistry<ClientSessionState>();
         this.state = ProtocolState.INIT;
-    
+
         this.log = LogFactory.getLog(getClass());
-        
+
         this.codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec());
         this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendMailTrxCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
         this.codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
-        
+
         iosession.setSocketTimeout(5000);
     }
-    
+
     private void signalDeliveryReady() {
         if (this.sessionState.getRequest() != null) {
             throw new IllegalStateException("Delivery request is not null");
         }
         this.log.debug("Ready for delivery request");
-        
+
         DeliveryRequest request = this.handler.submitRequest(this.context);
         this.sessionState.reset(request);
         if (request == null) {
@@ -95,7 +95,7 @@ public class ClientSession {
             }
         }
     }
-    
+
     private void signalException(final Exception ex) {
         this.handler.exception(ex, this.context);
 
@@ -108,14 +108,14 @@ public class ClientSession {
             this.log.error(ex.getMessage(), ex);
         }
     }
-    
+
     private void signalDeliveryFailure() {
         DeliveryRequest request = this.sessionState.getRequest();
         if (request == null) {
-            throw new IllegalStateException("Delivery request is null"); 
+            throw new IllegalStateException("Delivery request is null");
         }
         DeliveryResult result = new DeliveryResultImpl(
-                this.sessionState.getReply(), 
+                this.sessionState.getReply(),
                 this.sessionState.getFailures());
         this.sessionState.reset(null);
         this.handler.failed(request, result, this.context);
@@ -123,14 +123,14 @@ public class ClientSession {
             this.log.debug("Delivery failed: " + request + "; result: " + result);
         }
     }
-    
+
     private void signalDeliverySuccess() {
         DeliveryRequest request = this.sessionState.getRequest();
         if (request == null) {
-            throw new IllegalStateException("Delivery request is null"); 
+            throw new IllegalStateException("Delivery request is null");
         }
         DeliveryResult result = new DeliveryResultImpl(
-                this.sessionState.getReply(), 
+                this.sessionState.getReply(),
                 this.sessionState.getFailures());
         this.sessionState.reset(null);
         this.handler.completed(request, result, this.context);
@@ -138,7 +138,7 @@ public class ClientSession {
             this.log.debug("Delivery succeeded: " + request + "; result: " + result);
         }
     }
-    
+
     public void connected() {
         if (this.state != ProtocolState.INIT) {
             throw new IllegalStateException("Unexpected state: " + this.state);
@@ -146,69 +146,75 @@ public class ClientSession {
         try {
             doConnected();
         } catch (IOException ex) {
+            this.currentCodec.cleanUp();
             signalException(ex);
         } catch (SMTPProtocolException ex) {
+            this.currentCodec.cleanUp();
             signalException(ex);
         }
     }
-    
+
     private void doConnected() throws IOException, SMTPProtocolException {
         if (this.log.isDebugEnabled()) {
             this.log.debug("New client connection: " + this.iosession.getRemoteAddress());
         }
-        
+
         this.currentCodec = this.codecs.getCodec(ProtocolState.HELO.name());
         this.currentCodec.reset(this.iosession, this.sessionState);
-        
+
         this.state = ProtocolState.HELO;
-        
+
         this.handler.connected(this.context);
     }
-    
+
     public void consumeData() {
         try {
             doConsumeData();
         } catch (IOException ex) {
+            this.currentCodec.cleanUp();
             signalException(ex);
         } catch (SMTPProtocolException ex) {
             this.state = ProtocolState.QUIT;
+            this.currentCodec.cleanUp();
             signalException(ex);
         }
     }
-    
+
     public void produceData() {
         try {
             doProduceData();
         } catch (IOException ex) {
+            this.currentCodec.cleanUp();
             signalException(ex);
         } catch (SMTPProtocolException ex) {
             this.state = ProtocolState.QUIT;
+            this.currentCodec.cleanUp();
             signalException(ex);
         }
     }
 
     private void doConsumeData() throws IOException, SMTPProtocolException {
         this.currentCodec.consumeData(this.iosession, this.sessionState);
-        updateSession();        
+        updateSession();
     }
-    
+
     private void doProduceData() throws IOException, SMTPProtocolException {
         this.currentCodec.produceData(this.iosession, this.sessionState);
-        updateSession();        
+        updateSession();
     }
-    
+
     private void updateSession() throws IOException, SMTPProtocolException {
         if (this.currentCodec.isCompleted()) {
-            
+
             SMTPReply reply = this.sessionState.getReply();
             if (this.log.isDebugEnabled()) {
                 this.log.debug(this.state + " codec completed with reply: " + reply);
             }
-            
+
             switch (this.state) {
             case HELO:
                 if (reply.getCode() != SMTPCodes.OK) {
-                    throw new ServiceRefusedException(reply); 
+                    throw new ServiceRefusedException(reply);
                 }
                 break;
             case MAIL:
@@ -225,7 +231,7 @@ public class ClientSession {
                 break;
             }
         }
-        
+
         String nextCodec = this.currentCodec.next(this.codecs, this.sessionState);
         if (nextCodec != null) {
             this.state = ProtocolState.valueOf(nextCodec);
@@ -235,23 +241,25 @@ public class ClientSession {
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Next codec: " + this.state);
             }
-            
+
             if (this.state == ProtocolState.MAIL) {
                 signalDeliveryReady();
             }
         }
     }
-    
+
     public void timeout() {
         try {
             doTimeout();
         } catch (IOException ex) {
+            this.currentCodec.cleanUp();
             this.iosession.close();
         } catch (SMTPProtocolException ex) {
+            this.currentCodec.cleanUp();
             this.iosession.close();
         }
     }
-    
+
     private void doTimeout() throws IOException, SMTPProtocolException {
         this.log.debug("Session timed out");
         if (this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
@@ -265,7 +273,7 @@ public class ClientSession {
             this.iosession.close();
         }
     }
-    
+
     public void disconneced() {
         this.handler.disconnected(this.context);
     }
