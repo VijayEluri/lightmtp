@@ -16,6 +16,7 @@ package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.Charset;
 
@@ -24,9 +25,14 @@ import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyWriter;
+import com.ok2c.lightmtp.message.content.FileSource;
 import com.ok2c.lightmtp.message.content.FileStore;
+import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
+import com.ok2c.lightmtp.protocol.DeliveryHandler;
+import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightnio.IOSession;
@@ -52,8 +58,9 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
     }
 
-    private final SMTPMessageWriter<SMTPReply> writer;
+    private final DeliveryHandler handler;
     private final File workingDir;
+    private final SMTPMessageWriter<SMTPReply> writer;
     private final CharArrayBuffer lineBuf;
     private final ContentBuffer contentBuf;
 
@@ -64,13 +71,17 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     private SMTPReply pendingReply;
     private boolean completed;
 
-    public ReceiveDataCodec(final File workingDir) {
+    public ReceiveDataCodec(final File workingDir, final DeliveryHandler handler) {
         super();
         if (workingDir == null) {
             throw new IllegalArgumentException("Working directory may not be null");
         }
-        this.writer = new SMTPReplyWriter();
+        if (handler == null) {
+            throw new IllegalArgumentException("Devliry handler may not be null");
+        }
         this.workingDir = workingDir;
+        this.handler = handler;
+        this.writer = new SMTPReplyWriter();
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.contentBuf = new ContentBuffer(SMTPConsts.ASCII);
         this.emptyLineFound = false;
@@ -150,6 +161,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         if (!buf.hasData()) {
             if (sessionState.getDataType() != null) {
                 this.completed = true;
+                sessionState.reset();
             }
             iosession.clearEvent(SelectionKey.OP_WRITE);
         }
@@ -191,6 +203,15 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         }
         if (this.terminalDotFound) {
             this.fileStore.finish();
+
+            File file = this.fileStore.getFile();
+            SMTPContent<ReadableByteChannel> content = new FileSource(file);
+            DeliveryRequest deliveryRequest = new BasicDeliveryRequest(
+                    sessionState.getSender(),
+                    sessionState.getRecipients(),
+                    content);
+
+            this.handler.handle(deliveryRequest, file);
 
             iosession.setEvent(SelectionKey.OP_WRITE);
 
