@@ -18,13 +18,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.charset.Charset;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.impl.SMTPOutputBuffer;
 import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyWriter;
@@ -39,30 +38,17 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
 
-    private static class ContentBuffer extends SessionOutputBufferImpl {
-
-        ContentBuffer(final Charset charset) {
-            super(BUF_SIZE, LINE_SIZE, charset);
-        }
-
-        public void clear() {
-            super.clear();
-        }
-
-    }
-
     private final DeliveryHandler handler;
     private final File workingDir;
     private final SMTPMessageWriter<SMTPReply> writer;
     private final CharArrayBuffer lineBuf;
-    private final ContentBuffer contentBuf;
+    private final SMTPOutputBuffer contentBuf;
 
     private File tempFile;
     private FileStore fileStore;
@@ -83,7 +69,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         this.handler = handler;
         this.writer = new SMTPReplyWriter();
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
-        this.contentBuf = new ContentBuffer(SMTPConsts.ASCII);
+        this.contentBuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
         this.emptyLineFound = false;
         this.terminalDotFound = false;
         this.pendingReply = null;

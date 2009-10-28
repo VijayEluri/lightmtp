@@ -40,7 +40,7 @@
     <dependency>
       <groupId>com.ok2c.lightnio</groupId>
       <artifactId>lightnio</artifactId>
-      <version>0.1</version>
+      <version>0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>commons-logging</groupId>

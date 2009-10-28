@@ -62,6 +62,14 @@ class LoggingSessionInputBuffer implements SessionInputBuffer {
         return this.buf.length();
     }
 
+    public int available() {
+        return this.buf.available();
+    }
+
+    public int capacity() {
+        return this.buf.capacity();
+    }
+
     public int read() {
         int b = this.buf.read();
         if (this.wire.isEnabled()) {
