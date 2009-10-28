@@ -62,6 +62,14 @@ class LoggingSessionOutputBuffer implements SessionOutputBuffer {
         return this.buf.length();
     }
 
+    public int available() {
+        return this.buf.available();
+    }
+
+    public int capacity() {
+        return this.buf.capacity();
+    }
+
     public void write(final ByteBuffer src) {
         if (this.wire.isEnabled()) {
             ByteBuffer b = src.duplicate();

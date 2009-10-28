@@ -18,11 +18,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.charset.Charset;
 
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.impl.SMTPInputBuffer;
 import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
@@ -32,7 +32,6 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 
 public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
@@ -40,18 +39,6 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
     private final static int LINE_SIZE = 1 * 1024;
     private final static int LIMIT = BUF_SIZE - LINE_SIZE;
     private final static ByteBuffer PERIOD = ByteBuffer.wrap(new byte[] { '.'} );
-
-    private static class ContentBuffer extends SessionInputBufferImpl {
-
-        ContentBuffer(final Charset charset) {
-            super(BUF_SIZE, LINE_SIZE, charset);
-        }
-
-        public void clear() {
-            super.clear();
-        }
-
-    }
 
     enum CodecState {
 
@@ -63,7 +50,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
     private final int maxLineLen;
     private final SMTPMessageParser<SMTPReply> parser;
-    private final ContentBuffer contentBuf;
+    private final SMTPInputBuffer contentBuf;
     private final CharArrayBuffer lineBuf;
 
     private SMTPContent<ReadableByteChannel> content;
@@ -75,7 +62,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
         super();
         this.maxLineLen = maxLineLen;
         this.parser = new SMTPReplyParser(enhancedCodes);
-        this.contentBuf = new ContentBuffer(SMTPConsts.ASCII);
+        this.contentBuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.codecState = CodecState.CONTENT_READY;
     }
