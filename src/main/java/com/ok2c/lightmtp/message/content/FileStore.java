@@ -34,6 +34,10 @@ public class FileStore implements SMTPContent<WritableByteChannel> {
         this.rafile = null;
     }
 
+    public File getFile() {
+        return this.getFile();
+    }
+
     public WritableByteChannel channel() throws FileNotFoundException {
         if (this.rafile == null) {
             this.rafile = new RandomAccessFile(this.file, "rw");
