@@ -31,7 +31,7 @@ public class TestDefaultProtocolHandler {
         ServerSessionState state = new ServerSessionState("whatever");
 
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
-        handler.register("HELO", new HeloHandler());
+        handler.register("HELO", new HeloHandler(null));
         handler.register("NOOP", new NoopHandler());
 
         SMTPCommand cmd1 = new SMTPCommand("HELO", "somedomain.com");
@@ -72,7 +72,7 @@ public class TestDefaultProtocolHandler {
         ServerSessionState state = new ServerSessionState("whatever");
 
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
-        handler.register("EHLO", new EhloHandler());
+        handler.register("EHLO", new EhloHandler(null));
         handler.register("NOOP", new NoopHandler());
 
         SMTPCommand cmd1 = new SMTPCommand("EHLO", "somedomain.com");
@@ -111,7 +111,7 @@ public class TestDefaultProtocolHandler {
         ServerSessionState state = new ServerSessionState("whatever");
 
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
-        handler.register("HELO", new HeloHandler());
+        handler.register("HELO", new HeloHandler(null));
         handler.register("NOOP", new NoopHandler());
 
         SMTPCommand cmd1 = new SMTPCommand("Helo", "somedomain.com");

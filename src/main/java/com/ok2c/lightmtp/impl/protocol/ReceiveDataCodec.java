@@ -21,6 +21,7 @@ import java.nio.channels.SelectionKey;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.SMTPOutputBuffer;
@@ -197,15 +198,33 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
                     sessionState.getRecipients(),
                     content);
 
-            this.handler.handle(deliveryRequest, file);
+            try {
+                this.handler.handle(
+                        deliveryRequest, 
+                        deliveryRequest.getRecipients().size() > 1 ? null : file);
+                SMTPCode enhancedCode = null;
+                if (sessionState.isEnhancedCodeCapable()) {
+                    enhancedCode = new SMTPCode(2, 6, 0);
+                }
+                this.pendingReply = new SMTPReply(SMTPCodes.OK, 
+                        enhancedCode, "message accepted");
+            } catch (SMTPErrorException ex) {
+                SMTPCode enhancedCode = null;
+                if (sessionState.isEnhancedCodeCapable()) {
+                    enhancedCode = ex.getEnhancedCode();
+                }
+                this.pendingReply = new SMTPReply(ex.getCode(), 
+                        enhancedCode, ex.getMessage());
+            } catch (IOException ex) {
+                SMTPCode enhancedCode = null;
+                if (sessionState.isEnhancedCodeCapable()) {
+                    enhancedCode = new SMTPCode(2, 6, 0);
+                }
+                this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
+                        enhancedCode, ex.getMessage());
+            }
 
             iosession.setEvent(SelectionKey.OP_WRITE);
-
-            SMTPCode enhancedCode = null;
-            if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(2, 6, 0);
-            }
-            this.pendingReply = new SMTPReply(SMTPCodes.OK, enhancedCode, "message accepted");
 
             cleanUp();
         }

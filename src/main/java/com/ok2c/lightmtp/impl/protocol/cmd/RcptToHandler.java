@@ -18,17 +18,20 @@ import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPProtocolException;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
 import com.ok2c.lightmtp.protocol.CommandHandler;
+import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
 public class RcptToHandler implements CommandHandler<ServerSessionState> {
 
+    private final EnvelopValidator validator;
     private final AddressArgParser argParser;
 
-    public RcptToHandler() {
+    public RcptToHandler(final EnvelopValidator validator) {
         super();
+        this.validator = validator;
         this.argParser = new AddressArgParser("TO:");
     }
 
@@ -37,31 +40,33 @@ public class RcptToHandler implements CommandHandler<ServerSessionState> {
             final List<String> params,
             final ServerSessionState sessionState) {
 
-        if (sessionState.getClientType() != null && sessionState.getSender() != null) {
-            try {
-                String recipient = this.argParser.parse(argument);
-                sessionState.getRecipients().add(recipient);
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(2, 1, 5);
-                }
-                return new SMTPReply(SMTPCodes.OK, enhancedCode, "recipient <" + recipient + "> ok");
-            } catch (SMTPProtocolException ex) {
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(5, 5, 1);
-                }
-                return new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, enhancedCode,
-                        ex.getMessage());
+        try {
+            if (sessionState.getClientType() == null || sessionState.getSender() == null) {
+                throw new SMTPErrorException(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+                        new SMTPCode(5, 5, 1),
+                        "bad sequence of commands");
             }
-        } else {
+
+            String recipient = this.argParser.parse(argument);
+            
+            if (this.validator != null) {
+                this.validator.validateRecipient(recipient);
+            }
+            
+            sessionState.getRecipients().add(recipient);
             SMTPCode enhancedCode = null;
             if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(5, 5, 1);
+                enhancedCode = new SMTPCode(2, 1, 5);
             }
-            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, enhancedCode,
-                    "bad sequence of commands");
+            return new SMTPReply(SMTPCodes.OK, enhancedCode, "recipient <" + recipient + "> ok");
+        } catch (SMTPErrorException ex) {
+            boolean enhanced = sessionState.isEnhancedCodeCapable();
+            sessionState.setClientType(null);
+            sessionState.setClientDomain(null);
+            return new SMTPReply(ex.getCode(), 
+                    enhanced ? ex.getEnhancedCode() : null, ex.getMessage());
         }
+
     }
 
 }
