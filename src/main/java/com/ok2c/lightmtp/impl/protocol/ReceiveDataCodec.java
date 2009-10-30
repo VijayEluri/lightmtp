@@ -199,9 +199,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
                     content);
 
             try {
-                this.handler.handle(
-                        deliveryRequest, 
-                        deliveryRequest.getRecipients().size() > 1 ? null : file);
+                this.handler.handle(deliveryRequest);
                 SMTPCode enhancedCode = null;
                 if (sessionState.isEnhancedCodeCapable()) {
                     enhancedCode = new SMTPCode(2, 6, 0);

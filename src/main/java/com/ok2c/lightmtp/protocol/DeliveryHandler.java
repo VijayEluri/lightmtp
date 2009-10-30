@@ -14,13 +14,12 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.ok2c.lightmtp.SMTPErrorException;
 
 public interface DeliveryHandler {
 
-    void handle(DeliveryRequest request, File tempFile) throws SMTPErrorException, IOException;
+    void handle(DeliveryRequest request) throws SMTPErrorException, IOException;
 
 }
