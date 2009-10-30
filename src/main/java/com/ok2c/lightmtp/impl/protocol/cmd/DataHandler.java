@@ -50,11 +50,9 @@ public class DataHandler implements CommandHandler<ServerSessionState> {
             return new SMTPReply(SMTPCodes.START_MAIL_INPUT, null,
                     "send message, ending in <CRLF>.<CRLF>");
         } catch (SMTPErrorException ex) {
-            boolean enhanced = sessionState.isEnhancedCodeCapable();
-            sessionState.setClientType(null);
-            sessionState.setClientDomain(null);
             return new SMTPReply(ex.getCode(), 
-                    enhanced ? ex.getEnhancedCode() : null, ex.getMessage());
+                    sessionState.isEnhancedCodeCapable() ? ex.getEnhancedCode() : null, 
+                    ex.getMessage());
         }
     }
 
