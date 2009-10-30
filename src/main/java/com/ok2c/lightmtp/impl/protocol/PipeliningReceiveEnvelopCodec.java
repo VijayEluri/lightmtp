@@ -35,7 +35,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class PipeliningReceiveMailTrxCodec implements ProtocolCodec<ServerSessionState> {
+public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessionState> {
 
     private final ProtocolHandler<ServerSessionState> commandHandler;
     private final SMTPMessageParser<SMTPCommand> parser;
@@ -45,7 +45,7 @@ public class PipeliningReceiveMailTrxCodec implements ProtocolCodec<ServerSessio
     private boolean idle;
     private boolean completed;
 
-    public PipeliningReceiveMailTrxCodec(final ProtocolHandler<ServerSessionState> commandHandler) {
+    public PipeliningReceiveEnvelopCodec(final ProtocolHandler<ServerSessionState> commandHandler) {
         super();
         if (commandHandler == null) {
             throw new IllegalArgumentException("Command handler may not be null");

@@ -56,7 +56,7 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerSessionStat
         if (command == null) {
             throw new IllegalArgumentException("Command may not be null");
         }
-        String cmd = command.getCode();
+        String cmd = command.getVerb();
         CommandHandler<ServerSessionState> handler = this.map.get(cmd.toUpperCase(Locale.US));
         if (handler != null) {
             return handler.handle(command.getArgument(), command.getParams(), sessionState);

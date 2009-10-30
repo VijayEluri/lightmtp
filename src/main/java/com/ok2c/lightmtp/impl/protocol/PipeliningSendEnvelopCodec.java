@@ -34,7 +34,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionState> {
+public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionState> {
 
     enum CodecState {
 
@@ -52,7 +52,7 @@ public class PipeliningSendMailTrxCodec implements ProtocolCodec<ClientSessionSt
 
     private CodecState codecState;
 
-    public PipeliningSendMailTrxCodec(boolean enhancedCodes) {
+    public PipeliningSendEnvelopCodec(boolean enhancedCodes) {
         super();
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();

@@ -20,7 +20,7 @@ import java.util.List;
 
 public class SMTPCommand {
 
-    private final String code;
+    private final String verb;
     private final String argument;
     private final List<String> params;
     
@@ -29,7 +29,7 @@ public class SMTPCommand {
         if (code == null) {
             throw new IllegalArgumentException("Code may not be null");
         }
-        this.code = code;
+        this.verb = code;
         this.argument = argument;
         if (params == null || params.isEmpty()) {
             this.params = Collections.emptyList();
@@ -46,8 +46,8 @@ public class SMTPCommand {
         this(code, null, null);
     }
 
-    public String getCode() {
-        return this.code;
+    public String getVerb() {
+        return this.verb;
     }
 
     public String getArgument() {
@@ -61,7 +61,7 @@ public class SMTPCommand {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        buffer.append(this.code);
+        buffer.append(this.verb);
         buffer.append(' ');
         buffer.append(this.argument);
         for (String param: this.params) {
