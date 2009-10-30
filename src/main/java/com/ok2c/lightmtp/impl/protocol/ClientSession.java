@@ -70,7 +70,7 @@ public class ClientSession {
         this.log = LogFactory.getLog(getClass());
 
         this.codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec());
-        this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendMailTrxCodec(false));
+        this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
         this.codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
 

@@ -191,7 +191,7 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientSessionState> 
 
             if (pipelining) {
                 codecs.register(ProtocolState.MAIL.name(),
-                        new PipeliningSendMailTrxCodec(enhancedCodes));
+                        new PipeliningSendEnvelopCodec(enhancedCodes));
                 codecs.register(ProtocolState.DATA.name(),
                         new SendDataCodec(enhancedCodes));
             }

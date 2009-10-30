@@ -52,7 +52,7 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
             throw new IllegalArgumentException("Session output buffer may not be null");
         }
         this.lineBuf.clear();
-        this.lineBuf.append(message.getCode());
+        this.lineBuf.append(message.getVerb());
         if (message.getArgument() != null) {
             this.lineBuf.append(' ');
             this.lineBuf.append(message.getArgument());

@@ -59,7 +59,7 @@ public class TestSMTPCommandParser {
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
         Assert.assertNotNull(command);
-        Assert.assertEquals("NOOP", command.getCode());
+        Assert.assertEquals("NOOP", command.getVerb());
         Assert.assertNull(command.getArgument());
         Assert.assertNotNull(command.getParams());
         Assert.assertEquals(0, command.getParams().size());
@@ -79,7 +79,7 @@ public class TestSMTPCommandParser {
         Assert.assertNull(parser.parse(inbuf, false));
         SMTPCommand command = parser.parse(inbuf, true);
         Assert.assertNotNull(command);
-        Assert.assertEquals("NOOP", command.getCode());
+        Assert.assertEquals("NOOP", command.getVerb());
         Assert.assertNull(command.getArgument());
         Assert.assertNotNull(command.getParams());
         Assert.assertEquals(0, command.getParams().size());
@@ -98,7 +98,7 @@ public class TestSMTPCommandParser {
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
         Assert.assertNotNull(command);
-        Assert.assertEquals("MAIL", command.getCode());
+        Assert.assertEquals("MAIL", command.getVerb());
         Assert.assertEquals("FROM:<someone@pampa.com>", command.getArgument());
         Assert.assertNotNull(command.getParams());
         Assert.assertEquals(4, command.getParams().size());
@@ -127,7 +127,7 @@ public class TestSMTPCommandParser {
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
         Assert.assertNotNull(command);
-        Assert.assertEquals("MAIL", command.getCode());
+        Assert.assertEquals("MAIL", command.getVerb());
         Assert.assertEquals("FROM:<someone@pampa.com>", command.getArgument());
         Assert.assertNotNull(command.getParams());
         Assert.assertEquals(1, command.getParams().size());
@@ -160,7 +160,7 @@ public class TestSMTPCommandParser {
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
         Assert.assertNotNull(command);
-        Assert.assertEquals("MAIL", command.getCode());
+        Assert.assertEquals("MAIL", command.getVerb());
         Assert.assertEquals("FROM:<someone@pampa.com>", command.getArgument());
     }
 

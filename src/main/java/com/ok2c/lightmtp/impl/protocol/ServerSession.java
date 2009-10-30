@@ -78,7 +78,7 @@ public class ServerSession {
         this.codecs.register(ProtocolState.INIT.name(),
                 new ServiceReadyCodec());
         this.codecs.register(ProtocolState.MAIL.name(),
-                new PipeliningReceiveMailTrxCodec(createProtocolHandler(validator)));
+                new PipeliningReceiveEnvelopCodec(createProtocolHandler(validator)));
         this.codecs.register(ProtocolState.DATA.name(),
                 new ReceiveDataCodec(workingDir, handler));
 
