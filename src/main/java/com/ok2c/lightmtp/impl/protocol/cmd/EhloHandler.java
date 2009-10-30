@@ -19,15 +19,20 @@ import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
 import com.ok2c.lightmtp.protocol.CommandHandler;
+import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
 public class EhloHandler implements CommandHandler<ServerSessionState> {
 
-    public EhloHandler() {
+    private final EnvelopValidator validator;
+    
+    public EhloHandler(final EnvelopValidator validator) {
         super();
+        this.validator = validator;
     }
 
     public SMTPReply handle(
@@ -38,8 +43,18 @@ public class EhloHandler implements CommandHandler<ServerSessionState> {
         // Reset session
         sessionState.reset();
 
-        String domain = argument;
-        if (domain != null) {
+        try {
+            String domain = argument;
+            if (domain == null) {
+                throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+                        new SMTPCode(5, 5, 2),
+                        "domain not given");
+            }
+            
+            if (this.validator != null) {
+                this.validator.validateClientDomain(domain);
+            }
+            
             sessionState.setClientType(ClientType.EXTENDED);
             sessionState.setClientDomain(domain);
 
@@ -47,11 +62,10 @@ public class EhloHandler implements CommandHandler<ServerSessionState> {
             lines.add("Welcome " + domain);
             lines.addAll(sessionState.getExtensions());
             return new SMTPReply(SMTPCodes.OK, null, lines);
-        } else {
+        } catch (SMTPErrorException ex) {
             sessionState.setClientType(null);
             sessionState.setClientDomain(null);
-            return new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, new SMTPCode(5, 5, 2),
-                    "domain not given");
+            return new SMTPReply(ex.getCode(), ex.getEnhancedCode(), ex.getMessage());
         }
     }
 

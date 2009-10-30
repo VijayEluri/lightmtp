@@ -97,6 +97,7 @@ public class ClientSession {
     }
 
     private void signalException(final Exception ex) {
+        this.currentCodec.cleanUp();
         this.handler.exception(ex, this.context);
 
         DeliveryRequest request = this.sessionState.getRequest();
@@ -146,12 +147,48 @@ public class ClientSession {
         try {
             doConnected();
         } catch (IOException ex) {
-            this.currentCodec.cleanUp();
             signalException(ex);
         } catch (SMTPProtocolException ex) {
-            this.currentCodec.cleanUp();
             signalException(ex);
         }
+    }
+
+    public void consumeData() {
+        try {
+            doConsumeData();
+        } catch (IOException ex) {
+            signalException(ex);
+        } catch (SMTPProtocolException ex) {
+            this.state = ProtocolState.QUIT;
+            signalException(ex);
+        }
+    }
+
+    public void produceData() {
+        try {
+            doProduceData();
+        } catch (IOException ex) {
+            signalException(ex);
+        } catch (SMTPProtocolException ex) {
+            this.state = ProtocolState.QUIT;
+            signalException(ex);
+        }
+    }
+    
+    public void timeout() {
+        try {
+            doTimeout();
+        } catch (IOException ex) {
+            this.currentCodec.cleanUp();
+            this.iosession.close();
+        } catch (SMTPProtocolException ex) {
+            this.currentCodec.cleanUp();
+            this.iosession.close();
+        }
+    }
+
+    public void disconneced() {
+        this.handler.disconnected(this.context);
     }
 
     private void doConnected() throws IOException, SMTPProtocolException {
@@ -165,32 +202,6 @@ public class ClientSession {
         this.state = ProtocolState.HELO;
 
         this.handler.connected(this.context);
-    }
-
-    public void consumeData() {
-        try {
-            doConsumeData();
-        } catch (IOException ex) {
-            this.currentCodec.cleanUp();
-            signalException(ex);
-        } catch (SMTPProtocolException ex) {
-            this.state = ProtocolState.QUIT;
-            this.currentCodec.cleanUp();
-            signalException(ex);
-        }
-    }
-
-    public void produceData() {
-        try {
-            doProduceData();
-        } catch (IOException ex) {
-            this.currentCodec.cleanUp();
-            signalException(ex);
-        } catch (SMTPProtocolException ex) {
-            this.state = ProtocolState.QUIT;
-            this.currentCodec.cleanUp();
-            signalException(ex);
-        }
     }
 
     private void doConsumeData() throws IOException, SMTPProtocolException {
@@ -248,18 +259,6 @@ public class ClientSession {
         }
     }
 
-    public void timeout() {
-        try {
-            doTimeout();
-        } catch (IOException ex) {
-            this.currentCodec.cleanUp();
-            this.iosession.close();
-        } catch (SMTPProtocolException ex) {
-            this.currentCodec.cleanUp();
-            this.iosession.close();
-        }
-    }
-
     private void doTimeout() throws IOException, SMTPProtocolException {
         this.log.debug("Session timed out");
         if (this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
@@ -272,10 +271,6 @@ public class ClientSession {
         } else {
             this.iosession.close();
         }
-    }
-
-    public void disconneced() {
-        this.handler.disconnected(this.context);
     }
 
 }

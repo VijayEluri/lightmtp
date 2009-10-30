@@ -14,13 +14,14 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import java.io.File;
-import java.io.IOException;
-
 import com.ok2c.lightmtp.SMTPErrorException;
 
-public interface DeliveryHandler {
+public interface EnvelopValidator {
 
-    void handle(DeliveryRequest request, File tempFile) throws SMTPErrorException, IOException;
+    void validateClientDomain(String clientDomain) throws SMTPErrorException;
+
+    void validateSender(String sender) throws SMTPErrorException;
+    
+    void validateRecipient(String recipient) throws SMTPErrorException;
 
 }

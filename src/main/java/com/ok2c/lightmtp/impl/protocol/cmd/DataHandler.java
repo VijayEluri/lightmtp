@@ -18,6 +18,7 @@ import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.DataType;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
@@ -34,26 +35,26 @@ public class DataHandler implements CommandHandler<ServerSessionState> {
             final List<String> params,
             final ServerSessionState sessionState) {
 
-        if (sessionState.getClientType() != null && sessionState.getSender() != null) {
-            if (!sessionState.getRecipients().isEmpty()) {
-                sessionState.setDataType(DataType.ASCII);
-                return new SMTPReply(SMTPCodes.START_MAIL_INPUT, null,
-                        "send message, ending in <CRLF>.<CRLF>");
-            } else {
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(5, 5, 1);
-                }
-                return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, enhancedCode,
+        try {
+            if (sessionState.getClientType() == null || sessionState.getSender() == null) {
+                throw new SMTPErrorException(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+                        new SMTPCode(5, 5, 1),
+                        "bad sequence of commands");
+            }
+            if (sessionState.getRecipients().isEmpty()) {
+                throw new SMTPErrorException(SMTPCodes.ERR_PERM_TRX_FAILED, 
+                        new SMTPCode(5, 5, 1),
                         "no valid recipients");
             }
-        } else {
-            SMTPCode enhancedCode = null;
-            if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(5, 5, 1);
-            }
-            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, enhancedCode,
-                    "bad sequence of commands");
+            sessionState.setDataType(DataType.ASCII);
+            return new SMTPReply(SMTPCodes.START_MAIL_INPUT, null,
+                    "send message, ending in <CRLF>.<CRLF>");
+        } catch (SMTPErrorException ex) {
+            boolean enhanced = sessionState.isEnhancedCodeCapable();
+            sessionState.setClientType(null);
+            sessionState.setClientDomain(null);
+            return new SMTPReply(ex.getCode(), 
+                    enhanced ? ex.getEnhancedCode() : null, ex.getMessage());
         }
     }
 

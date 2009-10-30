@@ -19,6 +19,8 @@ import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
@@ -110,10 +112,25 @@ public class PipeliningReceiveMailTrxCodec implements ProtocolCodec<ServerSessio
         SessionInputBuffer buf = sessionState.getInbuf();
 
         int bytesRead = buf.fill(iosession.channel());
-        SMTPCommand command = this.parser.parse(buf, bytesRead == -1);
+        
+        SMTPCommand command = null;
+        SMTPReply reply = null;        
+        
+        try {
+            command = this.parser.parse(buf, bytesRead == -1);
+            if (command != null) {
+                reply = this.commandHandler.handle(command, sessionState);
+            }
+        } catch (SMTPProtocolException ex) {
+            SMTPCode enhancedCode = null;
+            if (sessionState.isEnhancedCodeCapable()) {
+                enhancedCode = new SMTPCode(5, 5, 1);
+            }
+            reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, enhancedCode, 
+                    ex.getMessage());
+        }
 
-        if (command != null) {
-            SMTPReply reply = this.commandHandler.handle(command, sessionState);
+        if (reply != null) {
             this.pendingReplies.add(reply);
             iosession.setEvent(SelectionKey.OP_WRITE);
 

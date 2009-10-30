@@ -29,7 +29,7 @@ public class TestCommandHandler {
     @Test
     public void testHeloHandlerBasicResponse() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
-        HeloHandler handler = new HeloHandler();
+        HeloHandler handler = new HeloHandler(null);
         SMTPReply reply = handler.handle("somedomain.com", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -43,7 +43,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
-        HeloHandler handler = new HeloHandler();
+        HeloHandler handler = new HeloHandler(null);
         SMTPReply reply = handler.handle("somedomain.com", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -58,7 +58,7 @@ public class TestCommandHandler {
     @Test
     public void testHeloHandlerDomainNotGiven() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
-        HeloHandler handler = new HeloHandler();
+        HeloHandler handler = new HeloHandler(null);
         SMTPReply reply = handler.handle(null, null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(500, reply.getCode());
@@ -70,7 +70,7 @@ public class TestCommandHandler {
     @Test
     public void testEhloHandlerBasicResponse() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
-        EhloHandler handler = new EhloHandler();
+        EhloHandler handler = new EhloHandler(null);
         SMTPReply reply = handler.handle("somedomain.com", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -84,7 +84,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
-        EhloHandler handler = new EhloHandler();
+        EhloHandler handler = new EhloHandler(null);
         SMTPReply reply = handler.handle("somedomain.com", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -99,7 +99,7 @@ public class TestCommandHandler {
     @Test
     public void testEhloHandlerDomainNotGiven() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
-        EhloHandler handler = new EhloHandler();
+        EhloHandler handler = new EhloHandler(null);
         SMTPReply reply = handler.handle(null, null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(500, reply.getCode());
@@ -166,7 +166,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerBasicResponse() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.BASIC);
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -178,7 +178,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerEnhancedResponse() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -190,7 +190,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerClientTypeNotKnown() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(null);
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(503, reply.getCode());
@@ -203,7 +203,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.BASIC);
         state.setSender("someone-else@somedomain.com");
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(503, reply.getCode());
@@ -215,7 +215,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.EXTENDED);
         state.setSender("someone-else@somedomain.com");
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(503, reply.getCode());
@@ -227,7 +227,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerInvalidArgument() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.BASIC);
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:me", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(500, reply.getCode());
@@ -238,7 +238,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerInvalidArgumentEnhancedResponse() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler();
+        MailFromHandler handler = new MailFromHandler(null);
         SMTPReply reply = handler.handle("from:me", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(500, reply.getCode());
@@ -250,7 +250,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.BASIC);
         state.setSender("me@somedomain.com");
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -273,7 +273,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.EXTENDED);
         state.setSender("me@somedomain.com");
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -294,7 +294,7 @@ public class TestCommandHandler {
     public void testRcptToHandlerClientTypeNotKnown() throws Exception {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(null);
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(503, reply.getCode());
@@ -307,7 +307,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.BASIC);
         state.setSender(null);
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(503, reply.getCode());
@@ -319,7 +319,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.EXTENDED);
         state.setSender(null);
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:<someone@somedomain.com>", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(503, reply.getCode());
@@ -331,7 +331,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.BASIC);
         state.setSender("me@somedomain.com");
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:me", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(500, reply.getCode());
@@ -343,7 +343,7 @@ public class TestCommandHandler {
         ServerSessionState state = new ServerSessionState("whatever");
         state.setClientType(ClientType.EXTENDED);
         state.setSender("me@somedomain.com");
-        RcptToHandler handler = new RcptToHandler();
+        RcptToHandler handler = new RcptToHandler(null);
         SMTPReply reply = handler.handle("to:me", null, state);
         Assert.assertNotNull(reply);
         Assert.assertEquals(500, reply.getCode());

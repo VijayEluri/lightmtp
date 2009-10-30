@@ -24,7 +24,7 @@ public final class SMTPCodes {
 
     public static final int ERR_TRANS_SERVICE_NOT_AVAILABLE      = 421;
     public static final int ERR_TRANS_MAILBOX_UNAVAILABLE        = 450;
-    public static final int ERR_TRANS_ACTION_ABORTED             = 451;
+    public static final int ERR_TRANS_PROCESSING_ERROR           = 451;
     public static final int ERR_TRANS_INSUFFICIENT_STORAGE       = 452;
 
     public static final int ERR_PERM_SYNTAX_ERR_COMMAND          = 500;

@@ -14,7 +14,9 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import com.ok2c.lightmtp.SMTPProtocolException;
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPErrorException;
 
 class AddressArgParser {
 
@@ -25,23 +27,30 @@ class AddressArgParser {
         this.prefix = prefix;
     }
 
-    String parse(final String argument) throws SMTPProtocolException {
+    String parse(final String argument) throws SMTPErrorException {
         if (argument == null) {
-            throw new SMTPProtocolException("Argument missing");
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND,
+                    new SMTPCode(5, 5, 1), "Argument missing");
         }
         if (argument.length() < this.prefix.length() + 2) {
-            throw new SMTPProtocolException("Invalid argument: " + argument);
+            throw invalidArgError(argument);
         }
         String s = argument.substring(0, this.prefix.length());
         if (!s.equalsIgnoreCase(this.prefix)) {
-            throw new SMTPProtocolException("Invalid argument: " + argument);
+            throw invalidArgError(argument);
         }
         String sender = argument.substring(this.prefix.length()).trim();
         if (sender.startsWith("<") && sender.endsWith(">")) {
             return sender.substring(1, sender.length() - 1);
         } else {
-            throw new SMTPProtocolException("Invalid argument: " + argument);
+            throw invalidArgError(argument);
         }
     }
 
+    private SMTPErrorException invalidArgError(final String argument) {
+        return new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND,
+                new SMTPCode(5, 5, 1),
+                "Invalid argument: " + argument);
+    }
+    
 }
