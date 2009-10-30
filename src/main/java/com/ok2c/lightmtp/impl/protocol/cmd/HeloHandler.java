@@ -58,9 +58,7 @@ public class HeloHandler implements CommandHandler<ServerSessionState> {
         } catch (SMTPErrorException ex) {
             sessionState.setClientType(null);
             sessionState.setClientDomain(null);
-            return new SMTPReply(ex.getCode(), 
-                    sessionState.isEnhancedCodeCapable() ? ex.getEnhancedCode() : null, 
-                    ex.getMessage());
+            return new SMTPReply(ex.getCode(), ex.getMessage());
         }
     }
 

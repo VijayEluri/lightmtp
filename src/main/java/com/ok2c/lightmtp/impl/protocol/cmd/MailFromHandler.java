@@ -60,11 +60,9 @@ public class MailFromHandler implements CommandHandler<ServerSessionState> {
             }
             return new SMTPReply(SMTPCodes.OK, enhancedCode, "originator <" + sender + "> ok");
         } catch (SMTPErrorException ex) {
-            boolean enhanced = sessionState.isEnhancedCodeCapable();
-            sessionState.setClientType(null);
-            sessionState.setClientDomain(null);
             return new SMTPReply(ex.getCode(), 
-                    enhanced ? ex.getEnhancedCode() : null, ex.getMessage());
+                    sessionState.isEnhancedCodeCapable() ? ex.getEnhancedCode() : null, 
+                    ex.getMessage());
         }
 
     }
