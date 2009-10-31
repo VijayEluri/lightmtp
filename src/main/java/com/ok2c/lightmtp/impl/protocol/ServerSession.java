@@ -30,6 +30,7 @@ import com.ok2c.lightmtp.impl.protocol.cmd.NoopHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.QuitHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.RcptToHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.RsetHandler;
+import com.ok2c.lightmtp.impl.protocol.cmd.VrfyHandler;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
@@ -93,6 +94,7 @@ public class ServerSession {
         handler.register("RSET", new RsetHandler());
         handler.register("NOOP", new NoopHandler());
         handler.register("QUIT", new QuitHandler());
+        handler.register("VRFY", new VrfyHandler(validator));
         handler.register("MAIL", new MailFromHandler(validator));
         handler.register("RCPT", new RcptToHandler(validator));
         handler.register("DATA", new DataHandler());

@@ -19,10 +19,12 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.DataType;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
 public class TestCommandHandler {
 
@@ -440,6 +442,100 @@ public class TestCommandHandler {
         Assert.assertEquals(554, reply.getCode());
         Assert.assertEquals(new SMTPCode(5, 5, 1), reply.getEnhancedCode());
         Assert.assertNull(state.getDataType());
+    }
+
+    @Test
+    public void testVrfyHandlerByAddress() throws Exception {
+        ServerSessionState state = new ServerSessionState("whatever");
+        state.setClientType(ClientType.BASIC);
+        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
+
+            public void validateSender(String sender) throws SMTPErrorException {
+            }
+
+            public void validateRecipient(String recipient) throws SMTPErrorException {
+                Assert.assertEquals("someaddress", recipient);
+            }
+
+            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
+            }
+        });
+
+        SMTPReply reply = handler.handle("Some name <someaddress>", null, state);
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+    }
+
+    @Test
+    public void testVrfyHandlerByFullInput() throws Exception {
+        ServerSessionState state = new ServerSessionState("whatever");
+        state.setClientType(ClientType.BASIC);
+        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
+
+            public void validateSender(String sender) throws SMTPErrorException {
+            }
+
+            public void validateRecipient(String recipient) throws SMTPErrorException {
+                Assert.assertEquals("Some name <someaddress", recipient);
+            }
+
+            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
+            }
+        });
+
+        SMTPReply reply = handler.handle("Some name <someaddress", null, state);
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertNull(reply.getEnhancedCode());
+    }
+
+    @Test
+    public void testVrfyHandlerEnhancedCode() throws Exception {
+        ServerSessionState state = new ServerSessionState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
+
+            public void validateSender(String sender) throws SMTPErrorException {
+            }
+
+            public void validateRecipient(String recipient) throws SMTPErrorException {
+                Assert.assertEquals("someaddress", recipient);
+            }
+
+            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
+            }
+        });
+
+        SMTPReply reply = handler.handle("<someaddress>", null, state);
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertEquals(new SMTPCode(2, 1, 5), reply.getEnhancedCode());
+    }
+
+    @Test
+    public void testVrfyHandlerFailure() throws Exception {
+        ServerSessionState state = new ServerSessionState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
+
+            public void validateSender(String sender) throws SMTPErrorException {
+            }
+
+            public void validateRecipient(String recipient) throws SMTPErrorException {
+                if (recipient.equals("someaddress")) {
+                    throw new SMTPErrorException(500, new SMTPCode(5, 1, 1), "Ooopsie");
+                }
+            }
+
+            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
+            }
+        });
+
+        SMTPReply reply = handler.handle("someaddress", null, state);
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(500, reply.getCode());
+        Assert.assertEquals(new SMTPCode(5, 1, 1), reply.getEnhancedCode());
     }
 
 }
