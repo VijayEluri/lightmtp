@@ -22,6 +22,8 @@ import java.nio.channels.ReadableByteChannel;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.ok2c.lightmtp.impl.protocol.SMTPInputBuffer;
+import com.ok2c.lightmtp.impl.protocol.SMTPOutputBuffer;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
 

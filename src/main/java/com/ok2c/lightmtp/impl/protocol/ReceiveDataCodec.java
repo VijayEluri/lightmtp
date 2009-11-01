@@ -24,7 +24,6 @@ import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.SMTPOutputBuffer;
 import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyWriter;

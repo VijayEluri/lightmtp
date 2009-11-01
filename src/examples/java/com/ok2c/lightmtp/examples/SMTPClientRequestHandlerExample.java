@@ -23,7 +23,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
-import com.ok2c.lightmtp.impl.client.ClientIOEventDispatch;
+import com.ok2c.lightmtp.impl.agent.ClientIOEventDispatch;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;

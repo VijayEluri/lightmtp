@@ -12,7 +12,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.client;
+package com.ok2c.lightmtp.agent;
 
 public interface DeliveryCallback {
 
