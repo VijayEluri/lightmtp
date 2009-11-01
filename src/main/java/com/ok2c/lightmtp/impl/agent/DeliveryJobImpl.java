@@ -13,10 +13,10 @@
  * under the License.
  */
 
-package com.ok2c.lightmtp.impl.client;
+package com.ok2c.lightmtp.impl.agent;
 
-import com.ok2c.lightmtp.client.DeliveryCallback;
-import com.ok2c.lightmtp.client.DeliveryJob;
+import com.ok2c.lightmtp.agent.DeliveryCallback;
+import com.ok2c.lightmtp.agent.DeliveryJob;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 

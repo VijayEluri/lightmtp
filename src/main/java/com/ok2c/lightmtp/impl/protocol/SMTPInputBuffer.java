@@ -12,14 +12,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import com.ok2c.lightmtp.SMTPConsts;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
+import com.ok2c.lightnio.impl.SessionInputBufferImpl;
+import com.ok2c.lightnio.impl.TextConsts;
 
-public class SMTPOutputBuffer extends SessionOutputBufferImpl {
+public class SMTPInputBuffer extends SessionInputBufferImpl {
 
-    public SMTPOutputBuffer(int buffersize, int linebuffersize) {
+    public SMTPInputBuffer(int buffersize, int linebuffersize) {
         super(buffersize, linebuffersize, SMTPConsts.ASCII);
     }
 
@@ -27,4 +28,18 @@ public class SMTPOutputBuffer extends SessionOutputBufferImpl {
         super.clear();
     }
 
+    @Override
+    protected int findLineDelim() {
+        int prev = -1;
+        int cur = -1;
+        for (int i = this.buffer.position(); i < this.buffer.limit(); i++) {
+            prev = cur;
+            cur = this.buffer.get(i);
+            if (prev == TextConsts.CR && cur == TextConsts.LF) {
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+    
 }

@@ -12,7 +12,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.impl.client;
+package com.ok2c.lightmtp.impl.agent;
 
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;

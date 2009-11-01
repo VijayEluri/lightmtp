@@ -22,7 +22,6 @@ import java.nio.channels.SelectionKey;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.SMTPInputBuffer;
 import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
