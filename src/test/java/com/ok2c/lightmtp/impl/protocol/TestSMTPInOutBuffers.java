@@ -12,7 +12,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.impl;
+package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -22,8 +22,6 @@ import java.nio.channels.ReadableByteChannel;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.ok2c.lightmtp.impl.protocol.SMTPInputBuffer;
-import com.ok2c.lightmtp.impl.protocol.SMTPOutputBuffer;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
@@ -88,7 +86,7 @@ public class TestSMTPInOutBuffers {
 
         inbuf.fill(channel);
         Assert.assertEquals(10, inbuf.length());
-        
+
         inbuf.clear();
         Assert.assertEquals(0, inbuf.length());
     }
@@ -98,9 +96,9 @@ public class TestSMTPInOutBuffers {
         SMTPOutputBuffer outbuf = new SMTPOutputBuffer(16, 16);
 
         outbuf.writeLine("yadayada");
-        
+
         Assert.assertEquals(10, outbuf.length());
-        
+
         outbuf.clear();
         Assert.assertEquals(0, outbuf.length());
     }
