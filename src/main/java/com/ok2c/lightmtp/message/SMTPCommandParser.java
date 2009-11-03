@@ -78,6 +78,7 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
             if (!lines.isEmpty()) {
                 argument = lines.removeFirst();
             }
+            this.lineBuf.clear();
             return new SMTPCommand(code, argument, lines); 
         } else {
             return null;

@@ -66,6 +66,28 @@ public class TestSMTPCommandParser {
     }
 
     @Test
+    public void testMultipleCommandParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
+        SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
+
+        String[] input = new String[] {
+                "NOOP\r\nTHIS\r\nTHAT\r\n"
+        };
+
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        inbuf.fill(channel);
+        SMTPCommand command1 = parser.parse(inbuf, false);
+        Assert.assertNotNull(command1);
+        Assert.assertEquals("NOOP", command1.getVerb());
+        SMTPCommand command2 = parser.parse(inbuf, false);
+        Assert.assertNotNull(command2);
+        Assert.assertEquals("THIS", command2.getVerb());
+        SMTPCommand command3 = parser.parse(inbuf, false);
+        Assert.assertNotNull(command3);
+        Assert.assertEquals("THAT", command3.getVerb());
+    }
+
+    @Test
     public void testCommandParsingEndOfStream() throws Exception {
         SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
