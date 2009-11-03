@@ -64,7 +64,29 @@ public class TestSMTPReplyParser {
         Assert.assertNull(reply.getEnhancedCode());
         Assert.assertEquals("OK", reply.getLine());
     }
-    
+
+    @Test
+    public void testMultipleReplyParsing() throws Exception {
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
+        SMTPMessageParser<SMTPReply> parser = new SMTPReplyParser();
+
+        String[] input = new String[] {
+                "250 OK\r\n500 NOT OK\r\n550 NOT OK\r\n"
+        };
+
+        ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
+        inbuf.fill(channel);
+        SMTPReply reply1 = parser.parse(inbuf, false);
+        Assert.assertNotNull(reply1);
+        Assert.assertEquals(250, reply1.getCode());
+        SMTPReply reply2 = parser.parse(inbuf, false);
+        Assert.assertNotNull(reply2);
+        Assert.assertEquals(500, reply2.getCode());
+        SMTPReply reply3 = parser.parse(inbuf, false);
+        Assert.assertNotNull(reply3);
+        Assert.assertEquals(550, reply3.getCode());
+    }
+
     @Test
     public void testReplyParsingEndOfStream() throws Exception {
         SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
