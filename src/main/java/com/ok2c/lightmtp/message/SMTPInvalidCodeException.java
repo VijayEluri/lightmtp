@@ -16,11 +16,11 @@ package com.ok2c.lightmtp.message;
 
 import com.ok2c.lightmtp.SMTPProtocolException;
 
-public class SMTPCodeException extends SMTPProtocolException {
+public class SMTPInvalidCodeException extends SMTPProtocolException {
 
     private static final long serialVersionUID = -8404737471665972563L;
 
-    public SMTPCodeException(final String line) {
+    public SMTPInvalidCodeException(final String line) {
         super("Malformed SMTP reply (invalid code): " + line);
     }
 

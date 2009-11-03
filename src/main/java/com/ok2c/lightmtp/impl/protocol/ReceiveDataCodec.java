@@ -52,8 +52,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
     private File tempFile;
     private FileStore fileStore;
-    private boolean emptyLineFound;
-    private boolean terminalDotFound;
+    private boolean dataReceived;
     private SMTPReply pendingReply;
     private boolean completed;
 
@@ -67,11 +66,10 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         }
         this.workingDir = workingDir;
         this.handler = handler;
-        this.writer = new SMTPReplyWriter();
+        this.writer = new SMTPReplyWriter(true);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.contentBuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
-        this.emptyLineFound = false;
-        this.terminalDotFound = false;
+        this.dataReceived = false;
         this.pendingReply = null;
         this.completed = false;
     }
@@ -106,8 +104,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         this.fileStore = new FileStore(this.tempFile);
         this.lineBuf.clear();
 
-        this.emptyLineFound = false;
-        this.terminalDotFound = false;
+        this.dataReceived = false;
         this.pendingReply = null;
 
         this.completed = false;
@@ -166,18 +163,20 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         SessionInputBuffer buf = sessionState.getInbuf();
 
         boolean hasData = true;
-        while (hasData && !this.terminalDotFound) {
+        while (hasData && !this.dataReceived) {
             int bytesRead = buf.fill(iosession.channel());
             if (buf.readLine(this.lineBuf, bytesRead == -1)) {
 
                 processLine();
 
-                this.contentBuf.writeLine(this.lineBuf);
+                if (!this.dataReceived) {
+                    this.contentBuf.writeLine(this.lineBuf);
+                }
                 this.lineBuf.clear();
             } else {
                 hasData = false;
             }
-            if (this.contentBuf.length() > 4 * 1024 || bytesRead == -1) {
+            if (this.dataReceived || this.contentBuf.length() > 4 * 1024 || bytesRead == -1) {
                 this.contentBuf.flush(this.fileStore.channel());
             }
             if (bytesRead == -1) {
@@ -187,7 +186,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         if (this.contentBuf.hasData()) {
             this.contentBuf.flush(this.fileStore.channel());
         }
-        if (this.terminalDotFound) {
+        if (this.dataReceived) {
             this.fileStore.finish();
 
             File file = this.fileStore.getFile();
@@ -215,7 +214,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
             } catch (IOException ex) {
                 SMTPCode enhancedCode = null;
                 if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(2, 6, 0);
+                    enhancedCode = new SMTPCode(4, 2, 0);
                 }
                 this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
                         enhancedCode, ex.getMessage());
@@ -228,15 +227,12 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     }
 
     private void processLine() {
-        boolean previousEmptyLine = this.emptyLineFound;
         int lineLen = this.lineBuf.length();
-        if (lineLen == 0) {
-            this.emptyLineFound = true;
-        } else if (lineLen == 1) {
-            if (previousEmptyLine && this.lineBuf.charAt(0) == '.') {
-                this.terminalDotFound = true;
+        if (lineLen == 1) {
+            if (this.lineBuf.charAt(0) == '.') {
+                this.dataReceived = true;
             }
-        } else {
+        } else if (lineLen > 1){
             // Strip away extra dot
             if (this.lineBuf.charAt(0) == '.' && this.lineBuf.charAt(1) == '.') {
                 char[] buf = this.lineBuf.buffer();

@@ -65,7 +65,7 @@ public class ServerSession {
         }
         Log log = LogFactory.getLog(iosession.getClass());
         if (log.isDebugEnabled()) {
-            this.iosession = new LoggingIOSession(iosession, "client", log);
+            this.iosession = new LoggingIOSession(iosession, "server", log);
         } else {
             this.iosession = iosession;
         }
@@ -82,8 +82,6 @@ public class ServerSession {
                 new PipeliningReceiveEnvelopCodec(createProtocolHandler(validator)));
         this.codecs.register(ProtocolState.DATA.name(),
                 new ReceiveDataCodec(workingDir, handler));
-
-        iosession.setSocketTimeout(5000);
     }
 
     protected ProtocolHandler<ServerSessionState> createProtocolHandler(

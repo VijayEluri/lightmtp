@@ -20,6 +20,9 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightnio.IOEventDispatch;
@@ -35,32 +38,30 @@ public class DefaultMailTransferAgent {
     private final DefaultListeningIOReactor ioReactor;
     private final String serverId;
     private final File workingDir;
-    private final EnvelopValidator validator;
-    private final DeliveryHandler handler;
 
+    private final Log log;
+    
     private volatile IOReactorThread thread;
 
     public DefaultMailTransferAgent(
             final String serverId,
             final File workingDir,
-            final EnvelopValidator validator,
-            final DeliveryHandler handler,
             final IOReactorConfig config) throws IOException {
         super();
         if (workingDir == null) {
             throw new IllegalArgumentException("Working dir may not be null");
         }
-        if (handler == null) {
-            throw new IllegalArgumentException("Delivery handler may not be null");
-        }
         this.serverId = serverId;
         this.workingDir = workingDir;
-        this.validator = validator;
-        this.handler = handler;
         this.ioReactor = new DefaultListeningIOReactor(config);
+
+        this.log = LogFactory.getLog(getClass());
     }
 
     public ListenerEndpoint listen(final SocketAddress address) {
+        if (this.log.isDebugEnabled()) {
+            this.log.debug("Start listener " + address);
+        }
         return this.ioReactor.listen(address);
     }
 
@@ -80,17 +81,22 @@ public class DefaultMailTransferAgent {
         return new ServerIOEventDispatch(serverId, workingDir, validator, handler);
     }
 
-    private void execute() throws IOException {
+    private void execute(
+            final EnvelopValidator validator,
+            final DeliveryHandler handler) throws IOException {
         IOEventDispatch ioEventDispatch = createIOEventDispatch(
                 this.serverId,
                 this.workingDir,
-                this.validator,
-                this.handler);
+                validator,
+                handler);
         this.ioReactor.execute(ioEventDispatch);
     }
 
-    public void start() {
-        this.thread = new IOReactorThread();
+    public void start(
+            final EnvelopValidator validator,
+            final DeliveryHandler handler) {
+        this.log.debug("Start I/O reactor");
+        this.thread = new IOReactorThread(validator, handler);
         this.thread.start();
     }
 
@@ -112,11 +118,12 @@ public class DefaultMailTransferAgent {
     }
 
     public void shutdown() throws IOException {
-        this.ioReactor.shutdown();
+        this.log.debug("Shut down I/O reactor");
+        this.ioReactor.shutdown(30000);
         IOReactorThread t = this.thread;
         try {
             if (t != null) {
-                t.join(500);
+                t.join(1000);
             }
         } catch (InterruptedException ignore) {
         }
@@ -124,12 +131,23 @@ public class DefaultMailTransferAgent {
 
     private class IOReactorThread extends Thread {
 
+        private final EnvelopValidator validator;
+        private final DeliveryHandler handler;
+
         private volatile Exception ex;
 
+        public IOReactorThread(
+                final EnvelopValidator validator,
+                final DeliveryHandler handler) {
+            super();
+            this.validator = validator;
+            this.handler = handler;
+        }
+        
         @Override
         public void run() {
             try {
-                execute();
+                execute(this.validator, this.handler);
             } catch (Exception ex) {
                 this.ex = ex;
             }

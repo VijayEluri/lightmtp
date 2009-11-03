@@ -15,12 +15,18 @@
 package com.ok2c.lightmtp.impl.agent;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
+import com.ok2c.lightnio.SessionRequest;
+import com.ok2c.lightnio.SessionRequestCallback;
 import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
@@ -28,37 +34,49 @@ import com.ok2c.lightnio.impl.IOReactorConfig;
 public class DefaultMailUserAgent {
 
     private final DefaultConnectingIOReactor ioReactor;
-    private final DeliveryRequestHandler handler;
 
+    private final Log log;
+    
     private volatile IOReactorThread thread;
 
     public DefaultMailUserAgent(
-            final DeliveryRequestHandler handler,
             final IOReactorConfig config) throws IOException {
         super();
-        if (handler == null) {
-            throw new IllegalArgumentException("Delivery handler may not be null");
-        }
-        this.handler = handler;
         this.ioReactor = new DefaultConnectingIOReactor(config);
+
+        this.log = LogFactory.getLog(getClass());
     }
 
     public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
+    public SessionRequest connect(
+            final SocketAddress remoteAddress,
+            final SocketAddress localAddress,
+            final Object attachment,
+            final SessionRequestCallback callback) {
+        if (this.log.isDebugEnabled()) {
+            this.log.debug("Request new connection " + remoteAddress + " [" + attachment + "]");
+        }
+        return this.ioReactor.connect(remoteAddress, localAddress, attachment, callback);
+    }
+    
     protected IOEventDispatch createIOEventDispatch(
             final DeliveryRequestHandler handler) {
         return new ClientIOEventDispatch(handler);
     }
 
-    private void execute() throws IOException {
-        IOEventDispatch ioEventDispatch = createIOEventDispatch(this.handler);
+    private void execute(
+            final DeliveryRequestHandler handler) throws IOException {
+        IOEventDispatch ioEventDispatch = createIOEventDispatch(handler);
         this.ioReactor.execute(ioEventDispatch);
     }
 
-    public void start() {
-        this.thread = new IOReactorThread();
+    public void start(
+            final DeliveryRequestHandler handler) {
+        this.log.debug("Start I/O reactor");
+        this.thread = new IOReactorThread(handler);
         this.thread.start();
     }
 
@@ -80,11 +98,12 @@ public class DefaultMailUserAgent {
     }
 
     public void shutdown() throws IOException {
-        this.ioReactor.shutdown();
+        this.log.debug("Shut down I/O reactor");
+        this.ioReactor.shutdown(30000);
         IOReactorThread t = this.thread;
         try {
             if (t != null) {
-                t.join(500);
+                t.join(1000);
             }
         } catch (InterruptedException ignore) {
         }
@@ -92,12 +111,18 @@ public class DefaultMailUserAgent {
 
     private class IOReactorThread extends Thread {
 
+        private final DeliveryRequestHandler handler;
+
         private volatile Exception ex;
 
+        public IOReactorThread(final DeliveryRequestHandler handler) {
+            super();
+            this.handler = handler;
+        }
         @Override
         public void run() {
             try {
-                execute();
+                execute(this.handler);
             } catch (Exception ex) {
                 this.ex = ex;
             }

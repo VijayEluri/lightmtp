@@ -143,7 +143,7 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         try {
             c = Integer.parseInt(this.lineBuf.substring(i, i + 3));
         } catch (NumberFormatException ex) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         cursor.updatePos(i + 3);
         return c;
@@ -175,32 +175,32 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         
         int i2 = this.lineBuf.indexOf('.', i1, cursor.getUpperBound());
         if (i2 == -1) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         try {
             codeClass = Integer.parseInt(this.lineBuf.substring(i1, i2));
         } catch (NumberFormatException ex) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         i1 = i2 + 1;
         i2 = this.lineBuf.indexOf('.', i1, cursor.getUpperBound());
         if (i2 == -1) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         try {
             subject = Integer.parseInt(this.lineBuf.substring(i1, i2));
         } catch (NumberFormatException ex) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         i1 = i2 + 1;
         i2 = this.lineBuf.indexOf(' ', i1, cursor.getUpperBound());
         if (i2 == -1) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         try {
             detail = Integer.parseInt(this.lineBuf.substring(i1, i2));
         } catch (NumberFormatException ex) {
-            throw new SMTPCodeException(this.lineBuf.toString());
+            throw new SMTPInvalidCodeException(this.lineBuf.toString());
         }
         cursor.updatePos(i2 + 1);
         return new SMTPCode(codeClass, subject, detail);
