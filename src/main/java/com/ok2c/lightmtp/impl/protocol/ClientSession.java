@@ -73,8 +73,6 @@ public class ClientSession {
         this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
         this.codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
-
-        iosession.setSocketTimeout(5000);
     }
 
     private void signalDeliveryReady() {

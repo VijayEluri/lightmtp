@@ -52,7 +52,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
         }
         this.commandHandler = commandHandler;
         this.parser = new SMTPCommandParser();
-        this.writer = new SMTPReplyWriter();
+        this.writer = new SMTPReplyWriter(true);
         this.pendingReplies = new LinkedList<SMTPReply>();
         this.idle = true;
         this.completed = false;

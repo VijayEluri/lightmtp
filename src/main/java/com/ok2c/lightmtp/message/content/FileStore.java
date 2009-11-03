@@ -35,7 +35,7 @@ public class FileStore implements SMTPContent<WritableByteChannel> {
     }
 
     public File getFile() {
-        return this.getFile();
+        return this.file;
     }
 
     public WritableByteChannel channel() throws FileNotFoundException {
