@@ -52,7 +52,6 @@ public class ServerSession {
 
     public ServerSession(
             final IOSession iosession,
-            final String serverId,
             final File workingDir,
             final EnvelopValidator validator,
             final DeliveryHandler handler) {
@@ -60,16 +59,13 @@ public class ServerSession {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
-        if (serverId == null) {
-            throw new IllegalArgumentException("Server id may not be null");
-        }
         Log log = LogFactory.getLog(iosession.getClass());
         if (log.isDebugEnabled()) {
             this.iosession = new LoggingIOSession(iosession, "server", log);
         } else {
             this.iosession = iosession;
         }
-        this.sessionState = new ServerSessionState(serverId);
+        this.sessionState = new ServerSessionState("LightMTP SMTP");
         this.iosession.setBufferStatus(this.sessionState);
         this.codecs = new ProtocolCodecRegistry<ServerSessionState>();
         this.state = ProtocolState.INIT;
@@ -104,9 +100,7 @@ public class ServerSession {
         if (this.currentCodec != null) {
             this.currentCodec.cleanUp();
         }
-        if (!this.iosession.isClosed()) {
-            this.iosession.close();
-        }
+        this.iosession.close();
     }
 
     private void handleIOException(final IOException ex) {

@@ -26,13 +26,11 @@ public class ServerIOEventDispatch implements IOEventDispatch {
 
     private static final String SERVER_SESSION = "smtp.server-session";
 
-    private final String serverId;
     private final File workingDir;
     private final EnvelopValidator validator;
     private final DeliveryHandler handler;
 
     public ServerIOEventDispatch(
-            final String serverId,
             final File workingDir,
             final EnvelopValidator validator,
             final DeliveryHandler handler) {
@@ -43,16 +41,22 @@ public class ServerIOEventDispatch implements IOEventDispatch {
         if (handler == null) {
             throw new IllegalArgumentException("Delivery handler may not be null");
         }
-        this.serverId = serverId;
         this.workingDir = workingDir;
         this.validator = validator;
         this.handler = handler;
     }
-
+    
+    protected ServerSession createServerSession(
+            final IOSession iosession,
+            final File workingDir,
+            final EnvelopValidator validator,
+            final DeliveryHandler handler) {
+        return new ServerSession(iosession, workingDir, validator, handler);
+    }
+    
     public void connected(final IOSession iosession) {
-        ServerSession serverSession = new ServerSession(
+        ServerSession serverSession = createServerSession(
                 iosession,
-                this.serverId,
                 this.workingDir,
                 this.validator,
                 this.handler);

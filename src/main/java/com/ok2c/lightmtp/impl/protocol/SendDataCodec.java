@@ -134,7 +134,6 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
                 if (bytesRead == -1 && !this.contentBuf.hasData()) {
 
                     this.lineBuf.clear();
-                    buf.writeLine(this.lineBuf);
                     this.lineBuf.append('.');
                     buf.writeLine(this.lineBuf);
                     this.lineBuf.clear();
