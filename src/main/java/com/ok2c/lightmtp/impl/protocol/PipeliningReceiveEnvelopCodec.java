@@ -111,35 +111,34 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
 
         SessionInputBuffer buf = sessionState.getInbuf();
 
-        int bytesRead = buf.fill(iosession.channel());
-        
-        SMTPCommand command = null;
-        SMTPReply reply = null;        
-        
-        try {
-            command = this.parser.parse(buf, bytesRead == -1);
-            if (command != null) {
-                reply = this.commandHandler.handle(command, sessionState);
+        for (;;) {
+            int bytesRead = buf.fill(iosession.channel());
+            try {
+                SMTPCommand command = this.parser.parse(buf, bytesRead == -1);
+                if (command == null) {
+                    if (bytesRead == -1) {
+                        throw new UnexpectedEndOfStreamException();
+                    }
+                    break;
+                }
+                SMTPReply reply = this.commandHandler.handle(command, sessionState);
+                this.pendingReplies.add(reply);
+            } catch (SMTPProtocolException ex) {
+                SMTPCode enhancedCode = null;
+                if (sessionState.isEnhancedCodeCapable()) {
+                    enhancedCode = new SMTPCode(5, 5, 1);
+                }
+                SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+                        enhancedCode, ex.getMessage());
+                this.pendingReplies.add(reply);
             }
-        } catch (SMTPProtocolException ex) {
-            SMTPCode enhancedCode = null;
-            if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(5, 5, 1);
-            }
-            reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, enhancedCode, 
-                    ex.getMessage());
         }
-
-        if (reply != null) {
-            this.pendingReplies.add(reply);
+        
+        if (!this.pendingReplies.isEmpty()) {
             iosession.setEvent(SelectionKey.OP_WRITE);
-
-            this.idle = (sessionState.getSender() == null);
         }
 
-        if (bytesRead == -1) {
-            throw new UnexpectedEndOfStreamException();
-        }
+        this.idle = (sessionState.getSender() == null);
     }
 
     public boolean isIdle() {

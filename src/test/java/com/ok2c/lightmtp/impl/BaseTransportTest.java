@@ -22,49 +22,25 @@ import org.junit.Before;
 
 import com.ok2c.lightmtp.impl.agent.DefaultMailTransferAgent;
 import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
-import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public abstract class BaseTransportTest {
 
+    protected static File TMP_DIR = new File(System.getProperty("java.io.tmpdir", "."));
+    
     protected DefaultMailTransferAgent mta;
     protected DefaultMailUserAgent mua;
     
     @Before
     public void setUp() throws Exception {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir", "."));
         
         IOReactorConfig config = new IOReactorConfig();
         config.setWorkerCount(2);
-        this.mta = new DefaultMailTransferAgent("Test SMTP server", tmpDir, config);
-        this.mta.setExceptionHandler(new IOReactorExceptionHandler() {
-            
-            public boolean handle(final RuntimeException ex) {
-                ex.printStackTrace(System.out);
-                return false;
-            }
-            
-            public boolean handle(final IOException ex) {
-                ex.printStackTrace(System.out);
-                return false;
-            }
-
-        });
+        this.mta = new DefaultMailTransferAgent(TMP_DIR, config);
+        this.mta.setExceptionHandler(new BasicExceptionHandler());
         
         this.mua = new DefaultMailUserAgent(config);
-        this.mua.setExceptionHandler(new IOReactorExceptionHandler() {
-            
-            public boolean handle(final RuntimeException ex) {
-                ex.printStackTrace(System.out);
-                return false;
-            }
-            
-            public boolean handle(final IOException ex) {
-                ex.printStackTrace(System.out);
-                return false;
-            }
-
-        });
+        this.mua.setExceptionHandler(new BasicExceptionHandler());
     }
     
     @After

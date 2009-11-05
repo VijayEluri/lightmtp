@@ -21,8 +21,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
-import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.SessionRequest;
@@ -62,22 +62,14 @@ public class DefaultMailUserAgent {
         return this.ioReactor.connect(remoteAddress, localAddress, attachment, callback);
     }
     
-    protected IOEventDispatch createIOEventDispatch(
-            final DeliveryRequestHandler handler) {
-        return new ClientIOEventDispatch(handler);
-    }
-
-    private void execute(
-            final DeliveryRequestHandler handler) throws IOException {
-        IOEventDispatch ioEventDispatch = createIOEventDispatch(handler);
-        this.ioReactor.execute(ioEventDispatch);
-    }
-
-    public void start(
-            final DeliveryRequestHandler handler) {
+    public void start(final IOEventDispatchFactory dispatchFactory) {
         this.log.debug("Start I/O reactor");
-        this.thread = new IOReactorThread(handler);
+        this.thread = new IOReactorThread(this.ioReactor, dispatchFactory);
         this.thread.start();
+    }
+
+    public void start(final DeliveryRequestHandler deliveryRequestHandler) {
+        start(new ClientIOEventDispatchFactory(deliveryRequestHandler));
     }
 
     public IOReactorStatus getStatus() {
@@ -107,31 +99,6 @@ public class DefaultMailUserAgent {
             }
         } catch (InterruptedException ignore) {
         }
-    }
-
-    private class IOReactorThread extends Thread {
-
-        private final DeliveryRequestHandler handler;
-
-        private volatile Exception ex;
-
-        public IOReactorThread(final DeliveryRequestHandler handler) {
-            super();
-            this.handler = handler;
-        }
-        @Override
-        public void run() {
-            try {
-                execute(this.handler);
-            } catch (Exception ex) {
-                this.ex = ex;
-            }
-        }
-
-        public Exception getException() {
-            return this.ex;
-        }
-
     }
 
 }
