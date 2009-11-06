@@ -12,12 +12,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.agent;
+package com.ok2c.lightmtp.protocol;
 
-import com.ok2c.lightnio.IOEventDispatch;
+import com.ok2c.lightnio.IOSession;
 
-public interface IOEventDispatchFactory {
+public interface SessionFactory<T> {
 
-    IOEventDispatch createIOEventDispatch();
-    
+    T create(IOSession iosession);
+
 }

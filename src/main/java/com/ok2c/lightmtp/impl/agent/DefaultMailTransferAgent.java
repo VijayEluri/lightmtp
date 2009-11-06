@@ -23,7 +23,8 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
+import com.ok2c.lightmtp.agent.IOSessionRegistry;
+import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
@@ -37,6 +38,7 @@ public class DefaultMailTransferAgent {
 
     private final File workingDir;
     private final DefaultListeningIOReactor ioReactor;
+    private final IOSessionRegistry sessionRegistry;
 
     private final Log log;
     
@@ -52,6 +54,7 @@ public class DefaultMailTransferAgent {
         this.workingDir = workingDir;
         this.ioReactor = new DefaultListeningIOReactor(config,
                 new SimpleThreadFactory("MUA"));
+        this.sessionRegistry = new IOSessionRegistry();
 
         this.log = LogFactory.getLog(getClass());
     }
@@ -71,19 +74,24 @@ public class DefaultMailTransferAgent {
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
-    public void start(final IOEventDispatchFactory dispatchFactory) {
-        this.log.debug("Start I/O reactor");
-        this.thread = new IOReactorThread(this.ioReactor, dispatchFactory);
-        this.thread.start();
-    }
-
     public void start(
             final EnvelopValidator envelopValidator,
             final DeliveryHandler deliveryHandler) {
-        start(new ServerIOEventDispatchFactory(
-                this.workingDir, 
-                envelopValidator, 
-                deliveryHandler));
+        ServerSessionFactory sessionFactory = new ServerSessionFactory(
+                this.workingDir,
+                envelopValidator,
+                deliveryHandler);
+        start(sessionFactory);
+    }
+
+    public void start(final ServerSessionFactory sessionFactory) {
+        this.log.debug("Start I/O reactor");
+        
+        ServerIOEventDispatch iodispatch = new ServerIOEventDispatch(
+                this.sessionRegistry, 
+                sessionFactory);
+        this.thread = new IOReactorThread(this.ioReactor, iodispatch);
+        this.thread.start();
     }
 
     public IOReactorStatus getStatus() {

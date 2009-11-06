@@ -14,8 +14,9 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import com.ok2c.lightmtp.agent.IOSessionRegistry;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
-import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
+import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOSession;
 
@@ -23,20 +24,28 @@ public class ClientIOEventDispatch implements IOEventDispatch {
 
     private static final String CLIENT_SESSION = "smtp.client-session";
     
-    private final DeliveryRequestHandler handler;
+    private final IOSessionRegistry sessionRegistry;
+    private final ClientSessionFactory sessionFactory;
     
-    public ClientIOEventDispatch(final DeliveryRequestHandler handler) {
+    public ClientIOEventDispatch(
+            final IOSessionRegistry sessionRegistry,
+            final ClientSessionFactory sessionFactory) {
         super();
-        if (handler == null) {
-            throw new IllegalArgumentException("Delivery request handler may not be null");
+        if (sessionRegistry == null) {
+            throw new IllegalArgumentException("I/O session registry may not be null");
         }
-        this.handler = handler;
+        if (sessionFactory == null) {
+            throw new IllegalArgumentException("Session factory may not be null");
+        }
+        this.sessionRegistry = sessionRegistry;
+        this.sessionFactory = sessionFactory;
     }
     
     public void connected(final IOSession iosession) {
-        ClientSession clientSession = new ClientSession(iosession, this.handler); 
+        ClientSession clientSession = this.sessionFactory.create(iosession); 
         iosession.setAttribute(CLIENT_SESSION, clientSession);
         clientSession.connected();
+        this.sessionRegistry.add(iosession);
     }
 
     public void disconnected(final IOSession iosession) {
@@ -44,6 +53,7 @@ public class ClientIOEventDispatch implements IOEventDispatch {
         if (clientSession != null) {
             clientSession.disconneced();
         }
+        this.sessionRegistry.remove(iosession);
     }
 
     public void inputReady(final IOSession iosession) {

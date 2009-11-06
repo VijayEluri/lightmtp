@@ -14,11 +14,9 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
-import java.io.File;
-
+import com.ok2c.lightmtp.agent.IOSessionRegistry;
 import com.ok2c.lightmtp.impl.protocol.ServerSession;
-import com.ok2c.lightmtp.protocol.DeliveryHandler;
-import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOSession;
 
@@ -26,42 +24,28 @@ public class ServerIOEventDispatch implements IOEventDispatch {
 
     private static final String SERVER_SESSION = "smtp.server-session";
 
-    private final File workingDir;
-    private final EnvelopValidator validator;
-    private final DeliveryHandler handler;
+    private final IOSessionRegistry sessionRegistry;
+    private final ServerSessionFactory sessionFactory;
 
     public ServerIOEventDispatch(
-            final File workingDir,
-            final EnvelopValidator validator,
-            final DeliveryHandler handler) {
+            final IOSessionRegistry sessionRegistry,
+            final ServerSessionFactory sessionFactory) {
         super();
-        if (workingDir == null) {
-            throw new IllegalArgumentException("Working dir may not be null");
+        if (sessionRegistry == null) {
+            throw new IllegalArgumentException("I/O session registry may not be null");
         }
-        if (handler == null) {
-            throw new IllegalArgumentException("Delivery handler may not be null");
+        if (sessionFactory == null) {
+            throw new IllegalArgumentException("Session factory may not be null");
         }
-        this.workingDir = workingDir;
-        this.validator = validator;
-        this.handler = handler;
-    }
-    
-    protected ServerSession createServerSession(
-            final IOSession iosession,
-            final File workingDir,
-            final EnvelopValidator validator,
-            final DeliveryHandler handler) {
-        return new ServerSession(iosession, workingDir, validator, handler);
+        this.sessionRegistry = sessionRegistry;
+        this.sessionFactory = sessionFactory;
     }
     
     public void connected(final IOSession iosession) {
-        ServerSession serverSession = createServerSession(
-                iosession,
-                this.workingDir,
-                this.validator,
-                this.handler);
+        ServerSession serverSession = this.sessionFactory.create(iosession);
         iosession.setAttribute(SERVER_SESSION, serverSession);
         serverSession.connected();
+        this.sessionRegistry.add(iosession);
     }
 
     public void disconnected(final IOSession iosession) {
@@ -69,6 +53,7 @@ public class ServerIOEventDispatch implements IOEventDispatch {
         if (serverSession != null) {
             serverSession.disconneced();
         }
+        this.sessionRegistry.remove(iosession);
     }
 
     public void inputReady(final IOSession iosession) {
