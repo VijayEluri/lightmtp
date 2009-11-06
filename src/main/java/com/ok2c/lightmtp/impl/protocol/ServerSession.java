@@ -14,50 +14,36 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightmtp.SMTPProtocolException;
-import com.ok2c.lightmtp.impl.protocol.cmd.DataHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.DefaultProtocolHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.EhloHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.HeloHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.MailFromHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.NoopHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.QuitHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.RcptToHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.RsetHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.VrfyHandler;
-import com.ok2c.lightmtp.protocol.DeliveryHandler;
-import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
-import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightnio.IOSession;
 
 public class ServerSession {
 
     private final IOSession iosession;
     private final ServerSessionState sessionState;
+    private final ProtocolCodecs<ServerSessionState> codecs;
 
     private final Log log;
 
-    private ProtocolCodecs<ServerSessionState> codecs;
     private ProtocolCodec<ServerSessionState> currentCodec;
-
     private ProtocolState state;
 
     public ServerSession(
             final IOSession iosession,
-            final File workingDir,
-            final EnvelopValidator validator,
-            final DeliveryHandler handler) {
+            final ProtocolCodecs<ServerSessionState> codecs) {
         super();
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
+        }
+        if (codecs == null) {
+            throw new IllegalArgumentException("Protocol codecs may not be null");
         }
         Log log = LogFactory.getLog(iosession.getClass());
         if (log.isDebugEnabled()) {
@@ -67,32 +53,10 @@ public class ServerSession {
         }
         this.sessionState = new ServerSessionState("LightMTP SMTP");
         this.iosession.setBufferStatus(this.sessionState);
-        this.codecs = new ProtocolCodecRegistry<ServerSessionState>();
+        this.codecs = codecs;
         this.state = ProtocolState.INIT;
 
         this.log = LogFactory.getLog(getClass());
-
-        this.codecs.register(ProtocolState.INIT.name(),
-                new ServiceReadyCodec());
-        this.codecs.register(ProtocolState.MAIL.name(),
-                new PipeliningReceiveEnvelopCodec(createProtocolHandler(validator)));
-        this.codecs.register(ProtocolState.DATA.name(),
-                new ReceiveDataCodec(workingDir, handler));
-    }
-
-    protected ProtocolHandler<ServerSessionState> createProtocolHandler(
-            final EnvelopValidator validator) {
-        DefaultProtocolHandler handler = new DefaultProtocolHandler();
-        handler.register("HELO", new HeloHandler(validator));
-        handler.register("EHLO", new EhloHandler(validator));
-        handler.register("RSET", new RsetHandler());
-        handler.register("NOOP", new NoopHandler());
-        handler.register("QUIT", new QuitHandler());
-        handler.register("VRFY", new VrfyHandler(validator));
-        handler.register("MAIL", new MailFromHandler(validator));
-        handler.register("RCPT", new RcptToHandler(validator));
-        handler.register("DATA", new DataHandler());
-        return handler;
     }
 
     private void terminate() {

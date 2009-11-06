@@ -12,17 +12,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.impl.agent;
+package com.ok2c.lightmtp.impl.protocol;
 
-import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
-import com.ok2c.lightnio.IOEventDispatch;
+import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.protocol.SessionFactory;
+import com.ok2c.lightnio.IOSession;
 
-public class ClientIOEventDispatchFactory implements IOEventDispatchFactory {
+public class ClientSessionFactory implements SessionFactory<ClientSession> {
 
     private final DeliveryRequestHandler deliveryRequestHandler;
     
-    public ClientIOEventDispatchFactory(
+    public ClientSessionFactory(
             final DeliveryRequestHandler deliveryRequestHandler) {
         super();
         if (deliveryRequestHandler == null) {
@@ -30,9 +31,15 @@ public class ClientIOEventDispatchFactory implements IOEventDispatchFactory {
         }
         this.deliveryRequestHandler = deliveryRequestHandler;
     }
-
-    public IOEventDispatch createIOEventDispatch() {
-        return new ClientIOEventDispatch(this.deliveryRequestHandler);
-    }
     
+    public ClientSession create(final IOSession iosession) {
+        ProtocolCodecs<ClientSessionState> codecs = new ProtocolCodecRegistry<ClientSessionState>();        
+        codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec());
+        codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(false));
+        codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
+        codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
+        codecs.register(ProtocolState.RSET.name(), new SendRsetCodec());
+        return new ClientSession(iosession, this.deliveryRequestHandler, codecs);
+    }
+
 }

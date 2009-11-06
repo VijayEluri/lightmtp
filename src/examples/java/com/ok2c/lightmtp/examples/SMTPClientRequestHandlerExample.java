@@ -23,7 +23,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
+import com.ok2c.lightmtp.agent.IOSessionRegistry;
 import com.ok2c.lightmtp.impl.agent.ClientIOEventDispatch;
+import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
@@ -81,8 +83,11 @@ public class SMTPClientRequestHandlerExample {
         queue.add(request3);
         
         final CountDownLatch messageCount = new CountDownLatch(queue.size());
-        final MyDeliveryRequestHandler handler = new MyDeliveryRequestHandler(messageCount);         
-        final IOEventDispatch ioEventDispatch = new ClientIOEventDispatch(handler);
+        final MyDeliveryRequestHandler handler = new MyDeliveryRequestHandler(messageCount);
+        final ClientSessionFactory sessionFactory = new ClientSessionFactory(handler);
+        final IOSessionRegistry sessionRegistry = new IOSessionRegistry();
+        final IOEventDispatch ioEventDispatch = new ClientIOEventDispatch(
+                sessionRegistry, sessionFactory);
         final DefaultConnectingIOReactor ioReactor = new DefaultConnectingIOReactor(
                 new IOReactorConfig());
         

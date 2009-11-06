@@ -38,21 +38,27 @@ public class ClientSession {
     private final ClientSessionState sessionState;
     private final SessionContext context;
     private final DeliveryRequestHandler handler;
+    private final ProtocolCodecs<ClientSessionState> codecs;
 
     private final Log log;
 
-    private ProtocolCodecs<ClientSessionState> codecs;
     private ProtocolCodec<ClientSessionState> currentCodec;
 
     private ProtocolState state;
 
-    public ClientSession(final IOSession iosession, final DeliveryRequestHandler handler) {
+    public ClientSession(
+            final IOSession iosession, 
+            final DeliveryRequestHandler handler,
+            final ProtocolCodecs<ClientSessionState> codecs) {
         super();
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
         if (handler == null) {
             throw new IllegalArgumentException("Delivery request handler may not be null");
+        }
+        if (codecs == null) {
+            throw new IllegalArgumentException("Protocol codecs may not be null");
         }
         Log log = LogFactory.getLog(iosession.getClass());
         if (log.isDebugEnabled()) {

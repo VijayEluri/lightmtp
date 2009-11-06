@@ -14,26 +14,26 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
-import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
+import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactor;
 
 class IOReactorThread extends Thread {
 
     private final IOReactor ioReactor;
-    private final IOEventDispatchFactory dispatchFactory;
+    private final IOEventDispatch iodispatch;
 
     private volatile Exception ex;
 
-    public IOReactorThread(final IOReactor ioReactor, final IOEventDispatchFactory dispatchFactory) {
+    public IOReactorThread(final IOReactor ioReactor, final IOEventDispatch iodispatch) {
         super();
         this.ioReactor = ioReactor;
-        this.dispatchFactory = dispatchFactory;
+        this.iodispatch = iodispatch;
     }
     
     @Override
     public void run() {
         try {
-            this.ioReactor.execute(this.dispatchFactory.createIOEventDispatch());
+            this.ioReactor.execute(this.iodispatch);
         } catch (Exception ex) {
             this.ex = ex;
         }

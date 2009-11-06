@@ -14,7 +14,6 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -30,9 +29,8 @@ import org.junit.Test;
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
 import com.ok2c.lightmtp.impl.BaseTransportTest;
-import com.ok2c.lightmtp.impl.protocol.ServerSession;
+import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
 import com.ok2c.lightmtp.impl.protocol.cmd.DefaultProtocolHandler;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
@@ -43,9 +41,7 @@ import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.RcptResult;
-import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionRequest;
 
@@ -152,52 +148,12 @@ public class TestMailDelivery extends BaseTransportTest {
         
     }
     
-    static class OldServerIOEventDispatchFactory implements IOEventDispatchFactory {
-
-        private final EnvelopValidator envelopValidator;
-        private final DeliveryHandler deliveryHandler;
+    static class OldServerSessionFactory extends ServerSessionFactory {
         
-        public OldServerIOEventDispatchFactory(
-                final EnvelopValidator envelopValidator,
+        public OldServerSessionFactory(
+                final EnvelopValidator validator,
                 final DeliveryHandler deliveryHandler) {
-            super();
-            this.envelopValidator = envelopValidator;
-            this.deliveryHandler = deliveryHandler;
-        }
-        
-        public IOEventDispatch createIOEventDispatch() {
-            return new OldServerIOEventDispatch(this.envelopValidator, this.deliveryHandler);
-        }
-        
-    }
-    
-    static class OldServerIOEventDispatch extends ServerIOEventDispatch {
-        
-        public OldServerIOEventDispatch(
-                final EnvelopValidator validator,
-                final DeliveryHandler handler) {
-            super(TMP_DIR, validator, handler);
-        }
-
-        @Override
-        protected ServerSession createServerSession(
-                final IOSession iosession, 
-                final File workingDir,
-                final EnvelopValidator validator, 
-                final DeliveryHandler handler) {
-            return new OldServerSession(iosession, workingDir, validator, handler);
-        }
-        
-    }
-
-    static class OldServerSession extends ServerSession {
-        
-        public OldServerSession(
-                final IOSession iosession,
-                final File workingDir,
-                final EnvelopValidator validator,
-                final DeliveryHandler handler) {
-            super(iosession, workingDir, validator, handler);
+            super(TMP_DIR, validator, deliveryHandler);
         }
 
         @Override
@@ -209,8 +165,8 @@ public class TestMailDelivery extends BaseTransportTest {
             return handler;
         }
         
-    }
-
+    };
+    
     @Test
     public void testBasicNonPipelinedDelivery() throws Exception {
         
@@ -232,7 +188,7 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerIOEventDispatchFactory(null, deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(null, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -412,7 +368,7 @@ public class TestMailDelivery extends BaseTransportTest {
         
         
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerIOEventDispatchFactory(envelopValidator, deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -576,7 +532,7 @@ public class TestMailDelivery extends BaseTransportTest {
         };
         
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerIOEventDispatchFactory(envelopValidator, deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();

@@ -21,7 +21,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
+import com.ok2c.lightmtp.agent.IOSessionRegistry;
+import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
@@ -34,6 +35,7 @@ import com.ok2c.lightnio.impl.IOReactorConfig;
 public class DefaultMailUserAgent {
 
     private final DefaultConnectingIOReactor ioReactor;
+    private final IOSessionRegistry sessionRegistry;
 
     private final Log log;
     
@@ -44,7 +46,8 @@ public class DefaultMailUserAgent {
         super();
         this.ioReactor = new DefaultConnectingIOReactor(config, 
                 new SimpleThreadFactory("MTU"));
-
+        this.sessionRegistry = new IOSessionRegistry();
+        
         this.log = LogFactory.getLog(getClass());
     }
 
@@ -63,14 +66,19 @@ public class DefaultMailUserAgent {
         return this.ioReactor.connect(remoteAddress, localAddress, attachment, callback);
     }
     
-    public void start(final IOEventDispatchFactory dispatchFactory) {
+    public void start(final ClientSessionFactory sessionFactory) {
         this.log.debug("Start I/O reactor");
-        this.thread = new IOReactorThread(this.ioReactor, dispatchFactory);
+        
+        ClientIOEventDispatch iodispatch = new ClientIOEventDispatch(
+                this.sessionRegistry, 
+                sessionFactory);
+        this.thread = new IOReactorThread(this.ioReactor, iodispatch);
         this.thread.start();
     }
 
     public void start(final DeliveryRequestHandler deliveryRequestHandler) {
-        start(new ClientIOEventDispatchFactory(deliveryRequestHandler));
+        ClientSessionFactory sessionFactory = new ClientSessionFactory(deliveryRequestHandler);
+        start(sessionFactory);
     }
 
     public IOReactorStatus getStatus() {
