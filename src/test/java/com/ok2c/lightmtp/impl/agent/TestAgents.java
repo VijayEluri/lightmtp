@@ -27,6 +27,8 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.agent.IOEventDispatchFactory;
 import com.ok2c.lightmtp.impl.BaseTransportTest;
 import com.ok2c.lightmtp.impl.protocol.ServerSession;
@@ -39,6 +41,7 @@ import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
+import com.ok2c.lightmtp.protocol.RcptResult;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.IOSession;
@@ -288,4 +291,89 @@ public class TestAgents extends BaseTransportTest {
         
     }
 
+    @Test
+    public void testRecipientRejection() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1"), 
+                new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1", "testuser2"), 
+                new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        EnvelopValidator envelopValidator = new EnvelopValidator() {
+
+            public void validateClientDomain(final String clientDomain) throws SMTPErrorException {
+            }
+
+            public void validateRecipient(final String recipient) throws SMTPErrorException {
+                if (recipient.equals("testuser1")) {
+                    throw new SMTPErrorException(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
+                            new SMTPCode(5, 1, 1), 
+                            "requested action not taken: mailbox unavailable");
+                }
+            }
+
+            public void validateSender(final String sender) throws SMTPErrorException {
+            }
+            
+        };
+        
+        
+        SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
+        this.mta.start(envelopValidator, deliveryHandler);
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(deliveryRequestHandler);
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(2, results.size());
+        
+        DeliveryResult res1 = results.get(0);
+        Assert.assertEquals(1, res1.getFailures().size());
+        RcptResult rcres1 = res1.getFailures().get(0);
+        Assert.assertEquals("testuser1", rcres1.getRecipient());
+        Assert.assertEquals(550, rcres1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(5, 1, 1), rcres1.getReply().getEnhancedCode());
+        Assert.assertEquals(554, res1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(5, 5, 1), res1.getReply().getEnhancedCode());
+        
+        DeliveryResult res2 = results.get(1);
+        Assert.assertEquals(1, res2.getFailures().size());
+        RcptResult rcres2 = res2.getFailures().get(0);
+        Assert.assertEquals("testuser1", rcres2.getRecipient());
+        Assert.assertEquals(550, rcres2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(5, 1, 1), rcres2.getReply().getEnhancedCode());
+        Assert.assertEquals(250, res2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res2.getReply().getEnhancedCode());
+        
+        Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
+        Assert.assertNotNull(deliveries);
+        SimpleTestDelivery delivery1 = deliveries.poll();
+        Assert.assertNotNull(delivery1); 
+        Assert.assertEquals("root", delivery1.getSender());
+        Assert.assertEquals(1, delivery1.getRecipients().size());
+        Assert.assertEquals("testuser2", delivery1.getRecipients().get(0));
+        Assert.assertEquals(TEXT2, delivery1.getContent());
+        Assert.assertNull(deliveries.poll()); 
+    }
+    
 }

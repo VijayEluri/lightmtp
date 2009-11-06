@@ -51,6 +51,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
     private final LinkedList<String> recipients;
 
     private CodecState codecState;
+    private boolean deliveryFailed;
 
     public PipeliningSendEnvelopCodec(boolean enhancedCodes) {
         super();
@@ -58,6 +59,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
         this.writer = new SMTPCommandWriter();
         this.recipients = new LinkedList<String>();
         this.codecState = CodecState.MAIL_REQUEST_READY;
+        this.deliveryFailed = false;
     }
 
     public void cleanUp() {
@@ -76,6 +78,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
         this.parser.reset();
         this.recipients.clear();
         this.codecState = CodecState.MAIL_REQUEST_READY;
+        this.deliveryFailed = false;
 
         if (sessionState.getRequest() != null) {
             iosession.setEvent(SelectionKey.OP_WRITE);
@@ -148,10 +151,9 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
 
             switch (this.codecState) {
             case MAIL_RESPONSE_EXPECTED:
-                if (reply.getCode() == SMTPCodes.OK) {
-                    this.codecState = CodecState.RCPT_RESPONSE_EXPECTED;
-                } else {
-                    this.codecState = CodecState.COMPLETED;
+                this.codecState = CodecState.RCPT_RESPONSE_EXPECTED;
+                if (reply.getCode() != SMTPCodes.OK) {
+                    this.deliveryFailed = true;
                     sessionState.setReply(reply);
                 }
                 break;
@@ -167,6 +169,9 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
                 break;
             case DATA_RESPONSE_EXPECTED:
                 this.codecState = CodecState.COMPLETED;
+                if (reply.getCode() != SMTPCodes.START_MAIL_INPUT) {
+                    this.deliveryFailed = true;
+                }
                 sessionState.setReply(reply);
                 break;
             default:
@@ -190,8 +195,12 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
     public String next(
             final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
-        if (isCompleted()) {
-            return ProtocolState.DATA.name();
+        if (this.codecState == CodecState.COMPLETED) {
+            if (this.deliveryFailed) {
+                return ProtocolState.MAIL.name();
+            } else {
+                return ProtocolState.DATA.name();
+            }
         } else {
             return null;
         }
