@@ -15,6 +15,7 @@
 package com.ok2c.lightmtp.impl.agent;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -606,4 +607,59 @@ public class TestAgents extends BaseTransportTest {
         Assert.assertNull(deliveries.poll()); 
     }
 
+    @Test
+    public void testDeliveryFailure() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root@somewhere.com", 
+                Arrays.asList("testuser1"), 
+                new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
+        requests.add(new BasicDeliveryRequest(
+                "root@somewhere.com", 
+                Arrays.asList("testuser1", "testuser2"), 
+                new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        DeliveryHandler deliveryHandler = new DeliveryHandler() {
+
+            public void handle(final DeliveryRequest request) throws SMTPErrorException, IOException {
+                throw new IOException("Oooopsie");
+            }
+            
+        };
+        
+        this.mta.start(null, deliveryHandler);
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(deliveryRequestHandler);
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(2, results.size());
+        
+        DeliveryResult res1 = results.get(0);
+        Assert.assertTrue(res1.getFailures().isEmpty());
+        Assert.assertEquals(451, res1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(4, 2, 0), res1.getReply().getEnhancedCode());
+        
+        DeliveryResult res2 = results.get(1);
+        Assert.assertTrue(res2.getFailures().isEmpty());
+        Assert.assertEquals(451, res2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(4, 2, 0), res2.getReply().getEnhancedCode());
+    }
+    
 }
