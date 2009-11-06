@@ -42,7 +42,8 @@ public class DefaultMailUserAgent {
     public DefaultMailUserAgent(
             final IOReactorConfig config) throws IOException {
         super();
-        this.ioReactor = new DefaultConnectingIOReactor(config);
+        this.ioReactor = new DefaultConnectingIOReactor(config, 
+                new SimpleThreadFactory("MTU"));
 
         this.log = LogFactory.getLog(getClass());
     }
