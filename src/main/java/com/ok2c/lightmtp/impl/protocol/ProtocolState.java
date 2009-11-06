@@ -21,5 +21,6 @@ public enum ProtocolState {
     MAIL,
     DATA,
     QUIT,
+    RSET
     
 }
