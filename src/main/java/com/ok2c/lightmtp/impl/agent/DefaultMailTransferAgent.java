@@ -50,7 +50,8 @@ public class DefaultMailTransferAgent {
             throw new IllegalArgumentException("Working dir may not be null");
         }
         this.workingDir = workingDir;
-        this.ioReactor = new DefaultListeningIOReactor(config);
+        this.ioReactor = new DefaultListeningIOReactor(config,
+                new SimpleThreadFactory("MUA"));
 
         this.log = LogFactory.getLog(getClass());
     }
