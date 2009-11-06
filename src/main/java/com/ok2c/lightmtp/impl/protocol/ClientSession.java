@@ -244,12 +244,11 @@ public class ClientSession {
         String nextCodec = this.currentCodec.next(this.codecs, this.sessionState);
         if (nextCodec != null) {
             this.state = ProtocolState.valueOf(nextCodec);
-            this.currentCodec = this.codecs.getCodec(nextCodec);
-            this.currentCodec.reset(this.iosession, this.sessionState);
-
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Next codec: " + this.state);
             }
+            this.currentCodec = this.codecs.getCodec(nextCodec);
+            this.currentCodec.reset(this.iosession, this.sessionState);
 
             if (this.state == ProtocolState.MAIL) {
                 signalDeliveryReady();
