@@ -17,6 +17,7 @@ package com.ok2c.lightmtp.impl.protocol;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
@@ -53,6 +54,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
     private final LinkedList<String> recipients;
 
     private CodecState codecState;
+    private boolean deliveryFailed;
 
     public SimpleSendEnvelopCodec(boolean enhancedCodes) {
         super();
@@ -60,6 +62,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
         this.writer = new SMTPCommandWriter();
         this.recipients = new LinkedList<String>();
         this.codecState = CodecState.MAIL_REQUEST_READY;
+        this.deliveryFailed = false;
     }
 
     public void cleanUp() {
@@ -78,6 +81,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
         this.parser.reset();
         this.recipients.clear();
         this.codecState = CodecState.MAIL_REQUEST_READY;
+        this.deliveryFailed = false;
 
         if (sessionState.getRequest() != null) {
             iosession.setEvent(SelectionKey.OP_WRITE);
@@ -159,6 +163,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
                     this.recipients.addAll(request.getRecipients());
                     iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
+                    this.deliveryFailed = true;
                     this.codecState = CodecState.COMPLETED;
                     sessionState.setReply(reply);
                 }
@@ -174,7 +179,15 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
                 }
 
                 if (this.recipients.isEmpty()) {
-                    this.codecState = CodecState.DATA_REQUEST_READY;
+                    List<String> requested = request.getRecipients();
+                    List<RcptResult> failured = sessionState.getFailures();
+                    if (requested.size() > failured.size()) {
+                        this.codecState = CodecState.DATA_REQUEST_READY;
+                    } else {
+                        this.deliveryFailed = true;
+                        this.codecState = CodecState.COMPLETED;
+                        sessionState.setReply(reply);
+                    }
                 } else {
                     this.codecState = CodecState.RCPT_REQUEST_READY;
                 }
@@ -182,6 +195,9 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
                 break;
             case DATA_RESPONSE_EXPECTED:
                 this.codecState = CodecState.COMPLETED;
+                if (reply.getCode() != SMTPCodes.START_MAIL_INPUT) {
+                    this.deliveryFailed = true;
+                }
                 sessionState.setReply(reply);
                 break;
             }
@@ -203,8 +219,12 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
     public String next(
             final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
-        if (isCompleted()) {
-            return ProtocolState.DATA.name();
+        if (this.codecState == CodecState.COMPLETED) {
+            if (this.deliveryFailed) {
+                return ProtocolState.RSET.name();
+            } else {
+                return ProtocolState.DATA.name();
+            }
         } else {
             return null;
         }

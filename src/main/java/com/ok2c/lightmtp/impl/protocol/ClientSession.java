@@ -73,6 +73,7 @@ public class ClientSession {
         this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(false));
         this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
         this.codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
+        this.codecs.register(ProtocolState.RSET.name(), new SendRsetCodec());
     }
 
     private void signalDeliveryReady() {

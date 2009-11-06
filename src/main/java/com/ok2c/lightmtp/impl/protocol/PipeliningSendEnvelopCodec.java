@@ -197,7 +197,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
             final ClientSessionState sessionState) {
         if (this.codecState == CodecState.COMPLETED) {
             if (this.deliveryFailed) {
-                return ProtocolState.MAIL.name();
+                return ProtocolState.RSET.name();
             } else {
                 return ProtocolState.DATA.name();
             }
