@@ -49,7 +49,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionRequest;
 
-public class TestAgents extends BaseTransportTest {
+public class TestMailDelivery extends BaseTransportTest {
 
     static String TEXT1 = new String(
             "From: root\r\n" +
