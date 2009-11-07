@@ -80,6 +80,11 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
+        
+        if (sessionState.isTerminated()) {
+            this.completed = true;
+            return;
+        }
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
 
@@ -158,6 +163,9 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
             final ProtocolCodecs<ServerSessionState> codecs,
             final ServerSessionState sessionState) {
         if (isCompleted()) {
+            if (sessionState.isTerminated()) {
+                return ProtocolState.QUIT.name();
+            }
             return ProtocolState.DATA.name();
         } else {
             return null;

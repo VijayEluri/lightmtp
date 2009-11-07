@@ -15,6 +15,7 @@
 package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +27,8 @@ import com.ok2c.lightnio.IOSession;
 
 public class ServerSession {
 
+    public static final String TERMINATE = "com.ok2c.lighmtp.terminate";
+    
     private final IOSession iosession;
     private final ServerSessionState sessionState;
     private final ProtocolCodecs<ServerSessionState> codecs;
@@ -115,8 +118,8 @@ public class ServerSession {
         if (this.log.isDebugEnabled()) {
             this.log.error("Connection timed out: " + this.iosession.getRemoteAddress());
         }
-
-        terminate();
+        this.sessionState.terminated();
+        this.iosession.setEvent(SelectionKey.OP_WRITE);
     }
 
     public void disconneced() {
@@ -153,6 +156,12 @@ public class ServerSession {
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Next codec: " + this.state);
             }
+        }
+        ProtocolState token = (ProtocolState) this.iosession.getAttribute(TERMINATE);
+        if (token != null && token.equals(ProtocolState.QUIT)) {
+            this.log.debug("Session termination requested");
+            this.sessionState.terminated();
+            this.iosession.setEvent(SelectionKey.OP_WRITE);
         }
     }
 
