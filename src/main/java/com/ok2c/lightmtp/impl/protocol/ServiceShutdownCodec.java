@@ -17,6 +17,7 @@ package com.ok2c.lightmtp.impl.protocol;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
+import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
@@ -36,7 +37,7 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
 
     public ServiceShutdownCodec() {
         super();
-        this.writer = new SMTPReplyWriter();
+        this.writer = new SMTPReplyWriter(true);
     }
 
     public void cleanUp() {
@@ -46,7 +47,11 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
             final IOSession iosession,
             final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
-        this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE,
+        SMTPCode enhancedCode = null;
+        if (sessionState.isEnhancedCodeCapable()) {
+            enhancedCode = new SMTPCode(4, 3, 0);
+        }
+        this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE, enhancedCode,
                 sessionState.getServerId() + "service shutting down " +
                         "and closing transmission channel");
         this.completed = false;

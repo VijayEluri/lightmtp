@@ -129,12 +129,17 @@ public class SimpleSendHeloCodec implements ProtocolCodec<ClientSessionState> {
                 sessionState.setReply(reply);
                 break;
             default:
-                throw new SMTPProtocolException("Unexpected reply: " + reply);
+                if (reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
+                    sessionState.setReply(reply);
+                    this.codecState = CodecState.COMPLETED;                    
+                } else {
+                    throw new SMTPProtocolException("Unexpected reply: " + reply);
+                }
             }
-        }
-
-        if (bytesRead == -1) {
-            throw new UnexpectedEndOfStreamException();
+        } else {
+            if (bytesRead == -1 && !sessionState.isTerminated()) {
+                throw new UnexpectedEndOfStreamException();
+            }
         }
     }
 

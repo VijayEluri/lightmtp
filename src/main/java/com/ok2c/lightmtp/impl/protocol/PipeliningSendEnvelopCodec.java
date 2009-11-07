@@ -150,7 +150,11 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
             SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
 
             if (reply == null) {
-                break;
+                if (bytesRead == -1 && !sessionState.isTerminated()) {
+                    throw new UnexpectedEndOfStreamException();
+                } else {
+                    break;
+                }
             }
 
             switch (this.codecState) {
@@ -179,11 +183,12 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
                 sessionState.setReply(reply);
                 break;
             default:
-                throw new SMTPProtocolException("Unexpected reply: " + reply);
-            }
-
-            if (bytesRead == -1) {
-                throw new UnexpectedEndOfStreamException();
+                if (reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
+                    sessionState.setReply(reply);
+                    this.codecState = CodecState.COMPLETED;                    
+                } else {
+                    throw new SMTPProtocolException("Unexpected reply: " + reply);
+                }
             }
         }
     }
