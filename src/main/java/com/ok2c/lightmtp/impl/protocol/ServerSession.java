@@ -46,8 +46,9 @@ public class ServerSession {
             throw new IllegalArgumentException("Protocol codecs may not be null");
         }
         Log log = LogFactory.getLog(iosession.getClass());
-        if (log.isDebugEnabled()) {
-            this.iosession = new LoggingIOSession(iosession, "server", log);
+        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
+        if (log.isDebugEnabled() || wirelog.isDebugEnabled()) {
+            this.iosession = new LoggingIOSession(iosession, "server", log, new Wire(wirelog));
         } else {
             this.iosession = iosession;
         }
