@@ -204,10 +204,17 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
                 }
                 sessionState.setReply(reply);
                 break;
+            default:
+                if (reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
+                    sessionState.setReply(reply);
+                    this.codecState = CodecState.COMPLETED;                    
+                } else {
+                    throw new SMTPProtocolException("Unexpected reply: " + reply);
+                }
             }
         }
 
-        if (bytesRead == -1) {
+        if (bytesRead == -1 && !sessionState.isTerminated()) {
             throw new UnexpectedEndOfStreamException();
         }
     }

@@ -152,6 +152,7 @@ public class ClientSession {
             doConnected();
         } catch (IOException ex) {
             signalException(ex);
+            this.iosession.close();
         } catch (SMTPProtocolException ex) {
             signalException(ex);
         }
@@ -162,6 +163,7 @@ public class ClientSession {
             doConsumeData();
         } catch (IOException ex) {
             signalException(ex);
+            this.iosession.close();
         } catch (SMTPProtocolException ex) {
             this.state = ProtocolState.QUIT;
             signalException(ex);
@@ -241,6 +243,9 @@ public class ClientSession {
                 break;
             case MAIL:
                 if (reply.getCode() != SMTPCodes.START_MAIL_INPUT) {
+                    if (this.sessionState.getRequest() == null) {
+                        break;
+                    }
                     signalDeliveryFailure();
                 }
                 break;
@@ -251,6 +256,11 @@ public class ClientSession {
                     signalDeliveryFailure();
                 }
                 break;
+            }
+            
+            if (reply != null && reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
+                this.sessionState.terminated();
+                this.iosession.close();
             }
         }
 
