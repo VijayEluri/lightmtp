@@ -254,6 +254,9 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
             final ProtocolCodecs<ServerSessionState> codecs,
             final ServerSessionState sessionState) {
         if (isCompleted()) {
+            if (sessionState.isTerminated()) {
+                return ProtocolState.QUIT.name();
+            }
             return ProtocolState.MAIL.name();
         } else {
             return null;

@@ -63,6 +63,8 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
                 new PipeliningReceiveEnvelopCodec(createProtocolHandler(this.validator)));
         codecs.register(ProtocolState.DATA.name(),
                 new ReceiveDataCodec(this.workingDir, this.deliveryHandler));
+        codecs.register(ProtocolState.QUIT.name(),
+                new ServiceShutdownCodec());
         return new ServerSession(iosession, codecs);
     }
 

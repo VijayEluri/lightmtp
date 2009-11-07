@@ -17,18 +17,24 @@ package com.ok2c.lightmtp.impl.agent;
 import java.io.File;
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.nio.channels.SelectionKey;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightmtp.agent.IOSessionRegistry;
+import com.ok2c.lightmtp.impl.protocol.ProtocolState;
+import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
+import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.impl.DefaultListeningIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
@@ -113,6 +119,22 @@ public class DefaultMailTransferAgent {
 
     public void shutdown() throws IOException {
         this.log.debug("Shut down I/O reactor");
+        // Take down listeners
+        this.ioReactor.pause();
+        synchronized (this.sessionRegistry) {
+            Iterator<IOSession> sessions = this.sessionRegistry.iterator();
+            while (sessions.hasNext()) {
+                IOSession session = sessions.next(); 
+                session.setAttribute(ServerSession.TERMINATE, ProtocolState.QUIT);
+                session.setEvent(SelectionKey.OP_WRITE);
+            }
+        }
+        try {
+            if (!this.sessionRegistry.awaitShutdown(30, TimeUnit.SECONDS)) {
+                this.log.warn("Failed to shut down active sessions within 30 seconds");
+            }
+        } catch (InterruptedException ignore) {
+        }
         this.ioReactor.shutdown(30000);
         IOReactorThread t = this.thread;
         try {
