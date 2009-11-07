@@ -20,9 +20,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightnio.SessionBufferStatus;
@@ -62,21 +59,11 @@ public class ServerSessionState implements SessionBufferStatus {
     }
 
     protected SessionInputBuffer createSessionInputBuffer() {
-        SessionInputBuffer buf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
-        if (wirelog.isDebugEnabled()) {
-            buf = new LoggingSessionInputBuffer(buf, new Wire(wirelog), SMTPConsts.ASCII);
-        }
-        return buf;
+        return new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
     }
 
     protected SessionOutputBuffer createSessionOutputBuffer() {
-        SessionOutputBuffer buf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
-        if (wirelog.isDebugEnabled()) {
-            buf = new LoggingSessionOutputBuffer(buf, new Wire(wirelog), SMTPConsts.ASCII);
-        }
-        return buf;
+        return new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
     }
 
     public boolean hasBufferedInput() {

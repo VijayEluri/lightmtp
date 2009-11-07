@@ -35,12 +35,17 @@ class LoggingIOSession implements IOSession {
 
     private static AtomicLong COUNT = new AtomicLong(0);
     
-    private final Log log;
     private final IOSession session;
     private final ByteChannel channel;
     private final String id;
+    private final Log log;
+    private final Wire wirelog;
     
-    public LoggingIOSession(final IOSession session, final String id, final Log log) {
+    public LoggingIOSession(
+            final IOSession session, 
+            final String id, 
+            final Log log,
+            final Wire wirelog) {
         super();
         if (session == null) {
             throw new IllegalArgumentException("I/O session may not be null");
@@ -49,6 +54,7 @@ class LoggingIOSession implements IOSession {
         this.channel = new LoggingByteChannel();
         this.id = id + "-" + COUNT.incrementAndGet();
         this.log = log;
+        this.wirelog = wirelog;
     }
 
     public ByteChannel channel() {
@@ -183,6 +189,13 @@ class LoggingIOSession implements IOSession {
             if (log.isDebugEnabled()) {
                 log.debug("I/O session " + id + " " + session + ": " + bytesRead + " bytes read");
             }
+            if (bytesRead > 0 && wirelog.isEnabled()) {
+                ByteBuffer b = dst.duplicate();
+                int p = b.position();
+                b.limit(p);
+                b.position(p - bytesRead);
+                wirelog.input(b);
+            }
             return bytesRead;
         }
 
@@ -190,6 +203,13 @@ class LoggingIOSession implements IOSession {
             int byteWritten = session.channel().write(src);
             if (log.isDebugEnabled()) {
                 log.debug("I/O session " + id + " " + session + ": " + byteWritten + " bytes written");
+            }
+            if (byteWritten > 0 && wirelog.isEnabled()) {
+                ByteBuffer b = src.duplicate();
+                int p = b.position();
+                b.limit(p);
+                b.position(p - byteWritten);
+                wirelog.output(b);
             }
             return byteWritten;
         }
