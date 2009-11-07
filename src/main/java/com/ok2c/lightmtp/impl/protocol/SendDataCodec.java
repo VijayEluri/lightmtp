@@ -200,6 +200,9 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
             final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (isCompleted()) {
+            if (sessionState.isTerminated()) {
+                return ProtocolState.QUIT.name();
+            }
             return ProtocolState.MAIL.name();
         } else {
             return null;

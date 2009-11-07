@@ -119,7 +119,7 @@ public class ServerSession {
     }
 
     public void disconneced() {
-        this.log.debug("Connection terminated");
+        this.log.debug("Session terminated");
     }
 
     private void doConnected() throws IOException, SMTPProtocolException {
@@ -131,11 +131,13 @@ public class ServerSession {
     }
 
     private void doConsumeData() throws IOException, SMTPProtocolException {
+        this.log.debug("Consume data");
         this.currentCodec.consumeData(this.iosession, this.sessionState);
         updateSession();
     }
 
     private void doProduceData() throws IOException, SMTPProtocolException {
+        this.log.debug("Produce data");
         this.currentCodec.produceData(this.iosession, this.sessionState);
         updateSession();
     }

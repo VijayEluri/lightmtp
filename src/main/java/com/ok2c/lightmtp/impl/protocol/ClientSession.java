@@ -34,6 +34,8 @@ import com.ok2c.lightnio.IOSession;
 
 public class ClientSession {
 
+    public static final String TERMINATE = "com.ok2c.lighmtp.terminate";
+    
     private final IOSession iosession;
     private final ClientSessionState sessionState;
     private final SessionContext context;
@@ -70,16 +72,11 @@ public class ClientSession {
         this.context = new SessionContextImpl(iosession);
         this.handler = handler;
         this.iosession.setBufferStatus(this.sessionState);
-        this.codecs = new ProtocolCodecRegistry<ClientSessionState>();
+        this.codecs = codecs;
+
         this.state = ProtocolState.INIT;
 
         this.log = LogFactory.getLog(getClass());
-
-        this.codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec());
-        this.codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(false));
-        this.codecs.register(ProtocolState.DATA.name(), new SendDataCodec(false));
-        this.codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
-        this.codecs.register(ProtocolState.RSET.name(), new SendRsetCodec());
     }
 
     private void signalDeliveryReady() {
@@ -90,6 +87,7 @@ public class ClientSession {
 
         DeliveryRequest request = this.handler.submitRequest(this.context);
         this.sessionState.reset(request);
+        
         if (request == null) {
             this.iosession.clearEvent(SelectionKey.OP_WRITE);
             this.log.debug("No delivery request submitted");
@@ -193,6 +191,7 @@ public class ClientSession {
     }
 
     public void disconneced() {
+        this.log.debug("Session terminated");
         this.handler.disconnected(this.context);
     }
 
@@ -210,11 +209,17 @@ public class ClientSession {
     }
 
     private void doConsumeData() throws IOException, SMTPProtocolException {
+        this.log.debug("Consume data");
         this.currentCodec.consumeData(this.iosession, this.sessionState);
         updateSession();
     }
 
     private void doProduceData() throws IOException, SMTPProtocolException {
+        this.log.debug("Produce data");
+        if (this.sessionState.isTerminated() 
+                && this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
+            quit();
+        }
         this.currentCodec.produceData(this.iosession, this.sessionState);
         updateSession();
     }
@@ -261,20 +266,31 @@ public class ClientSession {
                 signalDeliveryReady();
             }
         }
+        
+        ProtocolState token = (ProtocolState) this.iosession.getAttribute(TERMINATE);
+        if (token != null && token.equals(ProtocolState.QUIT)) {
+            this.log.debug("Session termination requested");
+            this.sessionState.terminated();
+            this.iosession.setEvent(SelectionKey.OP_WRITE);
+        }
+    }
+
+    private void quit() throws IOException, SMTPProtocolException {
+        this.currentCodec = this.codecs.getCodec(ProtocolState.QUIT.name());
+        this.currentCodec.reset(this.iosession, this.sessionState);
+        this.state = ProtocolState.QUIT;
+        if (this.log.isDebugEnabled()) {
+            this.log.debug("Next codec: " + this.state);
+        }
     }
 
     private void doTimeout() throws IOException, SMTPProtocolException {
         this.log.debug("Session timed out");
         if (this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
-            this.currentCodec = this.codecs.getCodec(ProtocolState.QUIT.name());
-            this.currentCodec.reset(this.iosession, this.sessionState);
-            this.state = ProtocolState.QUIT;
-            if (this.log.isDebugEnabled()) {
-                this.log.debug("Next codec: " + this.state);
-            }
+            quit();
         } else {
             this.iosession.close();
         }
     }
-
+    
 }

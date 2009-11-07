@@ -99,8 +99,12 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
+        if (sessionState.isTerminated()) {
+            this.codecState = CodecState.COMPLETED;
+            return;
+        }
         if (sessionState.getRequest() == null) {
-            throw new IllegalArgumentException("Delivery request may not be null");
+            return;
         }
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
@@ -220,6 +224,9 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
             final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (this.codecState == CodecState.COMPLETED) {
+            if (sessionState.isTerminated()) {
+                return ProtocolState.QUIT.name();
+            }
             if (this.deliveryFailed) {
                 return ProtocolState.RSET.name();
             } else {
