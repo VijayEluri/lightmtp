@@ -46,6 +46,7 @@ public class ServerSessionState implements SessionBufferStatus {
     private String clientDomain;
     private String sender;
     private DataType dataType;
+    private boolean terminated;
 
     public ServerSessionState(final String serverId) {
         super();
@@ -140,6 +141,14 @@ public class ServerSessionState implements SessionBufferStatus {
 
     public void setDataType(final DataType dataType) {
         this.dataType = dataType;
+    }
+
+    public boolean isTerminated() {
+        return this.terminated;
+    }
+
+    public void terminated() {
+        this.terminated = true;
     }
 
     public void reset() {

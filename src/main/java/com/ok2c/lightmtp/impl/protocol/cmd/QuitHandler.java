@@ -31,6 +31,7 @@ public class QuitHandler implements CommandHandler<ServerSessionState> {
             final String argument,
             final List<String> params,
             final ServerSessionState sessionState) {
+        sessionState.terminated();
         return new SMTPReply(SMTPCodes.SERVICE_TERMINATING,
                 sessionState.getServerId() + " service terminating");
     }
