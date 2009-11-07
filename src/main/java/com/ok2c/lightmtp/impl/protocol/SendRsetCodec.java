@@ -75,6 +75,11 @@ public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
+        if (sessionState.isTerminated()) {
+            this.codecState = CodecState.COMPLETED;
+            return;
+        }
+        
         SessionOutputBuffer buf = sessionState.getOutbuf();
 
         switch (this.codecState) {
@@ -133,6 +138,9 @@ public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
             final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (this.codecState == CodecState.COMPLETED) {
+            if (sessionState.isTerminated()) {
+                return ProtocolState.QUIT.name();
+            }
             return ProtocolState.MAIL.name();
         } else {
             return null;

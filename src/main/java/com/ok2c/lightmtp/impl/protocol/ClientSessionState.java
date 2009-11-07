@@ -44,7 +44,8 @@ public class ClientSessionState implements SessionBufferStatus {
 
     private DeliveryRequest request;
     private SMTPReply reply;
-
+    private boolean terminated;
+    
     public ClientSessionState() {
         super();
         this.inbuf = createSessionInputBuffer();
@@ -111,6 +112,14 @@ public class ClientSessionState implements SessionBufferStatus {
 
     public void setReply(final SMTPReply reply) {
         this.reply = reply;
+    }
+
+    public boolean isTerminated() {
+        return this.terminated;
+    }
+
+    public void terminated() {
+        this.terminated = true;
     }
 
     @Override

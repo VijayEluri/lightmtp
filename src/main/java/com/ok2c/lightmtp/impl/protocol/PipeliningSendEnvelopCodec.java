@@ -96,10 +96,14 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
-        if (sessionState.getRequest() == null) {
-            throw new IllegalArgumentException("Delivery request may not be null");
+        if (sessionState.isTerminated()) {
+            this.codecState = CodecState.COMPLETED;
+            return;
         }
-
+        if (sessionState.getRequest() == null) {
+            return;
+        }
+        
         SessionOutputBuffer buf = sessionState.getOutbuf();
         DeliveryRequest request = sessionState.getRequest();
 
@@ -196,6 +200,9 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
             final ProtocolCodecs<ClientSessionState> codecs,
             final ClientSessionState sessionState) {
         if (this.codecState == CodecState.COMPLETED) {
+            if (sessionState.isTerminated()) {
+                return ProtocolState.QUIT.name();
+            }
             if (this.deliveryFailed) {
                 return ProtocolState.RSET.name();
             } else {

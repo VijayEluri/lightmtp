@@ -69,5 +69,10 @@ public class IOSessionRegistry {
         }
         return empty;
     }
+
+    @Override
+    public synchronized String toString() {
+        return this.sessions.toString();
+    }
     
 }
