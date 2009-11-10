@@ -16,7 +16,7 @@ package com.ok2c.lightmtp.impl.agent;
 
 import com.ok2c.lightmtp.agent.IOSessionRegistry;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
-import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
+import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOSession;
 
@@ -25,11 +25,11 @@ public class ClientIOEventDispatch implements IOEventDispatch {
     private static final String CLIENT_SESSION = "smtp.client-session";
     
     private final IOSessionRegistry sessionRegistry;
-    private final ClientSessionFactory sessionFactory;
+    private final SessionFactory<ClientSession> sessionFactory;
     
     public ClientIOEventDispatch(
             final IOSessionRegistry sessionRegistry,
-            final ClientSessionFactory sessionFactory) {
+            final SessionFactory<ClientSession> sessionFactory) {
         super();
         if (sessionRegistry == null) {
             throw new IllegalArgumentException("I/O session registry may not be null");

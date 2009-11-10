@@ -12,22 +12,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.impl.protocol;
+package com.ok2c.lightmtp.protocol;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.protocol.DeliveryResult;
-import com.ok2c.lightmtp.protocol.RcptResult;
 
-class DeliveryResultImpl implements DeliveryResult {
+public class BasicDeliveryResult implements DeliveryResult {
 
     private final SMTPReply reply;
     private final List<RcptResult> failures;
     
-    public DeliveryResultImpl(final SMTPReply reply, List<RcptResult> rcptFailures) {
+    public BasicDeliveryResult(final SMTPReply reply, List<RcptResult> rcptFailures) {
         super();
         if (reply == null) {
             throw new IllegalArgumentException("SMTP reply may not be null");
@@ -38,6 +36,10 @@ class DeliveryResultImpl implements DeliveryResult {
             list.addAll(rcptFailures);
         }
         this.failures = Collections.unmodifiableList(list);
+    }
+
+    public BasicDeliveryResult(final SMTPReply reply) {
+        this(reply, null);
     }
 
     public SMTPReply getReply() {

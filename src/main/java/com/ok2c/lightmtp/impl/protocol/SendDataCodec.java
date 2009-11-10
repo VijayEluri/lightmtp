@@ -18,15 +18,19 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
+import java.util.LinkedList;
 
+import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
+import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.protocol.RcptResult;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
@@ -48,26 +52,34 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
     }
 
     private final int maxLineLen;
+    private final DataAckMode mode;
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPInputBuffer contentBuf;
     private final CharArrayBuffer lineBuf;
+    private final LinkedList<String> recipients;
 
     private SMTPContent<ReadableByteChannel> content;
     private ReadableByteChannel contentChannel;
     private boolean contentSent;
     private CodecState codecState;
 
-    public SendDataCodec(int maxLineLen, boolean enhancedCodes) {
+    public SendDataCodec(int maxLineLen, boolean enhancedCodes, final DataAckMode mode) {
         super();
         this.maxLineLen = maxLineLen;
+        this.mode = mode != null ? mode : DataAckMode.SINGLE;
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.contentBuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
+        this.recipients = new LinkedList<String>();
         this.codecState = CodecState.CONTENT_READY;
     }
 
+    public SendDataCodec(boolean enhancedCodes, final DataAckMode mode) {
+        this(SMTPConsts.MAX_LINE_LEN, enhancedCodes, mode);
+    }
+
     public SendDataCodec(boolean enhancedCodes) {
-        this(SMTPConsts.MAX_LINE_LEN, enhancedCodes);
+        this(SMTPConsts.MAX_LINE_LEN, enhancedCodes, DataAckMode.SINGLE);
     }
 
     public void cleanUp() {
@@ -85,10 +97,18 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
         if (sessionState.getRequest() == null) {
             throw new IllegalArgumentException("Delivery request may not be null");
         }
+        
+        DeliveryRequest request = sessionState.getRequest();        
+        
         this.parser.reset();
         this.contentBuf.clear();
         this.lineBuf.clear();
-        this.content = sessionState.getRequest().getContent();
+        this.recipients.clear();
+        if (this.mode.equals(DataAckMode.PER_RECIPIENT)) {
+            this.recipients.addAll(request.getRecipients());
+        }
+        
+        this.content = request.getContent();
         this.contentChannel = this.content.channel();
         this.contentSent = false;
         this.codecState = CodecState.CONTENT_READY;
@@ -169,22 +189,34 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
         SessionInputBuffer buf = sessionState.getInbuf();
 
-        int bytesRead = buf.fill(iosession.channel());
-        SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
-
-        if (reply != null) {
+        while (this.codecState != CodecState.COMPLETED) {
+            int bytesRead = buf.fill(iosession.channel());
+            
+            SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
+            if (reply == null) {
+                if (bytesRead == -1 && !sessionState.isTerminated()) {
+                    throw new UnexpectedEndOfStreamException();
+                } else {
+                    break;
+                }
+            }
+            
             switch (this.codecState) {
             case CONTENT_RESPONSE_EXPECTED:
-                this.codecState = CodecState.COMPLETED;
+                if (this.mode.equals(DataAckMode.PER_RECIPIENT)) {
+                    String recipient = this.recipients.removeFirst();
+                    if (reply.getCode() != SMTPCodes.OK) {
+                        sessionState.getFailures().add(new RcptResult(reply, recipient));
+                    }
+                }
+                if (this.recipients.isEmpty()) {
+                    this.codecState = CodecState.COMPLETED;
+                }
                 sessionState.setReply(reply);
                 break;
             default:
                 throw new SMTPProtocolException("Unexpected reply: " + reply);
             }
-        }
-
-        if (bytesRead == -1) {
-            throw new UnexpectedEndOfStreamException();
         }
     }
 

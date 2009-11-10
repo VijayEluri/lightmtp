@@ -29,6 +29,7 @@ import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.ProtocolState;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
+import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.IOSession;
@@ -72,7 +73,7 @@ public class DefaultMailUserAgent {
         return this.ioReactor.connect(remoteAddress, localAddress, attachment, callback);
     }
     
-    public void start(final ClientSessionFactory sessionFactory) {
+    public void start(final SessionFactory<ClientSession> sessionFactory) {
         this.log.debug("Start I/O reactor");
         
         ClientIOEventDispatch iodispatch = new ClientIOEventDispatch(
