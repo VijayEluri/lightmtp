@@ -26,6 +26,7 @@ import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
+import com.ok2c.lightmtp.protocol.BasicDeliveryResult;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.ServiceRefusedException;
@@ -119,7 +120,7 @@ public class ClientSession {
         if (request == null) {
             throw new IllegalStateException("Delivery request is null");
         }
-        DeliveryResult result = new DeliveryResultImpl(
+        DeliveryResult result = new BasicDeliveryResult(
                 this.sessionState.getReply(),
                 this.sessionState.getFailures());
         this.sessionState.reset(null);
@@ -134,7 +135,7 @@ public class ClientSession {
         if (request == null) {
             throw new IllegalStateException("Delivery request is null");
         }
-        DeliveryResult result = new DeliveryResultImpl(
+        DeliveryResult result = new BasicDeliveryResult(
                 this.sessionState.getReply(),
                 this.sessionState.getFailures());
         this.sessionState.reset(null);

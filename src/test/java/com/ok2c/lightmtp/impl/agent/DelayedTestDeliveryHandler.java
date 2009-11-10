@@ -27,11 +27,11 @@ import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 
-public class SimpleTestDeliveryHandler implements DeliveryHandler {
+public class DelayedTestDeliveryHandler implements DeliveryHandler {
 
     private final Queue<SimpleTestDelivery> deliveries;
     
-    public SimpleTestDeliveryHandler() {
+    public DelayedTestDeliveryHandler() {
         super();
         this.deliveries = new ConcurrentLinkedQueue<SimpleTestDelivery>();
     }
@@ -41,17 +41,29 @@ public class SimpleTestDeliveryHandler implements DeliveryHandler {
     }
 
     public void handle(final DeliveryRequest request, final BasicFuture<DeliveryResult> future) {
-        try {
-            SimpleTestDelivery delivery = new SimpleTestDelivery();
-            delivery.setSender(request.getSender());
-            delivery.setRecipients(request.getRecipients());
-            delivery.setContent(ContentUtils.readToString(request.getContent()));
-            this.deliveries.add(delivery);
-            SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 6, 0), "message accepted");
-            future.completed(new BasicDeliveryResult(reply));
-        } catch (IOException ex) {
-            future.failed(ex);
-        }
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(200);
+                    SimpleTestDelivery delivery = new SimpleTestDelivery();
+                    delivery.setSender(request.getSender());
+                    delivery.setRecipients(request.getRecipients());
+                    delivery.setContent(ContentUtils.readToString(request.getContent()));
+                    deliveries.add(delivery);
+                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 6, 0), 
+                            "message accepted");
+                    future.completed(new BasicDeliveryResult(reply));
+                } catch (InterruptedException ex) {
+                    future.failed(ex);
+                } catch (IOException ex) {
+                    future.failed(ex);
+                }
+            }
+            
+        };
+        t.start();
     }
 
 }

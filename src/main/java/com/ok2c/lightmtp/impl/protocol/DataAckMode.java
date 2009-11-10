@@ -12,12 +12,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol;
+package com.ok2c.lightmtp.impl.protocol;
 
-import com.ok2c.lightnio.concurrent.BasicFuture;
+public enum DataAckMode {
 
-public interface DeliveryHandler {
-
-    void handle(DeliveryRequest request, BasicFuture<DeliveryResult> future);
+    SINGLE,
+    PER_RECIPIENT,
 
 }

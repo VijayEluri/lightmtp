@@ -19,7 +19,6 @@ import java.io.File;
 import com.ok2c.lightmtp.impl.protocol.cmd.DataHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.DefaultProtocolHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.EhloHandler;
-import com.ok2c.lightmtp.impl.protocol.cmd.HeloHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.MailFromHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.NoopHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.QuitHandler;
@@ -33,13 +32,13 @@ import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOSession;
 
-public class ServerSessionFactory implements SessionFactory<ServerSession> {
+public class LocalServerSessionFactory implements SessionFactory<ServerSession> {
 
     private final File workingDir;
     private final EnvelopValidator validator;
     private final DeliveryHandler deliveryHandler;
     
-    public ServerSessionFactory(
+    public LocalServerSessionFactory(
             final File workingDir,
             final EnvelopValidator validator,
             final DeliveryHandler deliveryHandler) {
@@ -62,7 +61,8 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
         codecs.register(ProtocolState.MAIL.name(),
                 new PipeliningReceiveEnvelopCodec(createProtocolHandler(this.validator)));
         codecs.register(ProtocolState.DATA.name(),
-                new ReceiveDataCodec(this.workingDir, this.deliveryHandler, DataAckMode.SINGLE));
+                new ReceiveDataCodec(this.workingDir, this.deliveryHandler, 
+                        DataAckMode.PER_RECIPIENT));
         codecs.register(ProtocolState.QUIT.name(),
                 new ServiceShutdownCodec());
         return new ServerSession(iosession, codecs);
@@ -71,8 +71,7 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
     protected ProtocolHandler<ServerSessionState> createProtocolHandler(
             final EnvelopValidator validator) {
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
-        handler.register("HELO", new HeloHandler(validator));
-        handler.register("EHLO", new EhloHandler(validator));
+        handler.register("LHLO", new EhloHandler(validator));
         handler.register("RSET", new RsetHandler());
         handler.register("NOOP", new NoopHandler());
         handler.register("QUIT", new QuitHandler());

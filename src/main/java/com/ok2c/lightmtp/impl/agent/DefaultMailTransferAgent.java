@@ -32,6 +32,7 @@ import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.IOSession;
@@ -90,7 +91,7 @@ public class DefaultMailTransferAgent {
         start(sessionFactory);
     }
 
-    public void start(final ServerSessionFactory sessionFactory) {
+    public void start(final SessionFactory<ServerSession> sessionFactory) {
         this.log.debug("Start I/O reactor");
         
         ServerIOEventDispatch iodispatch = new ServerIOEventDispatch(

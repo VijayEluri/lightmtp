@@ -18,10 +18,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPContent;
@@ -32,12 +36,15 @@ import com.ok2c.lightmtp.message.content.FileStore;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
+import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.protocol.RcptResult;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
+import com.ok2c.lightnio.concurrent.BasicFuture;
 
 public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
@@ -46,17 +53,22 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
     private final DeliveryHandler handler;
     private final File workingDir;
+    private final DataAckMode mode;
     private final SMTPMessageWriter<SMTPReply> writer;
+    private final LinkedList<SMTPReply> pendingReplies;
     private final CharArrayBuffer lineBuf;
     private final SMTPOutputBuffer contentBuf;
-
+    
     private File tempFile;
     private FileStore fileStore;
     private boolean dataReceived;
-    private SMTPReply pendingReply;
+    private BasicFuture<DeliveryResult> deliveryFuture;
     private boolean completed;
 
-    public ReceiveDataCodec(final File workingDir, final DeliveryHandler handler) {
+    public ReceiveDataCodec(
+            final File workingDir, 
+            final DeliveryHandler handler,
+            final DataAckMode mode) {
         super();
         if (workingDir == null) {
             throw new IllegalArgumentException("Working directory may not be null");
@@ -66,14 +78,23 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         }
         this.workingDir = workingDir;
         this.handler = handler;
+        this.mode = mode != null ? mode : DataAckMode.SINGLE;
         this.writer = new SMTPReplyWriter(true);
+        this.pendingReplies = new LinkedList<SMTPReply>();       
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.contentBuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
+        
         this.dataReceived = false;
-        this.pendingReply = null;
+        this.deliveryFuture = null;
         this.completed = false;
     }
 
+    public ReceiveDataCodec(
+            final File workingDir, 
+            final DeliveryHandler handler) {
+        this(workingDir, handler, DataAckMode.SINGLE);
+    }
+    
     @Override
     protected void finalize() throws Throwable {
         cleanUp();
@@ -104,8 +125,9 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         this.fileStore = new FileStore(this.tempFile);
         this.lineBuf.clear();
 
+        this.pendingReplies.clear();        
         this.dataReceived = false;
-        this.pendingReply = null;
+        this.deliveryFuture = null;
 
         this.completed = false;
     }
@@ -133,9 +155,17 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
         SessionOutputBuffer buf = sessionState.getOutbuf();
 
-        if (this.pendingReply != null) {
-            this.writer.write(this.pendingReply, buf);
-            this.pendingReply = null;
+        if (this.deliveryFuture != null) {
+            synchronized (iosession) {
+                if (this.deliveryFuture.isDone()) {
+                    deliveryCompleted(sessionState);
+                } else {
+                    iosession.clearEvent(SelectionKey.OP_WRITE);
+                }
+            }
+            while (!this.pendingReplies.isEmpty()) {
+                this.writer.write(this.pendingReplies.removeFirst(), buf);
+            }
         }
 
         if (buf.hasData()) {
@@ -150,6 +180,66 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         }
     }
 
+    private void deliveryCompleted(final ServerSessionState sessionState) {
+        if (this.mode.equals(DataAckMode.SINGLE)) {
+            try {
+                DeliveryResult result = this.deliveryFuture.get();
+                this.pendingReplies.add(result.getReply());
+            } catch (ExecutionException ex) {
+                Throwable cause = ex.getCause();
+                if (cause == null) {
+                    cause = ex;
+                }
+                this.pendingReplies.add(createErrorReply(cause));
+            } catch (InterruptedException ex) {
+                this.pendingReplies.add(createErrorReply(ex));
+            }
+        } else {
+            List<String> recipients = sessionState.getRecipients();
+            try {
+                DeliveryResult results = this.deliveryFuture.get();
+                Map<String, SMTPReply> map = new HashMap<String, SMTPReply>();
+                for (RcptResult res: results.getFailures()) {
+                    map.put(res.getRecipient(), res.getReply());
+                }
+                for (String recipient: recipients) {
+                    SMTPReply reply = map.get(recipient);
+                    if (reply == null) {
+                        reply = results.getReply();
+                    }
+                    this.pendingReplies.add(reply);
+                }
+            } catch (InterruptedException ex) {
+                SMTPReply reply = createErrorReply(ex);
+                for (int i = 0; i < recipients.size(); i++) {
+                    this.pendingReplies.add(reply);
+                }
+            } catch (ExecutionException ex) {
+                Throwable cause = ex.getCause();
+                if (cause == null) {
+                    cause = ex;
+                }
+                SMTPReply reply = createErrorReply(cause);
+                for (int i = 0; i < recipients.size(); i++) {
+                    this.pendingReplies.add(reply);
+                }
+            }
+        }
+    }
+
+    private SMTPReply createErrorReply(final Throwable ex) {
+        if (ex instanceof IOException) {
+            return new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
+                    new SMTPCode(4, 2, 0), ex.getMessage());
+        } else if (ex instanceof InterruptedException) {
+            return new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
+                    new SMTPCode(4, 2, 0), ex.getMessage());
+        } else {
+            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED,
+                    new SMTPCode(5, 2, 0), ex.getMessage());
+        }
+    }
+    
     public void consumeData(
             final IOSession iosession,
             final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
@@ -196,33 +286,9 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
                     sessionState.getRecipients(),
                     content);
 
-            try {
-                this.handler.handle(deliveryRequest);
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(2, 6, 0);
-                }
-                this.pendingReply = new SMTPReply(SMTPCodes.OK, 
-                        enhancedCode, "message accepted");
-            } catch (SMTPErrorException ex) {
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = ex.getEnhancedCode();
-                }
-                this.pendingReply = new SMTPReply(ex.getCode(), 
-                        enhancedCode, ex.getMessage());
-            } catch (IOException ex) {
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(4, 2, 0);
-                }
-                this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
-                        enhancedCode, ex.getMessage());
-            }
-
-            iosession.setEvent(SelectionKey.OP_WRITE);
-
-            cleanUp();
+            this.deliveryFuture = new BasicFuture<DeliveryResult>(
+                    new SessionResume<DeliveryResult>(iosession)); 
+            this.handler.handle(deliveryRequest, this.deliveryFuture);
         }
     }
 

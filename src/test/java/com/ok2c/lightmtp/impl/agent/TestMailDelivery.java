@@ -30,6 +30,8 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.impl.BaseTransportTest;
+import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
+import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
 import com.ok2c.lightmtp.impl.protocol.cmd.DefaultProtocolHandler;
@@ -44,6 +46,7 @@ import com.ok2c.lightmtp.protocol.RcptResult;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionRequest;
+import com.ok2c.lightnio.concurrent.BasicFuture;
 
 public class TestMailDelivery extends BaseTransportTest {
 
@@ -148,6 +151,86 @@ public class TestMailDelivery extends BaseTransportTest {
         
     }
     
+    @Test
+    public void testDelayedDelivery() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1"), 
+                new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1", "testuser2"), 
+                new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
+        
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        DelayedTestDeliveryHandler deliveryHandler = new DelayedTestDeliveryHandler();
+        this.mta.start(null, deliveryHandler);
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(deliveryRequestHandler);
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(3, results.size());
+        DeliveryResult res1 = results.get(0);
+        Assert.assertTrue(res1.getFailures().isEmpty());
+        Assert.assertEquals(250, res1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res1.getReply().getEnhancedCode());
+        DeliveryResult res2 = results.get(1);
+        Assert.assertTrue(res2.getFailures().isEmpty());
+        Assert.assertEquals(250, res2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res2.getReply().getEnhancedCode());
+        DeliveryResult res3 = results.get(2);
+        Assert.assertTrue(res3.getFailures().isEmpty());
+        Assert.assertEquals(250, res3.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res3.getReply().getEnhancedCode());
+        
+        Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
+        Assert.assertNotNull(deliveries);
+        SimpleTestDelivery delivery1 = deliveries.poll();
+        Assert.assertNotNull(delivery1); 
+        Assert.assertEquals("root", delivery1.getSender());
+        Assert.assertEquals(1, delivery1.getRecipients().size());
+        Assert.assertEquals("testuser1", delivery1.getRecipients().get(0));
+        Assert.assertEquals(TEXT1, delivery1.getContent());
+        SimpleTestDelivery delivery2 = deliveries.poll();
+        Assert.assertNotNull(delivery2); 
+        Assert.assertEquals("root", delivery2.getSender());
+        Assert.assertEquals(2, delivery2.getRecipients().size());
+        Assert.assertEquals("testuser1", delivery2.getRecipients().get(0));
+        Assert.assertEquals("testuser2", delivery2.getRecipients().get(1));
+        Assert.assertEquals(TEXT2, delivery2.getContent());
+        SimpleTestDelivery delivery3 = deliveries.poll();
+        Assert.assertNotNull(delivery3); 
+        Assert.assertEquals("root", delivery3.getSender());
+        Assert.assertEquals(3, delivery3.getRecipients().size());
+        Assert.assertEquals("testuser1", delivery3.getRecipients().get(0));
+        Assert.assertEquals("testuser2", delivery3.getRecipients().get(1));
+        Assert.assertEquals("testuser3", delivery3.getRecipients().get(2));
+        Assert.assertEquals(TEXT3, delivery3.getContent());
+        Assert.assertNull(deliveries.poll()); 
+    }
+
     static class OldServerSessionFactory extends ServerSessionFactory {
         
         public OldServerSessionFactory(
@@ -580,8 +663,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
-            public void handle(final DeliveryRequest request) throws SMTPErrorException, IOException {
-                throw new IOException("Oooopsie");
+            public void handle(final DeliveryRequest request, final BasicFuture<DeliveryResult> future){
+                future.failed(new IOException("Oooopsie"));
             }
             
         };
@@ -617,5 +700,145 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals(451, res2.getReply().getCode());
         Assert.assertEquals(new SMTPCode(4, 2, 0), res2.getReply().getEnhancedCode());
     }
-    
+
+    @Test
+    public void testBasicLocalDelivery() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1"), 
+                new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1", "testuser2"), 
+                new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
+        
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
+        this.mta.start(new LocalServerSessionFactory(TMP_DIR, null, deliveryHandler));
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(new LocalClientSessionFactory(deliveryRequestHandler));
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(3, results.size());
+        DeliveryResult res1 = results.get(0);
+        Assert.assertTrue(res1.getFailures().isEmpty());
+        Assert.assertEquals(250, res1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res1.getReply().getEnhancedCode());
+        DeliveryResult res2 = results.get(1);
+        Assert.assertTrue(res2.getFailures().isEmpty());
+        Assert.assertEquals(250, res2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res2.getReply().getEnhancedCode());
+        DeliveryResult res3 = results.get(2);
+        Assert.assertTrue(res3.getFailures().isEmpty());
+        Assert.assertEquals(250, res3.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res3.getReply().getEnhancedCode());
+        
+        Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
+        Assert.assertNotNull(deliveries);
+        SimpleTestDelivery delivery1 = deliveries.poll();
+        Assert.assertNotNull(delivery1); 
+        Assert.assertEquals("root", delivery1.getSender());
+        Assert.assertEquals(1, delivery1.getRecipients().size());
+        Assert.assertEquals("testuser1", delivery1.getRecipients().get(0));
+        Assert.assertEquals(TEXT1, delivery1.getContent());
+        SimpleTestDelivery delivery2 = deliveries.poll();
+        Assert.assertNotNull(delivery2); 
+        Assert.assertEquals("root", delivery2.getSender());
+        Assert.assertEquals(2, delivery2.getRecipients().size());
+        Assert.assertEquals("testuser1", delivery2.getRecipients().get(0));
+        Assert.assertEquals("testuser2", delivery2.getRecipients().get(1));
+        Assert.assertEquals(TEXT2, delivery2.getContent());
+        SimpleTestDelivery delivery3 = deliveries.poll();
+        Assert.assertNotNull(delivery3); 
+        Assert.assertEquals("root", delivery3.getSender());
+        Assert.assertEquals(3, delivery3.getRecipients().size());
+        Assert.assertEquals("testuser1", delivery3.getRecipients().get(0));
+        Assert.assertEquals("testuser2", delivery3.getRecipients().get(1));
+        Assert.assertEquals("testuser3", delivery3.getRecipients().get(2));
+        Assert.assertEquals(TEXT3, delivery3.getContent());
+        Assert.assertNull(deliveries.poll()); 
+    }
+
+    @Test
+    public void testLocalDeliveryFailure() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root", 
+                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        DeliveryHandler deliveryHandler = new DeliveryHandler() {
+
+            public void handle(final DeliveryRequest request, final BasicFuture<DeliveryResult> future){
+                future.failed(new IOException("Oooopsie"));
+            }
+            
+        };
+        
+        this.mta.start(new LocalServerSessionFactory(TMP_DIR, null, deliveryHandler));
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(new LocalClientSessionFactory(deliveryRequestHandler));
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(1, results.size());
+        
+        DeliveryResult res1 = results.get(0);
+        Assert.assertEquals(3, res1.getFailures().size());
+        
+        RcptResult rcres1 = res1.getFailures().get(0);
+        Assert.assertEquals("testuser1", rcres1.getRecipient());
+        Assert.assertEquals(451, rcres1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(4, 2, 0), rcres1.getReply().getEnhancedCode());
+        RcptResult rcres2 = res1.getFailures().get(1);
+        Assert.assertEquals("testuser2", rcres2.getRecipient());
+        Assert.assertEquals(451, rcres2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(4, 2, 0), rcres2.getReply().getEnhancedCode());
+        RcptResult rcres3 = res1.getFailures().get(2);
+        Assert.assertEquals("testuser3", rcres3.getRecipient());
+        Assert.assertEquals(451, rcres3.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(4, 2, 0), rcres3.getReply().getEnhancedCode());
+        
+        Assert.assertEquals(451, res1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(4, 2, 0), res1.getReply().getEnhancedCode());
+    }
+
 }
