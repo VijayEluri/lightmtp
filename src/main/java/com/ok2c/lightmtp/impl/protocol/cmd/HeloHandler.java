@@ -21,6 +21,7 @@ import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
@@ -33,33 +34,27 @@ public class HeloHandler implements CommandHandler<ServerSessionState> {
         this.validator = validator;
     }
 
-    public SMTPReply handle(
-            final String argument,
+    public Action<ServerSessionState> handle(
+            final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) {
+            final ServerSessionState sessionState) throws SMTPErrorException {
 
         // Reset session
         sessionState.reset();
 
-        try {
-            String domain = argument;
-            if (domain == null) {
-                throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
-                        null,
-                        "domain not given");
-            }
-            
-            if (this.validator != null) {
-                this.validator.validateClientDomain(domain);
-            }
-            sessionState.setClientType(ClientType.BASIC);
-            sessionState.setClientDomain(domain);
-            return new SMTPReply(SMTPCodes.OK, "Welcome " + domain);
-        } catch (SMTPErrorException ex) {
-            sessionState.setClientType(null);
-            sessionState.setClientDomain(null);
-            return new SMTPReply(ex.getCode(), ex.getMessage());
+        String domain = argument;
+        if (domain == null) {
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+                    null,
+                    "domain not given");
         }
+        
+        if (this.validator != null) {
+            this.validator.validateClientDomain(domain);
+        }
+        sessionState.setClientType(ClientType.BASIC);
+        sessionState.setClientDomain(domain);
+        return new SimpleAction(new SMTPReply(SMTPCodes.OK, null, "Welcome " + domain));
     }
 
 }

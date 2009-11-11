@@ -393,7 +393,7 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals("testuser1", rcres1.getRecipient());
         Assert.assertEquals(550, rcres1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(5, 1, 1), rcres1.getReply().getEnhancedCode());
-        Assert.assertEquals(554, res1.getReply().getCode());
+        Assert.assertEquals(503, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(5, 5, 1), res1.getReply().getEnhancedCode());
         
         DeliveryResult res2 = results.get(1);

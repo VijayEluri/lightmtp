@@ -16,10 +16,10 @@ package com.ok2c.lightmtp.protocol;
 
 import java.util.List;
 
-import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.SMTPErrorException;
 
 public interface CommandHandler<T> {
 
-    SMTPReply handle(String argument, List<String> params, T state);
+    Action<T> handle(String argument, List<String> params, T state) throws SMTPErrorException;
 
 }

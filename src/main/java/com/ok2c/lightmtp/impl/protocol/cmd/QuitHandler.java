@@ -16,9 +16,11 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.List;
 
+import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 
 public class QuitHandler implements CommandHandler<ServerSessionState> {
@@ -27,13 +29,14 @@ public class QuitHandler implements CommandHandler<ServerSessionState> {
         super();
     }
 
-    public SMTPReply handle(
-            final String argument,
+    public Action<ServerSessionState> handle(
+            final String argument, 
             final List<String> params,
             final ServerSessionState sessionState) {
         sessionState.terminated();
-        return new SMTPReply(SMTPCodes.SERVICE_TERMINATING,
-                sessionState.getServerId() + " service terminating");
+        return new SimpleAction(new SMTPReply(SMTPCodes.SERVICE_TERMINATING,
+                new SMTPCode(2, 0, 0),
+                sessionState.getServerId() + " service terminating"));
     }
 
 }

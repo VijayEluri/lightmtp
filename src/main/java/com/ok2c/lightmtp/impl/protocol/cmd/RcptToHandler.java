@@ -21,6 +21,7 @@ import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
@@ -35,36 +36,25 @@ public class RcptToHandler implements CommandHandler<ServerSessionState> {
         this.argParser = new AddressArgParser("TO:");
     }
 
-    public SMTPReply handle(
-            final String argument,
+    public Action<ServerSessionState> handle(
+            final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) {
-
-        try {
-            if (sessionState.getClientType() == null || sessionState.getSender() == null) {
-                throw new SMTPErrorException(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
-                        new SMTPCode(5, 5, 1),
-                        "bad sequence of commands");
-            }
-
-            String recipient = this.argParser.parse(argument);
-            
-            if (this.validator != null) {
-                this.validator.validateRecipient(recipient);
-            }
-            
-            sessionState.getRecipients().add(recipient);
-            SMTPCode enhancedCode = null;
-            if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(2, 1, 5);
-            }
-            return new SMTPReply(SMTPCodes.OK, enhancedCode, "recipient <" + recipient + "> ok");
-        } catch (SMTPErrorException ex) {
-            return new SMTPReply(ex.getCode(), 
-                    sessionState.isEnhancedCodeCapable() ? ex.getEnhancedCode() : null, 
-                    ex.getMessage());
+            final ServerSessionState sessionState) throws SMTPErrorException {
+        if (sessionState.getClientType() == null || sessionState.getSender() == null) {
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+                    new SMTPCode(5, 5, 1),
+                    "bad sequence of commands");
         }
 
+        String recipient = this.argParser.parse(argument);
+        
+        if (this.validator != null) {
+            this.validator.validateRecipient(recipient);
+        }
+        
+        sessionState.getRecipients().add(recipient);
+        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
+                "recipient <" + recipient + "> ok"));
     }
 
 }

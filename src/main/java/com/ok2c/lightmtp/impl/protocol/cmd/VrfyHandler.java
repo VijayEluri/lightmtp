@@ -21,6 +21,7 @@ import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
@@ -33,36 +34,26 @@ public class VrfyHandler implements CommandHandler<ServerSessionState> {
         this.validator = validator;
     }
 
-    public SMTPReply handle(
-            final String argument,
+    public Action<ServerSessionState> handle(
+            final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) {
-
-        try {
-            String recipient = null;
-            int fromIdx = argument.indexOf('<');
-            if (fromIdx != -1) {
-                int toIdx = argument.indexOf('>', fromIdx + 1);
-                if (toIdx != -1) {
-                    recipient = argument.substring(fromIdx + 1, toIdx);
-                }
+            final ServerSessionState sessionState) throws SMTPErrorException {
+        String recipient = null;
+        int fromIdx = argument.indexOf('<');
+        if (fromIdx != -1) {
+            int toIdx = argument.indexOf('>', fromIdx + 1);
+            if (toIdx != -1) {
+                recipient = argument.substring(fromIdx + 1, toIdx);
             }
-            if (recipient == null) {
-                recipient = argument;
-            }
-            if (this.validator != null) {
-                this.validator.validateRecipient(recipient);
-            }
-            SMTPCode enhancedCode = null;
-            if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(2, 1, 5);
-            }
-            return new SMTPReply(SMTPCodes.OK, enhancedCode, "recipient <" + recipient + "> ok");
-        } catch (SMTPErrorException ex) {
-            return new SMTPReply(ex.getCode(),
-                    sessionState.isEnhancedCodeCapable() ? ex.getEnhancedCode() : null,
-                    ex.getMessage());
         }
+        if (recipient == null) {
+            recipient = argument;
+        }
+        if (this.validator != null) {
+            this.validator.validateRecipient(recipient);
+        }
+        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
+                "recipient <" + recipient + "> ok"));
     }
 
 }

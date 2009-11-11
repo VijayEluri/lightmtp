@@ -49,7 +49,7 @@ public class TestSMTPReplyWriter {
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConstructorParam2() throws Exception {
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
-        writer.write(new SMTPReply(250, "OK"), null);
+        writer.write(new SMTPReply(250, null, "OK"), null);
     }
 
     @Test
@@ -57,7 +57,7 @@ public class TestSMTPReplyWriter {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
 
-        SMTPReply reply = new SMTPReply(250, "OK");
+        SMTPReply reply = new SMTPReply(250, null, "OK");
         writer.write(reply, outbuf);
          
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
@@ -127,7 +127,7 @@ public class TestSMTPReplyWriter {
         SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(16, true);
 
-        SMTPReply reply = new SMTPReply(250, "BLAHBLAHBLAHBLAH");
+        SMTPReply reply = new SMTPReply(250, null, "BLAHBLAHBLAHBLAH");
         writer.write(reply, outbuf);
     }
     

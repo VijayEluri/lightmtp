@@ -21,8 +21,9 @@ import java.util.Map;
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
-import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 
@@ -52,7 +53,9 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerSessionStat
         this.map.remove(cmd.toUpperCase(Locale.US));
     }
 
-    public SMTPReply handle(final SMTPCommand command, final ServerSessionState sessionState) {
+    public Action<ServerSessionState> handle(
+            final SMTPCommand command, 
+            final ServerSessionState sessionState) throws SMTPErrorException {
         if (command == null) {
             throw new IllegalArgumentException("Command may not be null");
         }
@@ -61,11 +64,8 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerSessionStat
         if (handler != null) {
             return handler.handle(command.getArgument(), command.getParams(), sessionState);
         } else {
-            SMTPCode enhancedCode = null;
-            if (sessionState.isEnhancedCodeCapable()) {
-                enhancedCode = new SMTPCode(5, 5, 1);
-            }
-            return new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, enhancedCode,
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+                    new SMTPCode(5, 5, 1),
                     "command not recognized");
         }
     }

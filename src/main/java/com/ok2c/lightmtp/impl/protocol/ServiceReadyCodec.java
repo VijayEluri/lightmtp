@@ -46,7 +46,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
             final IOSession iosession,
             final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
-        this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY,
+        this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");
         this.completed = false;
 
