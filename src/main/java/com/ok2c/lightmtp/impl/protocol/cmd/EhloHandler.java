@@ -23,6 +23,7 @@ import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
@@ -35,38 +36,30 @@ public class EhloHandler implements CommandHandler<ServerSessionState> {
         this.validator = validator;
     }
 
-    public SMTPReply handle(
-            final String argument,
+    public Action<ServerSessionState> handle(
+            final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) {
-
+            final ServerSessionState sessionState) throws SMTPErrorException {
         // Reset session
         sessionState.reset();
-
-        try {
-            String domain = argument;
-            if (domain == null) {
-                throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
-                        new SMTPCode(5, 5, 2),
-                        "domain not given");
-            }
-            
-            if (this.validator != null) {
-                this.validator.validateClientDomain(domain);
-            }
-            
-            sessionState.setClientType(ClientType.EXTENDED);
-            sessionState.setClientDomain(domain);
-
-            List<String> lines = new ArrayList<String>();
-            lines.add("Welcome " + domain);
-            lines.addAll(sessionState.getExtensions());
-            return new SMTPReply(SMTPCodes.OK, null, lines);
-        } catch (SMTPErrorException ex) {
-            sessionState.setClientType(null);
-            sessionState.setClientDomain(null);
-            return new SMTPReply(ex.getCode(), ex.getEnhancedCode(), ex.getMessage());
+        String domain = argument;
+        if (domain == null) {
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+                    new SMTPCode(5, 5, 2),
+                    "domain not given");
         }
+        
+        if (this.validator != null) {
+            this.validator.validateClientDomain(domain);
+        }
+        
+        sessionState.setClientType(ClientType.EXTENDED);
+        sessionState.setClientDomain(domain);
+
+        List<String> lines = new ArrayList<String>();
+        lines.add("Welcome " + domain);
+        lines.addAll(sessionState.getExtensions());
+        return new SimpleAction(new SMTPReply(SMTPCodes.OK, null, lines));
     }
 
 }

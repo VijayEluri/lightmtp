@@ -20,6 +20,7 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 
 public class NoopHandler implements CommandHandler<ServerSessionState> {
@@ -28,15 +29,11 @@ public class NoopHandler implements CommandHandler<ServerSessionState> {
         super();
     }
 
-    public SMTPReply handle(
-            final String argument,
+    public Action<ServerSessionState> handle(
+            final String argument, 
             final List<String> params,
             final ServerSessionState sessionState) {
-        SMTPCode enhancedCode = null;
-        if (sessionState.isEnhancedCodeCapable()) {
-            enhancedCode = new SMTPCode(2, 0, 0);
-        }
-        return new SMTPReply(SMTPCodes.OK, enhancedCode, "OK");
+        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 0, 0), "OK"));
     }
 
 }

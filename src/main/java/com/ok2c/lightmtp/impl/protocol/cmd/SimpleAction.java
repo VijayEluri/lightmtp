@@ -14,30 +14,21 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import java.util.List;
-
-import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightmtp.protocol.CommandHandler;
 
-public class RsetHandler implements CommandHandler<ServerSessionState> {
+class SimpleAction implements Action<ServerSessionState> {
 
-    public RsetHandler() {
+    private final SMTPReply reply;
+    
+    public SimpleAction(final SMTPReply reply) {
         super();
+        this.reply = reply;
     }
 
-    public Action<ServerSessionState> handle(
-            final String argument, 
-            final List<String> params,
-            final ServerSessionState sessionState) throws SMTPErrorException {
-        // Reset session
-        sessionState.reset();
-
-        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 0, 0), "OK"));
+    public SMTPReply execute(final ServerSessionState sessionState) {
+        return this.reply;
     }
-
+    
 }

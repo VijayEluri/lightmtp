@@ -47,11 +47,8 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
             final IOSession iosession,
             final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
-        SMTPCode enhancedCode = null;
-        if (sessionState.isEnhancedCodeCapable()) {
-            enhancedCode = new SMTPCode(4, 3, 0);
-        }
-        this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE, enhancedCode,
+        this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE, 
+                new SMTPCode(4, 3, 0),
                 sessionState.getServerId() + "service shutting down " +
                         "and closing transmission channel");
         this.completed = false;

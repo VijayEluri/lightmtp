@@ -53,10 +53,6 @@ public class SMTPReply {
         this.lines = Collections.unmodifiableList(new ArrayList<String>(lines));
     }
 
-    public SMTPReply(int code, final String line) {
-        this(code, null, line);
-    }
-
     public int getCode() {
         return this.code;
     }

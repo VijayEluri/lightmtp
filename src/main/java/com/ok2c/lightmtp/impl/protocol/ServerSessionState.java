@@ -98,10 +98,6 @@ public class ServerSessionState implements SessionBufferStatus {
         this.clientType = clientType;
     }
 
-    public boolean isEnhancedCodeCapable() {
-        return ClientType.EXTENDED.equals(this.clientType);
-    }
-
     public String getClientDomain() {
         return this.clientDomain;
     }

@@ -19,15 +19,15 @@ import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandParser;
 import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyWriter;
+import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
@@ -131,16 +131,12 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
                         break;
                     }
                 }
-                SMTPReply reply = this.commandHandler.handle(command, sessionState);
-                this.pendingReplies.add(reply);
-               
-            } catch (SMTPProtocolException ex) {
-                SMTPCode enhancedCode = null;
-                if (sessionState.isEnhancedCodeCapable()) {
-                    enhancedCode = new SMTPCode(5, 5, 1);
-                }
-                SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
-                        enhancedCode, ex.getMessage());
+                Action<ServerSessionState> action = this.commandHandler.handle(
+                        command, sessionState);
+                this.pendingReplies.add(action.execute(sessionState));
+            } catch (SMTPErrorException ex) {
+                SMTPReply reply = new SMTPReply(ex.getCode(), ex.getEnhancedCode(), 
+                        ex.getMessage());
                 this.pendingReplies.add(reply);
             }
         }
