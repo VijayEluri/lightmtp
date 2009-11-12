@@ -22,6 +22,7 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
@@ -53,7 +54,7 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
         this.map.remove(cmd.toUpperCase(Locale.US));
     }
 
-    public Action<ServerState> handle(
+    public Action<SMTPReply> handle(
             final SMTPCommand command, 
             final ServerState sessionState) throws SMTPErrorException {
         if (command == null) {

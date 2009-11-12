@@ -18,7 +18,10 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.Future;
 
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
@@ -138,12 +141,16 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                         break;
                     }
                 }
-                Action<ServerState> action = this.commandHandler.handle(
-                        command, sessionState);
-                this.pendingReplies.add(action.execute(sessionState));
+                Action<SMTPReply> action = this.commandHandler.handle(command, sessionState);
+                Future<SMTPReply> future = action.execute(null);
+                this.pendingReplies.add(future.get());
             } catch (SMTPErrorException ex) {
                 SMTPReply reply = new SMTPReply(ex.getCode(), ex.getEnhancedCode(), 
                         ex.getMessage());
+                this.pendingReplies.add(reply);
+            } catch (Exception ex) {
+                SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, 
+                        new SMTPCode(5, 5, 0), ex.getMessage());
                 this.pendingReplies.add(reply);
             }
         }

@@ -14,6 +14,8 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
+import java.util.concurrent.Future;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -33,8 +35,9 @@ public class TestCommandHandler {
     public void testHeloHandlerBasicResponse() throws Exception {
         ServerState state = new ServerState("whatever");
         HeloHandler handler = new HeloHandler(null);
-        Action<ServerState> action = handler.handle("somedomain.com", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
@@ -49,8 +52,9 @@ public class TestCommandHandler {
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
         HeloHandler handler = new HeloHandler(null);
-        Action<ServerState> action = handler.handle("somedomain.com", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
@@ -77,8 +81,9 @@ public class TestCommandHandler {
     public void testEhloHandlerBasicResponse() throws Exception {
         ServerState state = new ServerState("whatever");
         EhloHandler handler = new EhloHandler(null);
-        Action<ServerState> action = handler.handle("somedomain.com", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
@@ -92,8 +97,9 @@ public class TestCommandHandler {
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
         EhloHandler handler = new EhloHandler(null);
-        Action<ServerState> action = handler.handle("somedomain.com", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
@@ -122,8 +128,9 @@ public class TestCommandHandler {
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
         RsetHandler handler = new RsetHandler();
-        Action<ServerState> action = handler.handle(null, null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle(null, null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 0, 0), reply.getEnhancedCode());
@@ -137,8 +144,9 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
         RsetHandler handler = new RsetHandler();
-        Action<ServerState> action = handler.handle(null, null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle(null, null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 0, 0), reply.getEnhancedCode());
@@ -149,8 +157,9 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
         MailFromHandler handler = new MailFromHandler(null);
-        Action<ServerState> action = handler.handle("from:<someone@somedomain.com>", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("from:<someone@somedomain.com>", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 0), reply.getEnhancedCode());
@@ -204,8 +213,9 @@ public class TestCommandHandler {
         state.setClientType(ClientType.BASIC);
         state.setSender("me@somedomain.com");
         RcptToHandler handler = new RcptToHandler(null);
-        Action<ServerState> action = handler.handle("to:<someone@somedomain.com>", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("to:<someone@somedomain.com>", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 5), reply.getEnhancedCode());
@@ -214,7 +224,8 @@ public class TestCommandHandler {
         Assert.assertEquals("someone@somedomain.com", state.getRecipients().get(0));
 
         action = handler.handle("to:<someone-else@somedomain.com>", null, state);
-        reply = action.execute(state);
+        future = action.execute(null);
+        reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 5), reply.getEnhancedCode());
@@ -272,8 +283,9 @@ public class TestCommandHandler {
         state.setSender("me@somedomain.com");
         state.getRecipients().add("someone@somedomain.com");
         DataHandler handler = new DataHandler();
-        Action<ServerState> action = handler.handle(null, null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle(null, null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(354, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
@@ -287,8 +299,9 @@ public class TestCommandHandler {
         state.setSender("me@somedomain.com");
         state.getRecipients().add("someone@somedomain.com");
         DataHandler handler = new DataHandler();
-        Action<ServerState> action = handler.handle(null, null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle(null, null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(354, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
@@ -357,8 +370,9 @@ public class TestCommandHandler {
             }
         });
 
-        Action<ServerState> action = handler.handle("Some name <someaddress>", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("Some name <someaddress>", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 5), reply.getEnhancedCode());
@@ -381,8 +395,9 @@ public class TestCommandHandler {
             }
         });
 
-        Action<ServerState> action = handler.handle("Some name <someaddress", null, state);
-        SMTPReply reply = action.execute(state);
+        Action<SMTPReply> action = handler.handle("Some name <someaddress", null, state);
+        Future<SMTPReply> future = action.execute(null);
+        SMTPReply reply = future.get();
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 5), reply.getEnhancedCode());
