@@ -162,28 +162,26 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
-        if (this.deliveryFuture != null) {
-            synchronized (iosession) {
+        synchronized (iosession) {
+            if (this.deliveryFuture != null) {
                 if (this.deliveryFuture.isDone()) {
                     deliveryCompleted(sessionState);
-                } else {
-                    iosession.clearEvent(SelectionKey.OP_WRITE);
+                }
+                while (!this.pendingReplies.isEmpty()) {
+                    this.writer.write(this.pendingReplies.removeFirst(), buf);
                 }
             }
-            while (!this.pendingReplies.isEmpty()) {
-                this.writer.write(this.pendingReplies.removeFirst(), buf);
-            }
-        }
 
-        if (buf.hasData()) {
-            buf.flush(iosession.channel());
-        }
-        if (!buf.hasData()) {
-            if (sessionState.getDataType() != null) {
-                this.completed = true;
-                sessionState.reset();
+            if (buf.hasData()) {
+                buf.flush(iosession.channel());
             }
-            iosession.clearEvent(SelectionKey.OP_WRITE);
+            if (!buf.hasData()) {
+                if (sessionState.getDataType() != null) {
+                    this.completed = true;
+                    sessionState.reset();
+                }
+                iosession.clearEvent(SelectionKey.OP_WRITE);
+            }
         }
     }
 
