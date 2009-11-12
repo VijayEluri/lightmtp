@@ -34,7 +34,7 @@ public class HeloHandler implements CommandHandler<ServerState> {
         this.validator = validator;
     }
 
-    public Action<ServerState> handle(
+    public Action<SMTPReply> handle(
             final String argument, 
             final List<String> params,
             final ServerState sessionState) throws SMTPErrorException {

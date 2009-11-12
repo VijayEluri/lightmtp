@@ -30,7 +30,7 @@ public class RsetHandler implements CommandHandler<ServerState> {
         super();
     }
 
-    public Action<ServerState> handle(
+    public Action<SMTPReply> handle(
             final String argument, 
             final List<String> params,
             final ServerState sessionState) throws SMTPErrorException {

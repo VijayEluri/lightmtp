@@ -16,9 +16,10 @@ package com.ok2c.lightmtp.protocol;
 
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.SMTPReply;
 
 public interface ProtocolHandler<T> {
 
-    Action<T> handle(SMTPCommand command, T state) throws SMTPErrorException;
+    Action<SMTPReply> handle(SMTPCommand command, T state) throws SMTPErrorException;
 
 }

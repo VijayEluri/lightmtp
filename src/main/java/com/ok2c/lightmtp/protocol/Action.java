@@ -14,10 +14,12 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import com.ok2c.lightmtp.SMTPReply;
+import java.util.concurrent.Future;
+
+import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface Action<T> {
 
-    SMTPReply execute(T sessionState);
+    Future<T> execute(FutureCallback<T> callback);
 
 }

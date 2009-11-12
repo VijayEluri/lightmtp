@@ -14,11 +14,14 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.protocol.ServerState;
-import com.ok2c.lightmtp.protocol.Action;
+import java.util.concurrent.Future;
 
-class SimpleAction implements Action<ServerState> {
+import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.protocol.Action;
+import com.ok2c.lightnio.concurrent.BasicFuture;
+import com.ok2c.lightnio.concurrent.FutureCallback;
+
+class SimpleAction implements Action<SMTPReply> {
 
     private final SMTPReply reply;
     
@@ -27,8 +30,10 @@ class SimpleAction implements Action<ServerState> {
         this.reply = reply;
     }
 
-    public SMTPReply execute(final ServerState sessionState) {
-        return this.reply;
+    public Future<SMTPReply> execute(final FutureCallback<SMTPReply> callback) {
+        BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
+        future.completed(this.reply);
+        return future;
     }
     
 }

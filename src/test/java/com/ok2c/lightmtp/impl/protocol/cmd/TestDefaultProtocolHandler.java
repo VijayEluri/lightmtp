@@ -14,6 +14,8 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
+import java.util.concurrent.Future;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -38,8 +40,10 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd1 = new SMTPCommand("HELO", "somedomain.com");
 
-        Action<ServerState> action1 = handler.handle(cmd1, state);
-        SMTPReply reply1 = action1.execute(state);
+        Action<SMTPReply> action1 = handler.handle(cmd1, state);
+        Future<SMTPReply> future1 = action1.execute(null);
+        SMTPReply reply1 = future1.get();
+        
         Assert.assertNotNull(reply1);
         Assert.assertEquals(250, reply1.getCode());
         Assert.assertNull(reply1.getEnhancedCode());
@@ -48,8 +52,9 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd2 = new SMTPCommand("NOOP");
 
-        Action<ServerState> action2 = handler.handle(cmd2, state);
-        SMTPReply reply2 = action2.execute(state);
+        Action<SMTPReply> action2 = handler.handle(cmd2, state);
+        Future<SMTPReply> future2 = action2.execute(null);
+        SMTPReply reply2 = future2.get();
         Assert.assertNotNull(reply2);
         Assert.assertEquals(250, reply2.getCode());
         Assert.assertEquals(new SMTPCode(2, 0, 0), reply2.getEnhancedCode());
@@ -85,8 +90,9 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd1 = new SMTPCommand("Helo", "somedomain.com");
 
-        Action<ServerState> action1 = handler.handle(cmd1, state);
-        SMTPReply reply1 = action1.execute(state);
+        Action<SMTPReply> action1 = handler.handle(cmd1, state);
+        Future<SMTPReply> future1 = action1.execute(null);
+        SMTPReply reply1 = future1.get();
         Assert.assertNotNull(reply1);
         Assert.assertEquals(250, reply1.getCode());
         Assert.assertNull(reply1.getEnhancedCode());
@@ -95,8 +101,9 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd2 = new SMTPCommand("NoOp");
 
-        Action<ServerState> action2 = handler.handle(cmd2, state);
-        SMTPReply reply2 = action2.execute(state);
+        Action<SMTPReply> action2 = handler.handle(cmd2, state);
+        Future<SMTPReply> future2 = action2.execute(null);
+        SMTPReply reply2 = future2.get();
         Assert.assertNotNull(reply2);
         Assert.assertEquals(250, reply2.getCode());
         Assert.assertEquals(new SMTPCode(2, 0, 0), reply2.getEnhancedCode());
