@@ -55,17 +55,19 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
     }
     
     public ServerSession create(final IOSession iosession) {
+        SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ServerSessionState> codecs = new ProtocolCodecRegistry<ServerSessionState>();
         codecs.register(ProtocolState.INIT.name(),
-                new ServiceReadyCodec());
+                new ServiceReadyCodec(iobuffers));
         codecs.register(ProtocolState.MAIL.name(),
-                new PipeliningReceiveEnvelopCodec(createProtocolHandler(this.validator)));
+                new PipeliningReceiveEnvelopCodec(iobuffers, 
+                        createProtocolHandler(this.validator)));
         codecs.register(ProtocolState.DATA.name(),
-                new ReceiveDataCodec(this.workingDir, this.deliveryHandler, 
+                new ReceiveDataCodec(iobuffers, this.workingDir, this.deliveryHandler, 
                         DataAckMode.PER_RECIPIENT));
         codecs.register(ProtocolState.QUIT.name(),
-                new ServiceShutdownCodec());
-        return new ServerSession(iosession, codecs);
+                new ServiceShutdownCodec(iobuffers));
+        return new ServerSession(iosession, iobuffers, codecs);
     }
 
     protected ProtocolHandler<ServerSessionState> createProtocolHandler(

@@ -49,6 +49,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
 
     }
 
+    private final SMTPBuffers iobuffers;
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
     private final LinkedList<String> recipients;
@@ -56,8 +57,12 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
     private CodecState codecState;
     private boolean deliveryFailed;
 
-    public SimpleSendEnvelopCodec(boolean enhancedCodes) {
+    public SimpleSendEnvelopCodec(final SMTPBuffers iobuffers, boolean enhancedCodes) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
+        this.iobuffers = iobuffers;
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();
         this.recipients = new LinkedList<String>();
@@ -107,7 +112,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
             return;
         }
 
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
         DeliveryRequest request = sessionState.getRequest();
 
         switch (this.codecState) {
@@ -152,7 +157,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientSessionState>
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionInputBuffer buf = sessionState.getInbuf();
+        SessionInputBuffer buf = this.iobuffers.getInbuf();
         DeliveryRequest request = sessionState.getRequest();
 
         int bytesRead = buf.fill(iosession.channel());

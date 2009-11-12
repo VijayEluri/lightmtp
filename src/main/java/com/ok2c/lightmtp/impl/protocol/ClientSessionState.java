@@ -19,23 +19,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.RcptResult;
-import com.ok2c.lightnio.SessionBufferStatus;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
-public class ClientSessionState implements SessionBufferStatus {
+public class ClientSessionState {
 
-    private final static int BUF_SIZE = 8 * 1024;
-    private final static int LINE_SIZE = 1 * 1024;
-
-    private final SessionInputBuffer inbuf;
-    private final SessionOutputBuffer outbuf;
     private final Set<String> extensions;
     private final List<RcptResult> failures;
 
@@ -45,34 +34,8 @@ public class ClientSessionState implements SessionBufferStatus {
     
     public ClientSessionState() {
         super();
-        this.inbuf = createSessionInputBuffer();
-        this.outbuf = createSessionOutputBuffer();
         this.failures = new ArrayList<RcptResult>();
         this.extensions = new HashSet<String>();
-    }
-
-    protected SessionInputBuffer createSessionInputBuffer() {
-        return new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-    }
-
-    protected SessionOutputBuffer createSessionOutputBuffer() {
-        return new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-    }
-
-    public boolean hasBufferedInput() {
-        return this.inbuf.hasData();
-    }
-
-    public boolean hasBufferedOutput() {
-        return this.outbuf.hasData();
-    }
-
-    public SessionInputBuffer getInbuf() {
-        return this.inbuf;
-    }
-
-    public SessionOutputBuffer getOutbuf() {
-        return this.outbuf;
     }
 
     public void reset(final DeliveryRequest request) {
@@ -112,11 +75,7 @@ public class ClientSessionState implements SessionBufferStatus {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        buffer.append("[in buf: ");
-        buffer.append(this.inbuf.length());
-        buffer.append("][out buf: ");
-        buffer.append(this.outbuf.length());
-        buffer.append("][extensions: ");
+        buffer.append("[extensions: ");
         buffer.append(this.extensions);
         buffer.append("][last reply: ");
         buffer.append(this.reply);

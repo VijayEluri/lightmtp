@@ -37,6 +37,7 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessionState> {
 
+    private final SMTPBuffers iobuffers;
     private final ProtocolHandler<ServerSessionState> commandHandler;
     private final SMTPMessageParser<SMTPCommand> parser;
     private final SMTPMessageWriter<SMTPReply> writer;
@@ -45,11 +46,17 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
     private boolean idle;
     private boolean completed;
 
-    public PipeliningReceiveEnvelopCodec(final ProtocolHandler<ServerSessionState> commandHandler) {
+    public PipeliningReceiveEnvelopCodec(
+            final SMTPBuffers iobuffers, 
+            final ProtocolHandler<ServerSessionState> commandHandler) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
         if (commandHandler == null) {
             throw new IllegalArgumentException("Command handler may not be null");
         }
+        this.iobuffers = iobuffers;
         this.commandHandler = commandHandler;
         this.parser = new SMTPCommandParser();
         this.writer = new SMTPReplyWriter(true);
@@ -86,7 +93,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
             return;
         }
 
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
         while (!this.pendingReplies.isEmpty()) {
             SMTPReply reply = this.pendingReplies.remove();
@@ -118,7 +125,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionInputBuffer buf = sessionState.getInbuf();
+        SessionInputBuffer buf = this.iobuffers.getInbuf();
 
         for (;;) {
             int bytesRead = buf.fill(iosession.channel());

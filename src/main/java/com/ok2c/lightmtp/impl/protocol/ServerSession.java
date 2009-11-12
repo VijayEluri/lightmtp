@@ -30,6 +30,7 @@ public class ServerSession {
     public static final String TERMINATE = "com.ok2c.lighmtp.terminate";
     
     private final IOSession iosession;
+    private final SMTPBuffers iobuffers;
     private final ServerSessionState sessionState;
     private final ProtocolCodecs<ServerSessionState> codecs;
 
@@ -40,10 +41,14 @@ public class ServerSession {
 
     public ServerSession(
             final IOSession iosession,
+            final SMTPBuffers iobuffers,
             final ProtocolCodecs<ServerSessionState> codecs) {
         super();
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
+        }
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
         }
         if (codecs == null) {
             throw new IllegalArgumentException("Protocol codecs may not be null");
@@ -55,8 +60,9 @@ public class ServerSession {
         } else {
             this.iosession = iosession;
         }
+        this.iobuffers = iobuffers;
+        this.iosession.setBufferStatus(this.iobuffers);
         this.sessionState = new ServerSessionState("LightMTP SMTP");
-        this.iosession.setBufferStatus(this.sessionState);
         this.codecs = codecs;
         this.state = ProtocolState.INIT;
 
