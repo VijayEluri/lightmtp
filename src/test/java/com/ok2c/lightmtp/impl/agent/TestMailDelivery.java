@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Future;
 
 import junit.framework.Assert;
 
@@ -47,6 +48,7 @@ import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionRequest;
 import com.ok2c.lightnio.concurrent.BasicFuture;
+import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class TestMailDelivery extends BaseTransportTest {
 
@@ -663,8 +665,12 @@ public class TestMailDelivery extends BaseTransportTest {
 
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
-            public void handle(final DeliveryRequest request, final BasicFuture<DeliveryResult> future){
+            public Future<DeliveryResult> handle(
+                    final DeliveryRequest request, 
+                    final FutureCallback<DeliveryResult> callback) {
+                BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
                 future.failed(new IOException("Oooopsie"));
+                return future;
             }
             
         };
@@ -794,8 +800,12 @@ public class TestMailDelivery extends BaseTransportTest {
 
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
-            public void handle(final DeliveryRequest request, final BasicFuture<DeliveryResult> future){
+            public Future<DeliveryResult> handle(
+                    final DeliveryRequest request, 
+                    final FutureCallback<DeliveryResult> callback) {
+                BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
                 future.failed(new IOException("Oooopsie"));
+                return future;
             }
             
         };
