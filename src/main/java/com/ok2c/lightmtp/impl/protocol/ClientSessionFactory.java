@@ -34,7 +34,7 @@ public class ClientSessionFactory implements SessionFactory<ClientSession> {
     
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
-        ProtocolCodecs<ClientSessionState> codecs = new ProtocolCodecRegistry<ClientSessionState>();        
+        ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();        
         codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec(iobuffers));
         codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(iobuffers, false));
         codecs.register(ProtocolState.DATA.name(), new SendDataCodec(iobuffers, false));

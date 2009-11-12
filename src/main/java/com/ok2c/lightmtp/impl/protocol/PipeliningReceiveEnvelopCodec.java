@@ -35,10 +35,10 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessionState> {
+public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState> {
 
     private final SMTPBuffers iobuffers;
-    private final ProtocolHandler<ServerSessionState> commandHandler;
+    private final ProtocolHandler<ServerState> commandHandler;
     private final SMTPMessageParser<SMTPCommand> parser;
     private final SMTPMessageWriter<SMTPReply> writer;
     private final Queue<SMTPReply> pendingReplies;
@@ -48,7 +48,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
 
     public PipeliningReceiveEnvelopCodec(
             final SMTPBuffers iobuffers, 
-            final ProtocolHandler<ServerSessionState> commandHandler) {
+            final ProtocolHandler<ServerState> commandHandler) {
         super();
         if (iobuffers == null) {
             throw new IllegalArgumentException("IO buffers may not be null");
@@ -70,7 +70,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
 
     public void reset(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
         this.pendingReplies.clear();
@@ -80,7 +80,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
 
     public void produceData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -117,7 +117,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
 
     public void consumeData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -138,7 +138,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
                         break;
                     }
                 }
-                Action<ServerSessionState> action = this.commandHandler.handle(
+                Action<ServerState> action = this.commandHandler.handle(
                         command, sessionState);
                 this.pendingReplies.add(action.execute(sessionState));
             } catch (SMTPErrorException ex) {
@@ -164,8 +164,8 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerSessio
     }
 
     public String next(
-            final ProtocolCodecs<ServerSessionState> codecs,
-            final ServerSessionState sessionState) {
+            final ProtocolCodecs<ServerState> codecs,
+            final ServerState sessionState) {
         if (isCompleted()) {
             if (sessionState.isTerminated()) {
                 return ProtocolState.QUIT.name();

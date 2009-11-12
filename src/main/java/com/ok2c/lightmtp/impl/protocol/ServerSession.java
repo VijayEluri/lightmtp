@@ -31,18 +31,18 @@ public class ServerSession {
     
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
-    private final ServerSessionState sessionState;
-    private final ProtocolCodecs<ServerSessionState> codecs;
+    private final ServerState sessionState;
+    private final ProtocolCodecs<ServerState> codecs;
 
     private final Log log;
 
-    private ProtocolCodec<ServerSessionState> currentCodec;
+    private ProtocolCodec<ServerState> currentCodec;
     private ProtocolState state;
 
     public ServerSession(
             final IOSession iosession,
             final SMTPBuffers iobuffers,
-            final ProtocolCodecs<ServerSessionState> codecs) {
+            final ProtocolCodecs<ServerState> codecs) {
         super();
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -62,7 +62,7 @@ public class ServerSession {
         }
         this.iobuffers = iobuffers;
         this.iosession.setBufferStatus(this.iobuffers);
-        this.sessionState = new ServerSessionState("LightMTP SMTP");
+        this.sessionState = new ServerState("LightMTP SMTP");
         this.codecs = codecs;
         this.state = ProtocolState.INIT;
 

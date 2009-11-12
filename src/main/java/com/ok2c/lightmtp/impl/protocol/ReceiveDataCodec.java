@@ -46,7 +46,7 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 
-public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
+public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
@@ -110,7 +110,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
     public void reset(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -152,7 +152,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
 
     public void produceData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -187,7 +187,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
         }
     }
 
-    private void deliveryCompleted(final ServerSessionState sessionState) {
+    private void deliveryCompleted(final ServerState sessionState) {
         if (this.mode.equals(DataAckMode.SINGLE)) {
             try {
                 DeliveryResult result = this.deliveryFuture.get();
@@ -249,7 +249,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     
     public void consumeData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -324,8 +324,8 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<ServerSessionState> codecs,
-            final ServerSessionState sessionState) {
+            final ProtocolCodecs<ServerState> codecs,
+            final ServerState sessionState) {
         if (isCompleted()) {
             if (sessionState.isTerminated()) {
                 return ProtocolState.QUIT.name();

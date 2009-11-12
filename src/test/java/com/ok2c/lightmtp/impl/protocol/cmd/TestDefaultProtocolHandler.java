@@ -23,14 +23,14 @@ import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 
 public class TestDefaultProtocolHandler {
 
     @Test
     public void testDefaultProtocolHandlerBasics() throws Exception {
-        ServerSessionState state = new ServerSessionState("whatever");
+        ServerState state = new ServerState("whatever");
 
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
         handler.register("HELO", new HeloHandler(null));
@@ -38,7 +38,7 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd1 = new SMTPCommand("HELO", "somedomain.com");
 
-        Action<ServerSessionState> action1 = handler.handle(cmd1, state);
+        Action<ServerState> action1 = handler.handle(cmd1, state);
         SMTPReply reply1 = action1.execute(state);
         Assert.assertNotNull(reply1);
         Assert.assertEquals(250, reply1.getCode());
@@ -48,7 +48,7 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd2 = new SMTPCommand("NOOP");
 
-        Action<ServerSessionState> action2 = handler.handle(cmd2, state);
+        Action<ServerState> action2 = handler.handle(cmd2, state);
         SMTPReply reply2 = action2.execute(state);
         Assert.assertNotNull(reply2);
         Assert.assertEquals(250, reply2.getCode());
@@ -77,7 +77,7 @@ public class TestDefaultProtocolHandler {
 
     @Test
     public void testDefaultProtocolHandlerCaseInsensitive() throws Exception {
-        ServerSessionState state = new ServerSessionState("whatever");
+        ServerState state = new ServerState("whatever");
 
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
         handler.register("HELO", new HeloHandler(null));
@@ -85,7 +85,7 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd1 = new SMTPCommand("Helo", "somedomain.com");
 
-        Action<ServerSessionState> action1 = handler.handle(cmd1, state);
+        Action<ServerState> action1 = handler.handle(cmd1, state);
         SMTPReply reply1 = action1.execute(state);
         Assert.assertNotNull(reply1);
         Assert.assertEquals(250, reply1.getCode());
@@ -95,7 +95,7 @@ public class TestDefaultProtocolHandler {
 
         SMTPCommand cmd2 = new SMTPCommand("NoOp");
 
-        Action<ServerSessionState> action2 = handler.handle(cmd2, state);
+        Action<ServerState> action2 = handler.handle(cmd2, state);
         SMTPReply reply2 = action2.execute(state);
         Assert.assertNotNull(reply2);
         Assert.assertEquals(250, reply2.getCode());

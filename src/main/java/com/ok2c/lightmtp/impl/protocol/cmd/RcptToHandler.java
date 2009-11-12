@@ -20,12 +20,12 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
-public class RcptToHandler implements CommandHandler<ServerSessionState> {
+public class RcptToHandler implements CommandHandler<ServerState> {
 
     private final EnvelopValidator validator;
     private final AddressArgParser argParser;
@@ -36,10 +36,10 @@ public class RcptToHandler implements CommandHandler<ServerSessionState> {
         this.argParser = new AddressArgParser("TO:");
     }
 
-    public Action<ServerSessionState> handle(
+    public Action<ServerState> handle(
             final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) throws SMTPErrorException {
+            final ServerState sessionState) throws SMTPErrorException {
         if (sessionState.getClientType() == null || sessionState.getSender() == null) {
             throw new SMTPErrorException(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
                     new SMTPCode(5, 5, 1),

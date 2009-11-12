@@ -39,14 +39,14 @@ public class ClientSession {
     
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
-    private final ClientSessionState sessionState;
+    private final ClientState sessionState;
     private final SessionContext context;
     private final DeliveryRequestHandler handler;
-    private final ProtocolCodecs<ClientSessionState> codecs;
+    private final ProtocolCodecs<ClientState> codecs;
 
     private final Log log;
 
-    private ProtocolCodec<ClientSessionState> currentCodec;
+    private ProtocolCodec<ClientState> currentCodec;
 
     private ProtocolState state;
 
@@ -54,7 +54,7 @@ public class ClientSession {
             final IOSession iosession,
             final SMTPBuffers iobuffers,
             final DeliveryRequestHandler handler,
-            final ProtocolCodecs<ClientSessionState> codecs) {
+            final ProtocolCodecs<ClientState> codecs) {
         super();
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
@@ -77,7 +77,7 @@ public class ClientSession {
         }
         this.iobuffers = iobuffers;
         this.iosession.setBufferStatus(this.iobuffers);
-        this.sessionState = new ClientSessionState();
+        this.sessionState = new ClientState();
         this.context = new SessionContextImpl(iosession);
         this.handler = handler;
         this.codecs = codecs;

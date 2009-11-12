@@ -23,7 +23,7 @@ import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.RcptResult;
 
-public class ClientSessionState {
+public class ClientState {
 
     private final Set<String> extensions;
     private final List<RcptResult> failures;
@@ -32,7 +32,7 @@ public class ClientSessionState {
     private SMTPReply reply;
     private boolean terminated;
     
-    public ClientSessionState() {
+    public ClientState() {
         super();
         this.failures = new ArrayList<RcptResult>();
         this.extensions = new HashSet<String>();

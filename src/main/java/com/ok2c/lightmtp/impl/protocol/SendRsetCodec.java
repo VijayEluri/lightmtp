@@ -30,7 +30,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
+public class SendRsetCodec implements ProtocolCodec<ClientState> {
 
     enum CodecState {
 
@@ -62,7 +62,7 @@ public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
 
     public void reset(
             final IOSession iosession,
-            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.RSET_READY;
@@ -72,7 +72,7 @@ public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
 
     public void produceData(
             final IOSession iosession,
-            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -105,7 +105,7 @@ public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
 
     public void consumeData(
             final IOSession iosession,
-            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -140,8 +140,8 @@ public class SendRsetCodec implements ProtocolCodec<ClientSessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<ClientSessionState> codecs,
-            final ClientSessionState sessionState) {
+            final ProtocolCodecs<ClientState> codecs,
+            final ClientState sessionState) {
         if (this.codecState == CodecState.COMPLETED) {
             if (sessionState.isTerminated()) {
                 return ProtocolState.QUIT.name();

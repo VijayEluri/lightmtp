@@ -36,7 +36,7 @@ import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
-public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
+public class SendDataCodec implements ProtocolCodec<ClientState> {
 
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
@@ -95,7 +95,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
     public void reset(
             final IOSession iosession,
-            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -126,7 +126,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
     public void produceData(
             final IOSession iosession,
-            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -187,7 +187,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
     public void consumeData(
             final IOSession iosession,
-            final ClientSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ClientState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -237,8 +237,8 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<ClientSessionState> codecs,
-            final ClientSessionState sessionState) {
+            final ProtocolCodecs<ClientState> codecs,
+            final ClientState sessionState) {
         if (isCompleted()) {
             if (sessionState.isTerminated()) {
                 return ProtocolState.QUIT.name();

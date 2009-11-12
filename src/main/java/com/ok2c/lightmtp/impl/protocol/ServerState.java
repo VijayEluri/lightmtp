@@ -22,7 +22,7 @@ import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPExtensions;
 
-public class ServerSessionState {
+public class ServerState {
 
     private final Set<String> extensions;
     private final String serverId;
@@ -34,7 +34,7 @@ public class ServerSessionState {
     private DataType dataType;
     private boolean terminated;
 
-    public ServerSessionState(final String serverId) {
+    public ServerState(final String serverId) {
         super();
         Set<String> exts = new HashSet<String>();
         exts.add(SMTPExtensions.ENHANCEDSTATUSCODES);

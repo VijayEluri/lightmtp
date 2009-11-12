@@ -28,7 +28,7 @@ import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
+public class ServiceShutdownCodec implements ProtocolCodec<ServerState> {
 
     private final SMTPBuffers iobuffers;
     private final SMTPMessageWriter<SMTPReply> writer;
@@ -50,7 +50,7 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
 
     public void reset(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
         this.pendingReply = new SMTPReply(SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE, 
                 new SMTPCode(4, 3, 0),
@@ -63,7 +63,7 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
 
     public void produceData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -89,7 +89,7 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
 
     public void consumeData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
     }
 
     public boolean isIdle() {
@@ -101,8 +101,8 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<ServerSessionState> codecs,
-            final ServerSessionState sessionState) {
+            final ProtocolCodecs<ServerState> codecs,
+            final ServerState sessionState) {
         return null;
     }
 
