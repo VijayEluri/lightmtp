@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
@@ -44,7 +45,6 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
-import com.ok2c.lightnio.concurrent.BasicFuture;
 
 public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
@@ -63,7 +63,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private File tempFile;
     private FileStore fileStore;
     private boolean dataReceived;
-    private BasicFuture<DeliveryResult> deliveryFuture;
+    private Future<DeliveryResult> deliveryFuture;
     private boolean completed;
 
     public ReceiveDataCodec(
@@ -293,9 +293,8 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
                     sessionState.getRecipients(),
                     content);
 
-            this.deliveryFuture = new BasicFuture<DeliveryResult>(
-                    new SessionResume<DeliveryResult>(iosession)); 
-            this.handler.handle(deliveryRequest, this.deliveryFuture);
+            this.deliveryFuture = this.handler.handle(deliveryRequest, 
+                    new SessionResume<DeliveryResult>(iosession));
         }
     }
 

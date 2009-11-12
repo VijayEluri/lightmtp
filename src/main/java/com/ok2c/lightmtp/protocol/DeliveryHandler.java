@@ -14,10 +14,12 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import com.ok2c.lightnio.concurrent.BasicFuture;
+import java.util.concurrent.Future;
+
+import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface DeliveryHandler {
 
-    void handle(DeliveryRequest request, BasicFuture<DeliveryResult> future);
+    Future<DeliveryResult> handle(DeliveryRequest request, FutureCallback<DeliveryResult> callback);
 
 }
