@@ -57,7 +57,7 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
     
     public ServerSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
-        ProtocolCodecs<ServerSessionState> codecs = new ProtocolCodecRegistry<ServerSessionState>();
+        ProtocolCodecs<ServerState> codecs = new ProtocolCodecRegistry<ServerState>();
         codecs.register(ProtocolState.INIT.name(),
                 new ServiceReadyCodec(iobuffers));
         codecs.register(ProtocolState.MAIL.name(),
@@ -71,7 +71,7 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
         return new ServerSession(iosession, iobuffers, codecs);
     }
 
-    protected ProtocolHandler<ServerSessionState> createProtocolHandler(
+    protected ProtocolHandler<ServerState> createProtocolHandler(
             final EnvelopValidator validator) {
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
         handler.register("HELO", new HeloHandler(validator));

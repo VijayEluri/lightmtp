@@ -22,21 +22,21 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 
-public class DefaultProtocolHandler implements ProtocolHandler<ServerSessionState> {
+public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
 
-    private final Map<String, CommandHandler<ServerSessionState>> map;
+    private final Map<String, CommandHandler<ServerState>> map;
 
     public DefaultProtocolHandler() {
         super();
-        this.map = new HashMap<String, CommandHandler<ServerSessionState>>();
+        this.map = new HashMap<String, CommandHandler<ServerState>>();
     }
 
-    public void register(final String cmd, final CommandHandler<ServerSessionState> handler) {
+    public void register(final String cmd, final CommandHandler<ServerState> handler) {
         if (cmd == null) {
             throw new IllegalArgumentException("Command name may not be null");
         }
@@ -53,14 +53,14 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerSessionStat
         this.map.remove(cmd.toUpperCase(Locale.US));
     }
 
-    public Action<ServerSessionState> handle(
+    public Action<ServerState> handle(
             final SMTPCommand command, 
-            final ServerSessionState sessionState) throws SMTPErrorException {
+            final ServerState sessionState) throws SMTPErrorException {
         if (command == null) {
             throw new IllegalArgumentException("Command may not be null");
         }
         String cmd = command.getVerb();
-        CommandHandler<ServerSessionState> handler = this.map.get(cmd.toUpperCase(Locale.US));
+        CommandHandler<ServerState> handler = this.map.get(cmd.toUpperCase(Locale.US));
         if (handler != null) {
             return handler.handle(command.getArgument(), command.getParams(), sessionState);
         } else {

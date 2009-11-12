@@ -33,7 +33,7 @@ import com.ok2c.lightmtp.impl.BaseTransportTest;
 import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.impl.protocol.cmd.DefaultProtocolHandler;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
@@ -240,7 +240,7 @@ public class TestMailDelivery extends BaseTransportTest {
         }
 
         @Override
-        protected ProtocolHandler<ServerSessionState> createProtocolHandler(
+        protected ProtocolHandler<ServerState> createProtocolHandler(
                 final EnvelopValidator validator) {
             DefaultProtocolHandler handler = (DefaultProtocolHandler) super.createProtocolHandler(
                     validator);

@@ -27,7 +27,7 @@ import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
-public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
+public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
 
     private final SMTPBuffers iobuffers;
     private final SMTPMessageWriter<SMTPReply> writer;
@@ -49,7 +49,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
 
     public void reset(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
         this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");
@@ -60,7 +60,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
 
     public void produceData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -86,7 +86,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
 
     public void consumeData(
             final IOSession iosession,
-            final ServerSessionState sessionState) throws IOException, SMTPProtocolException {
+            final ServerState sessionState) throws IOException, SMTPProtocolException {
     }
 
     public boolean isIdle() {
@@ -98,8 +98,8 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerSessionState> {
     }
 
     public String next(
-            final ProtocolCodecs<ServerSessionState> codecs,
-            final ServerSessionState sessionState) {
+            final ProtocolCodecs<ServerState> codecs,
+            final ServerState sessionState) {
         if (isCompleted()) {
             return ProtocolState.MAIL.name();
         } else {

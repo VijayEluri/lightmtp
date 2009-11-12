@@ -15,10 +15,10 @@
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 
-class SimpleAction implements Action<ServerSessionState> {
+class SimpleAction implements Action<ServerState> {
 
     private final SMTPReply reply;
     
@@ -27,7 +27,7 @@ class SimpleAction implements Action<ServerSessionState> {
         this.reply = reply;
     }
 
-    public SMTPReply execute(final ServerSessionState sessionState) {
+    public SMTPReply execute(final ServerState sessionState) {
         return this.reply;
     }
     

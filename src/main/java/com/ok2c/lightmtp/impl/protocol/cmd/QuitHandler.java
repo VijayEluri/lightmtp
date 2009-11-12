@@ -19,20 +19,20 @@ import java.util.List;
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 
-public class QuitHandler implements CommandHandler<ServerSessionState> {
+public class QuitHandler implements CommandHandler<ServerState> {
 
     public QuitHandler() {
         super();
     }
 
-    public Action<ServerSessionState> handle(
+    public Action<ServerState> handle(
             final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) {
+            final ServerState sessionState) {
         sessionState.terminated();
         return new SimpleAction(new SMTPReply(SMTPCodes.SERVICE_TERMINATING,
                 new SMTPCode(2, 0, 0),

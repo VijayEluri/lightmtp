@@ -20,12 +20,12 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.protocol.ServerSessionState;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
-public class VrfyHandler implements CommandHandler<ServerSessionState> {
+public class VrfyHandler implements CommandHandler<ServerState> {
 
     private final EnvelopValidator validator;
 
@@ -34,10 +34,10 @@ public class VrfyHandler implements CommandHandler<ServerSessionState> {
         this.validator = validator;
     }
 
-    public Action<ServerSessionState> handle(
+    public Action<ServerState> handle(
             final String argument, 
             final List<String> params,
-            final ServerSessionState sessionState) throws SMTPErrorException {
+            final ServerState sessionState) throws SMTPErrorException {
         String recipient = null;
         int fromIdx = argument.indexOf('<');
         if (fromIdx != -1) {
