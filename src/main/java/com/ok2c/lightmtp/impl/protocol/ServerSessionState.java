@@ -20,21 +20,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPExtensions;
-import com.ok2c.lightnio.SessionBufferStatus;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
-public class ServerSessionState implements SessionBufferStatus {
+public class ServerSessionState {
 
-    private final static int BUF_SIZE = 8 * 1024;
-    private final static int LINE_SIZE = 1 * 1024;
-
-    private final SessionInputBuffer inbuf;
-    private final SessionOutputBuffer outbuf;
     private final Set<String> extensions;
     private final String serverId;
     private final LinkedList<String> recipients;
@@ -47,8 +36,6 @@ public class ServerSessionState implements SessionBufferStatus {
 
     public ServerSessionState(final String serverId) {
         super();
-        this.inbuf = createSessionInputBuffer();
-        this.outbuf = createSessionOutputBuffer();
         Set<String> exts = new HashSet<String>();
         exts.add(SMTPExtensions.ENHANCEDSTATUSCODES);
         exts.add(SMTPExtensions.MIME_8BIT);
@@ -56,30 +43,6 @@ public class ServerSessionState implements SessionBufferStatus {
         this.extensions = Collections.unmodifiableSet(exts);
         this.serverId = serverId;
         this.recipients = new LinkedList<String>();
-    }
-
-    protected SessionInputBuffer createSessionInputBuffer() {
-        return new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-    }
-
-    protected SessionOutputBuffer createSessionOutputBuffer() {
-        return new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
-    }
-
-    public boolean hasBufferedInput() {
-        return this.inbuf.hasData();
-    }
-
-    public boolean hasBufferedOutput() {
-        return this.outbuf.hasData();
-    }
-
-    public SessionInputBuffer getInbuf() {
-        return this.inbuf;
-    }
-
-    public SessionOutputBuffer getOutbuf() {
-        return this.outbuf;
     }
 
     public String getServerId() {
@@ -143,11 +106,7 @@ public class ServerSessionState implements SessionBufferStatus {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        buffer.append("[in buf: ");
-        buffer.append(this.inbuf.length());
-        buffer.append("][out buf: ");
-        buffer.append(this.outbuf.length());
-        buffer.append("][extensions: ");
+        buffer.append("[extensions: ");
         buffer.append(this.extensions);
         buffer.append("][client type: ");
         buffer.append(this.clientType);

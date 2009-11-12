@@ -51,6 +51,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
 
+    private final SMTPBuffers iobuffers;
     private final DeliveryHandler handler;
     private final File workingDir;
     private final DataAckMode mode;
@@ -66,16 +67,21 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     private boolean completed;
 
     public ReceiveDataCodec(
+            final SMTPBuffers iobuffers, 
             final File workingDir, 
             final DeliveryHandler handler,
             final DataAckMode mode) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
         if (workingDir == null) {
             throw new IllegalArgumentException("Working directory may not be null");
         }
         if (handler == null) {
             throw new IllegalArgumentException("Devliry handler may not be null");
         }
+        this.iobuffers = iobuffers;
         this.workingDir = workingDir;
         this.handler = handler;
         this.mode = mode != null ? mode : DataAckMode.SINGLE;
@@ -90,9 +96,10 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
     }
 
     public ReceiveDataCodec(
+            final SMTPBuffers iobuffers, 
             final File workingDir, 
             final DeliveryHandler handler) {
-        this(workingDir, handler, DataAckMode.SINGLE);
+        this(iobuffers, workingDir, handler, DataAckMode.SINGLE);
     }
     
     @Override
@@ -153,7 +160,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
         if (this.deliveryFuture != null) {
             synchronized (iosession) {
@@ -250,7 +257,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionInputBuffer buf = sessionState.getInbuf();
+        SessionInputBuffer buf = this.iobuffers.getInbuf();
 
         boolean hasData = true;
         while (hasData && !this.dataReceived) {

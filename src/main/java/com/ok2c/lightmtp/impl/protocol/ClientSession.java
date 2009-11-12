@@ -38,6 +38,7 @@ public class ClientSession {
     public static final String TERMINATE = "com.ok2c.lighmtp.terminate";
     
     private final IOSession iosession;
+    private final SMTPBuffers iobuffers;
     private final ClientSessionState sessionState;
     private final SessionContext context;
     private final DeliveryRequestHandler handler;
@@ -50,12 +51,16 @@ public class ClientSession {
     private ProtocolState state;
 
     public ClientSession(
-            final IOSession iosession, 
+            final IOSession iosession,
+            final SMTPBuffers iobuffers,
             final DeliveryRequestHandler handler,
             final ProtocolCodecs<ClientSessionState> codecs) {
         super();
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
+        }
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
         }
         if (handler == null) {
             throw new IllegalArgumentException("Delivery request handler may not be null");
@@ -70,10 +75,11 @@ public class ClientSession {
         } else {
             this.iosession = iosession;
         }
+        this.iobuffers = iobuffers;
+        this.iosession.setBufferStatus(this.iobuffers);
         this.sessionState = new ClientSessionState();
         this.context = new SessionContextImpl(iosession);
         this.handler = handler;
-        this.iosession.setBufferStatus(this.sessionState);
         this.codecs = codecs;
 
         this.state = ProtocolState.INIT;

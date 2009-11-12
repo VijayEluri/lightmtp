@@ -30,13 +30,18 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
 
+    private final SMTPBuffers iobuffers;
     private final SMTPMessageWriter<SMTPReply> writer;
 
     private SMTPReply pendingReply;
     private boolean completed;
 
-    public ServiceShutdownCodec() {
+    public ServiceShutdownCodec(final SMTPBuffers iobuffers) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
+        this.iobuffers = iobuffers;
         this.writer = new SMTPReplyWriter(true);
     }
 
@@ -66,7 +71,7 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
         if (this.pendingReply != null) {
             this.writer.write(this.pendingReply, buf);

@@ -33,13 +33,19 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
     }
     
     public ClientSession create(final IOSession iosession) {
+        SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ClientSessionState> codecs = new ProtocolCodecRegistry<ClientSessionState>();        
-        codecs.register(ProtocolState.HELO.name(), new SendLocalHeloCodec());
-        codecs.register(ProtocolState.MAIL.name(), new PipeliningSendEnvelopCodec(true));
-        codecs.register(ProtocolState.DATA.name(), new SendDataCodec(true, DataAckMode.PER_RECIPIENT));
-        codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec());
-        codecs.register(ProtocolState.RSET.name(), new SendRsetCodec());
-        return new ClientSession(iosession, this.deliveryRequestHandler, codecs);
+        codecs.register(ProtocolState.HELO.name(), 
+                new SendLocalHeloCodec(iobuffers));
+        codecs.register(ProtocolState.MAIL.name(), 
+                new PipeliningSendEnvelopCodec(iobuffers, true));
+        codecs.register(ProtocolState.DATA.name(), 
+                new SendDataCodec(iobuffers, true, DataAckMode.PER_RECIPIENT));
+        codecs.register(ProtocolState.QUIT.name(), 
+                new SendQuitCodec(iobuffers));
+        codecs.register(ProtocolState.RSET.name(), 
+                new SendRsetCodec(iobuffers));
+        return new ClientSession(iosession, iobuffers, this.deliveryRequestHandler, codecs);
     }
 
 }

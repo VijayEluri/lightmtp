@@ -40,13 +40,18 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
 
     }
 
+    private final SMTPBuffers iobuffers;
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
 
     private CodecState codecState;
 
-    public SendQuitCodec() {
+    public SendQuitCodec(final SMTPBuffers iobuffers) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
+        this.iobuffers = iobuffers;
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
         this.codecState = CodecState.QUIT_READY;
@@ -75,7 +80,7 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
         switch (this.codecState) {
         case QUIT_READY:
@@ -103,7 +108,7 @@ public class SendQuitCodec implements ProtocolCodec<ClientSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionInputBuffer buf = sessionState.getInbuf();
+        SessionInputBuffer buf = this.iobuffers.getInbuf();
 
         int bytesRead = buf.fill(iosession.channel());
         SMTPReply reply = this.parser.parse(buf, bytesRead == -1);

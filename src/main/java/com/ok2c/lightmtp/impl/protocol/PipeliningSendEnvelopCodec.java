@@ -46,6 +46,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
 
     }
 
+    private final SMTPBuffers iobuffers;
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
     private final LinkedList<String> recipients;
@@ -53,8 +54,12 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
     private CodecState codecState;
     private boolean deliveryFailed;
 
-    public PipeliningSendEnvelopCodec(boolean enhancedCodes) {
+    public PipeliningSendEnvelopCodec(final SMTPBuffers iobuffers, boolean enhancedCodes) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
+        this.iobuffers = iobuffers;
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();
         this.recipients = new LinkedList<String>();
@@ -104,7 +109,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
             return;
         }
         
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
         DeliveryRequest request = sessionState.getRequest();
 
         switch (this.codecState) {
@@ -143,7 +148,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientSessionSt
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionInputBuffer buf = sessionState.getInbuf();
+        SessionInputBuffer buf = this.iobuffers.getInbuf();
 
         while (this.codecState != CodecState.COMPLETED) {
             int bytesRead = buf.fill(iosession.channel());

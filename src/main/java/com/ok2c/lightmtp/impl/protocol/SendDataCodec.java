@@ -51,6 +51,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
 
     }
 
+    private final SMTPBuffers iobuffers;
     private final int maxLineLen;
     private final DataAckMode mode;
     private final SMTPMessageParser<SMTPReply> parser;
@@ -63,8 +64,14 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
     private boolean contentSent;
     private CodecState codecState;
 
-    public SendDataCodec(int maxLineLen, boolean enhancedCodes, final DataAckMode mode) {
+    public SendDataCodec(
+            final SMTPBuffers iobuffers, 
+            int maxLineLen, boolean enhancedCodes, final DataAckMode mode) {
         super();
+        if (iobuffers == null) {
+            throw new IllegalArgumentException("IO buffers may not be null");
+        }
+        this.iobuffers = iobuffers;
         this.maxLineLen = maxLineLen;
         this.mode = mode != null ? mode : DataAckMode.SINGLE;
         this.parser = new SMTPReplyParser(enhancedCodes);
@@ -74,12 +81,13 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
         this.codecState = CodecState.CONTENT_READY;
     }
 
-    public SendDataCodec(boolean enhancedCodes, final DataAckMode mode) {
-        this(SMTPConsts.MAX_LINE_LEN, enhancedCodes, mode);
+    public SendDataCodec(final SMTPBuffers iobuffers, 
+            boolean enhancedCodes, final DataAckMode mode) {
+        this(iobuffers, SMTPConsts.MAX_LINE_LEN, enhancedCodes, mode);
     }
 
-    public SendDataCodec(boolean enhancedCodes) {
-        this(SMTPConsts.MAX_LINE_LEN, enhancedCodes, DataAckMode.SINGLE);
+    public SendDataCodec(final SMTPBuffers iobuffers, boolean enhancedCodes) {
+        this(iobuffers, SMTPConsts.MAX_LINE_LEN, enhancedCodes, DataAckMode.SINGLE);
     }
 
     public void cleanUp() {
@@ -126,7 +134,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionOutputBuffer buf = sessionState.getOutbuf();
+        SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
         switch (this.codecState) {
         case CONTENT_READY:
@@ -187,7 +195,7 @@ public class SendDataCodec implements ProtocolCodec<ClientSessionState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        SessionInputBuffer buf = sessionState.getInbuf();
+        SessionInputBuffer buf = this.iobuffers.getInbuf();
 
         while (this.codecState != CodecState.COMPLETED) {
             int bytesRead = buf.fill(iosession.channel());
