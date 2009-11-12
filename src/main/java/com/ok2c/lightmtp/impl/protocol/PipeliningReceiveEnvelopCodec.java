@@ -120,6 +120,8 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                                 new SMTPCode(5, 3, 0), ex.getMessage());
                     }
                     this.writer.write(reply, buf);
+                } else {
+                    break;
                 }
             }
 
