@@ -20,17 +20,19 @@ import java.util.concurrent.Future;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
-class SessionResume<T> implements FutureCallback<T>{
+class OutputTrigger<T> implements FutureCallback<T>{
 
+    final ServerState state;    
     final IOSession iosession;    
     
-    public SessionResume(final IOSession iosession) {
+    public OutputTrigger(final ServerState state, final IOSession iosession) {
         super();
         this.iosession = iosession;
+        this.state = state;
     }
     
     private void resume() {
-        synchronized (this.iosession) {
+        synchronized (this.state) {
             this.iosession.setEvent(SelectionKey.OP_WRITE);
         }
     }

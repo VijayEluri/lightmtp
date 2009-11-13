@@ -63,7 +63,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private File tempFile;
     private FileStore fileStore;
     private boolean dataReceived;
-    private Future<DeliveryResult> deliveryFuture;
+    private Future<DeliveryResult> pendingDelivery;
     private boolean completed;
 
     public ReceiveDataCodec(
@@ -91,7 +91,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.contentBuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
         
         this.dataReceived = false;
-        this.deliveryFuture = null;
+        this.pendingDelivery = null;
         this.completed = false;
     }
 
@@ -134,7 +134,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
         this.pendingReplies.clear();        
         this.dataReceived = false;
-        this.deliveryFuture = null;
+        this.pendingDelivery = null;
 
         this.completed = false;
     }
@@ -162,9 +162,9 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
-        synchronized (iosession) {
-            if (this.deliveryFuture != null) {
-                if (this.deliveryFuture.isDone()) {
+        synchronized (sessionState) {
+            if (this.pendingDelivery != null) {
+                if (this.pendingDelivery.isDone()) {
                     deliveryCompleted(sessionState);
                 }
                 while (!this.pendingReplies.isEmpty()) {
@@ -188,7 +188,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private void deliveryCompleted(final ServerState sessionState) {
         if (this.mode.equals(DataAckMode.SINGLE)) {
             try {
-                DeliveryResult result = this.deliveryFuture.get();
+                DeliveryResult result = this.pendingDelivery.get();
                 this.pendingReplies.add(result.getReply());
             } catch (ExecutionException ex) {
                 Throwable cause = ex.getCause();
@@ -202,7 +202,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         } else {
             List<String> recipients = sessionState.getRecipients();
             try {
-                DeliveryResult results = this.deliveryFuture.get();
+                DeliveryResult results = this.pendingDelivery.get();
                 Map<String, SMTPReply> map = new HashMap<String, SMTPReply>();
                 for (RcptResult res: results.getFailures()) {
                     map.put(res.getRecipient(), res.getReply());
@@ -257,42 +257,44 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
-        boolean hasData = true;
-        while (hasData && !this.dataReceived) {
-            int bytesRead = buf.fill(iosession.channel());
-            if (buf.readLine(this.lineBuf, bytesRead == -1)) {
+        synchronized (sessionState) {
+            boolean hasData = true;
+            while (hasData && !this.dataReceived) {
+                int bytesRead = buf.fill(iosession.channel());
+                if (buf.readLine(this.lineBuf, bytesRead == -1)) {
 
-                processLine();
+                    processLine();
 
-                if (!this.dataReceived) {
-                    this.contentBuf.writeLine(this.lineBuf);
+                    if (!this.dataReceived) {
+                        this.contentBuf.writeLine(this.lineBuf);
+                    }
+                    this.lineBuf.clear();
+                } else {
+                    hasData = false;
                 }
-                this.lineBuf.clear();
-            } else {
-                hasData = false;
+                if (this.dataReceived || this.contentBuf.length() > 4 * 1024 || bytesRead == -1) {
+                    this.contentBuf.flush(this.fileStore.channel());
+                }
+                if (bytesRead == -1) {
+                    throw new UnexpectedEndOfStreamException();
+                }
             }
-            if (this.dataReceived || this.contentBuf.length() > 4 * 1024 || bytesRead == -1) {
+            if (this.contentBuf.hasData()) {
                 this.contentBuf.flush(this.fileStore.channel());
             }
-            if (bytesRead == -1) {
-                throw new UnexpectedEndOfStreamException();
+            if (this.dataReceived) {
+                this.fileStore.finish();
+
+                File file = this.fileStore.getFile();
+                SMTPContent<ReadableByteChannel> content = new FileSource(file);
+                DeliveryRequest deliveryRequest = new BasicDeliveryRequest(
+                        sessionState.getSender(),
+                        sessionState.getRecipients(),
+                        content);
+
+                this.pendingDelivery = this.handler.handle(deliveryRequest, 
+                        new OutputTrigger<DeliveryResult>(sessionState, iosession));
             }
-        }
-        if (this.contentBuf.hasData()) {
-            this.contentBuf.flush(this.fileStore.channel());
-        }
-        if (this.dataReceived) {
-            this.fileStore.finish();
-
-            File file = this.fileStore.getFile();
-            SMTPContent<ReadableByteChannel> content = new FileSource(file);
-            DeliveryRequest deliveryRequest = new BasicDeliveryRequest(
-                    sessionState.getSender(),
-                    sessionState.getRecipients(),
-                    content);
-
-            this.deliveryFuture = this.handler.handle(deliveryRequest, 
-                    new SessionResume<DeliveryResult>(iosession));
         }
     }
 
