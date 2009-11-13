@@ -92,15 +92,15 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         if (sessionState == null) {
             throw new IllegalArgumentException("Session state may not be null");
         }
-        
-        if (sessionState.isTerminated()) {
-            this.completed = true;
-            return;
-        }
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
+        
+        synchronized (sessionState) {
+            if (sessionState.isTerminated()) {
+                this.completed = true;
+                return;
+            }
 
-        synchronized (iosession) {
             while (!this.pendingReplies.isEmpty()) {
                 Future<SMTPReply> future = this.pendingReplies.peek();
                 if (future.isDone()) {
@@ -153,34 +153,34 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
-        for (;;) {
-            int bytesRead = buf.fill(iosession.channel());
-            try {
-                SMTPCommand command = this.parser.parse(buf, bytesRead == -1);
-                if (command == null) {
-                    if (bytesRead == -1 && !sessionState.isTerminated()) {
-                        throw new UnexpectedEndOfStreamException();
-                    } else {
-                        break;
+        synchronized (sessionState) {
+            for (;;) {
+                int bytesRead = buf.fill(iosession.channel());
+                try {
+                    SMTPCommand command = this.parser.parse(buf, bytesRead == -1);
+                    if (command == null) {
+                        if (bytesRead == -1 && !sessionState.isTerminated()) {
+                            throw new UnexpectedEndOfStreamException();
+                        } else {
+                            break;
+                        }
                     }
+                    Action<SMTPReply> action = this.commandHandler.handle(command, sessionState);
+                    Future<SMTPReply> future = action.execute(
+                            new OutputTrigger<SMTPReply>(sessionState, iosession));
+                    this.pendingReplies.add(future);
+                } catch (SMTPErrorException ex) {
+                    SMTPReply reply = new SMTPReply(ex.getCode(), ex.getEnhancedCode(), 
+                            ex.getMessage());
+                    BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(null);
+                    future.completed(reply);
+                    this.pendingReplies.add(future);
+                    iosession.setEvent(SelectionKey.OP_WRITE);
                 }
-                Action<SMTPReply> action = this.commandHandler.handle(command, sessionState);
-                Future<SMTPReply> future = action.execute(new SessionResume<SMTPReply>(iosession));
-                this.pendingReplies.add(future);
-            } catch (SMTPErrorException ex) {
-                SMTPReply reply = new SMTPReply(ex.getCode(), ex.getEnhancedCode(), 
-                        ex.getMessage());
-                BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(null);
-                future.completed(reply);
-                this.pendingReplies.add(future);
             }
-        }
-        
-        if (!this.pendingReplies.isEmpty()) {
-            iosession.setEvent(SelectionKey.OP_WRITE);
-        }
-
-        this.idle = (sessionState.getSender() == null);
+            
+            this.idle = (sessionState.getSender() == null);
+        }        
     }
 
     public boolean isIdle() {
