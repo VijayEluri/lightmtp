@@ -47,14 +47,7 @@ public class RcptToHandler implements CommandHandler<ServerState> {
         }
 
         String recipient = this.argParser.parse(argument);
-        
-        if (this.validator != null) {
-            this.validator.validateRecipient(recipient);
-        }
-        
-        sessionState.getRecipients().add(recipient);
-        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
-                "recipient <" + recipient + "> ok"));
+        return new CheckRecipientAction(recipient, sessionState, this.validator);
     }
 
 }

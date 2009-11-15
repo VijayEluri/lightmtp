@@ -23,18 +23,19 @@ import org.junit.Test;
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.impl.agent.SimpleEnvelopValidator;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.DataType;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class TestCommandHandler {
 
     @Test
     public void testHeloHandlerBasicResponse() throws Exception {
         ServerState state = new ServerState("whatever");
-        HeloHandler handler = new HeloHandler(null);
+        HeloHandler handler = new HeloHandler();
         Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
         Future<SMTPReply> future = action.execute(null);
         SMTPReply reply = future.get();
@@ -51,7 +52,7 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
-        HeloHandler handler = new HeloHandler(null);
+        HeloHandler handler = new HeloHandler();
         Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
         Future<SMTPReply> future = action.execute(null);
         SMTPReply reply = future.get();
@@ -68,7 +69,7 @@ public class TestCommandHandler {
     @Test
     public void testHeloHandlerDomainNotGiven() throws Exception {
         ServerState state = new ServerState("whatever");
-        HeloHandler handler = new HeloHandler(null);
+        HeloHandler handler = new HeloHandler();
         try {
             handler.handle(null, null, state);
         } catch (SMTPErrorException ex) {
@@ -80,7 +81,7 @@ public class TestCommandHandler {
     @Test
     public void testEhloHandlerBasicResponse() throws Exception {
         ServerState state = new ServerState("whatever");
-        EhloHandler handler = new EhloHandler(null);
+        EhloHandler handler = new EhloHandler();
         Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
         Future<SMTPReply> future = action.execute(null);
         SMTPReply reply = future.get();
@@ -96,7 +97,7 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setSender("someone@somewhere");
         state.getRecipients().add("someoneelse@somewhere");
-        EhloHandler handler = new EhloHandler(null);
+        EhloHandler handler = new EhloHandler();
         Action<SMTPReply> action = handler.handle("somedomain.com", null, state);
         Future<SMTPReply> future = action.execute(null);
         SMTPReply reply = future.get();
@@ -113,7 +114,7 @@ public class TestCommandHandler {
     @Test
     public void testEhloHandlerDomainNotGiven() throws Exception {
         ServerState state = new ServerState("whatever");
-        EhloHandler handler = new EhloHandler(null);
+        EhloHandler handler = new EhloHandler();
         try {
             handler.handle(null, null, state);
         } catch (SMTPErrorException ex) {
@@ -156,7 +157,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerBasicResponse() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
         Action<SMTPReply> action = handler.handle("from:<someone@somedomain.com>", null, state);
         Future<SMTPReply> future = action.execute(null);
         SMTPReply reply = future.get();
@@ -212,7 +213,7 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
         state.setSender("me@somedomain.com");
-        RcptToHandler handler = new RcptToHandler(null);
+        RcptToHandler handler = new RcptToHandler(new SimpleEnvelopValidator());
         Action<SMTPReply> action = handler.handle("to:<someone@somedomain.com>", null, state);
         Future<SMTPReply> future = action.execute(null);
         SMTPReply reply = future.get();
@@ -357,17 +358,16 @@ public class TestCommandHandler {
     public void testVrfyHandlerByAddress() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
-        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
+        VrfyHandler handler = new VrfyHandler(new SimpleEnvelopValidator() {
 
-            public void validateSender(String sender) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(String recipient) throws SMTPErrorException {
+            @Override
+            public Future<SMTPReply> validateRecipient(
+                    final String recipient,
+                    final FutureCallback<SMTPReply> callback) {
                 Assert.assertEquals("someaddress", recipient);
+                return super.validateRecipient(recipient, callback);
             }
 
-            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
-            }
         });
 
         Action<SMTPReply> action = handler.handle("Some name <someaddress>", null, state);
@@ -382,17 +382,16 @@ public class TestCommandHandler {
     public void testVrfyHandlerByFullInput() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
-        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
+        VrfyHandler handler = new VrfyHandler(new SimpleEnvelopValidator() {
 
-            public void validateSender(String sender) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(String recipient) throws SMTPErrorException {
+            @Override
+            public Future<SMTPReply> validateRecipient(
+                    final String recipient,
+                    final FutureCallback<SMTPReply> callback) {
                 Assert.assertEquals("Some name <someaddress", recipient);
+                return super.validateRecipient(recipient, callback);
             }
 
-            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
-            }
         });
 
         Action<SMTPReply> action = handler.handle("Some name <someaddress", null, state);
@@ -401,33 +400,6 @@ public class TestCommandHandler {
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 5), reply.getEnhancedCode());
-    }
-
-    @Test
-    public void testVrfyHandlerFailure() throws Exception {
-        ServerState state = new ServerState("whatever");
-        state.setClientType(ClientType.EXTENDED);
-        VrfyHandler handler = new VrfyHandler(new EnvelopValidator() {
-
-            public void validateSender(String sender) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(String recipient) throws SMTPErrorException {
-                if (recipient.equals("someaddress")) {
-                    throw new SMTPErrorException(500, new SMTPCode(5, 1, 1), "Ooopsie");
-                }
-            }
-
-            public void validateClientDomain(String clientDomain) throws SMTPErrorException {
-            }
-        });
-
-        try {
-            handler.handle("someaddress", null, state);
-        } catch (SMTPErrorException ex) {
-            Assert.assertEquals(500, ex.getCode());
-            Assert.assertEquals(new SMTPCode(5, 1, 1), ex.getEnhancedCode());
-        }
     }
 
 }

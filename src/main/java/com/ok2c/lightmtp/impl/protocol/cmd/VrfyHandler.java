@@ -16,8 +16,6 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.List;
 
-import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
@@ -49,11 +47,7 @@ public class VrfyHandler implements CommandHandler<ServerState> {
         if (recipient == null) {
             recipient = argument;
         }
-        if (this.validator != null) {
-            this.validator.validateRecipient(recipient);
-        }
-        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
-                "recipient <" + recipient + "> ok"));
+        return new VerifyRecipientAction(recipient, this.validator);
     }
 
 }

@@ -47,14 +47,7 @@ public class MailFromHandler implements CommandHandler<ServerState> {
         }
 
         String sender = this.argParser.parse(argument);
-        
-        if (this.validator != null) {
-            this.validator.validateSender(sender);
-        }
-        
-        sessionState.setSender(sender);
-        return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0), 
-                "originator <" + sender + "> ok"));
+        return new CheckSenderAction(sender, sessionState, validator);
     }
     
 }

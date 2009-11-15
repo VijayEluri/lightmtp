@@ -25,15 +25,11 @@ import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
-import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
 public class EhloHandler implements CommandHandler<ServerState> {
 
-    private final EnvelopValidator validator;
-    
-    public EhloHandler(final EnvelopValidator validator) {
+    public EhloHandler() {
         super();
-        this.validator = validator;
     }
 
     public Action<SMTPReply> handle(
@@ -48,14 +44,10 @@ public class EhloHandler implements CommandHandler<ServerState> {
                     new SMTPCode(5, 5, 2),
                     "domain not given");
         }
-        
-        if (this.validator != null) {
-            this.validator.validateClientDomain(domain);
+        synchronized (sessionState) {
+            sessionState.setClientType(ClientType.EXTENDED);
+            sessionState.setClientDomain(domain);
         }
-        
-        sessionState.setClientType(ClientType.EXTENDED);
-        sessionState.setClientDomain(domain);
-
         List<String> lines = new ArrayList<String>();
         lines.add("Welcome " + domain);
         lines.addAll(sessionState.getExtensions());
