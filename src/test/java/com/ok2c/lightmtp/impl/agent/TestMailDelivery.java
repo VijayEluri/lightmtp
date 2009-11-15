@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.BaseTransportTest;
 import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
@@ -93,7 +93,7 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(null, deliveryHandler);
+        this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -174,7 +174,7 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         DelayedTestDeliveryHandler deliveryHandler = new DelayedTestDeliveryHandler();
-        this.mta.start(null, deliveryHandler);
+        this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -273,7 +273,7 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerSessionFactory(null, deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -348,22 +348,23 @@ public class TestMailDelivery extends BaseTransportTest {
         
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
-        EnvelopValidator envelopValidator = new EnvelopValidator() {
+        EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
-            public void validateClientDomain(final String clientDomain) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(final String recipient) throws SMTPErrorException {
+            @Override
+            public Future<SMTPReply> validateRecipient(
+                    final String recipient,
+                    final FutureCallback<SMTPReply> callback) {
                 if (recipient.equals("testuser1")) {
-                    throw new SMTPErrorException(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
+                    BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
+                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
                             new SMTPCode(5, 1, 1), 
-                            "requested action not taken: mailbox unavailable");
+                            "requested action not taken: mailbox unavailable");        
+                    future.completed(reply);
+                    return future;
                 }
+                return super.validateRecipient(recipient, callback);
             }
 
-            public void validateSender(final String sender) throws SMTPErrorException {
-            }
-            
         };
         
         
@@ -433,22 +434,23 @@ public class TestMailDelivery extends BaseTransportTest {
         
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
-        EnvelopValidator envelopValidator = new EnvelopValidator() {
+        EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
-            public void validateClientDomain(final String clientDomain) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(final String recipient) throws SMTPErrorException {
+            @Override
+            public Future<SMTPReply> validateRecipient(
+                    final String recipient,
+                    final FutureCallback<SMTPReply> callback) {
                 if (recipient.equals("testuser1")) {
-                    throw new SMTPErrorException(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
+                    BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
+                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
                             new SMTPCode(5, 1, 1), 
-                            "requested action not taken: mailbox unavailable");
+                            "requested action not taken: mailbox unavailable");        
+                    future.completed(reply);
+                    return future;
                 }
+                return super.validateRecipient(recipient, callback);
             }
 
-            public void validateSender(final String sender) throws SMTPErrorException {
-            }
-            
         };
         
         
@@ -518,22 +520,23 @@ public class TestMailDelivery extends BaseTransportTest {
         
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
-        EnvelopValidator envelopValidator = new EnvelopValidator() {
+        EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
-            public void validateClientDomain(final String clientDomain) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(final String recipient) throws SMTPErrorException {
-            }
-
-            public void validateSender(final String sender) throws SMTPErrorException {
+            @Override
+            public Future<SMTPReply> validateSender(
+                    final String sender,
+                    final FutureCallback<SMTPReply> callback) {
                 if (sender.equals("root@somewhere.com")) {
-                    throw new SMTPErrorException(SMTPCodes.ERR_PERM_MAILBOX_NOT_ALLOWED,
+                    BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
+                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_NOT_ALLOWED,
                             new SMTPCode(5, 1, 8), 
-                            "bad sender's system address");
+                            "bad sender's system address");        
+                    future.completed(reply);
+                    return future;
                 }
+                return super.validateSender(sender, callback);
             }
-            
+
         };
         
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
@@ -598,20 +601,21 @@ public class TestMailDelivery extends BaseTransportTest {
         
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
-        EnvelopValidator envelopValidator = new EnvelopValidator() {
+        EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
-            public void validateClientDomain(final String clientDomain) throws SMTPErrorException {
-            }
-
-            public void validateRecipient(final String recipient) throws SMTPErrorException {
-            }
-
-            public void validateSender(final String sender) throws SMTPErrorException {
+            @Override
+            public Future<SMTPReply> validateSender(
+                    final String sender,
+                    final FutureCallback<SMTPReply> callback) {
                 if (sender.equals("root@somewhere.com")) {
-                    throw new SMTPErrorException(SMTPCodes.ERR_PERM_MAILBOX_NOT_ALLOWED,
+                    BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
+                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_NOT_ALLOWED,
                             new SMTPCode(5, 1, 8), 
-                            "bad sender's system address");
+                            "bad sender's system address");        
+                    future.completed(reply);
+                    return future;
                 }
+                return super.validateSender(sender, callback);
             }
             
         };
@@ -675,7 +679,7 @@ public class TestMailDelivery extends BaseTransportTest {
             
         };
         
-        this.mta.start(null, deliveryHandler);
+        this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -728,7 +732,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new LocalServerSessionFactory(TMP_DIR, null, deliveryHandler));
+        this.mta.start(new LocalServerSessionFactory(
+                TMP_DIR, new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -810,7 +815,8 @@ public class TestMailDelivery extends BaseTransportTest {
             
         };
         
-        this.mta.start(new LocalServerSessionFactory(TMP_DIR, null, deliveryHandler));
+        this.mta.start(new LocalServerSessionFactory(
+                TMP_DIR, new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();

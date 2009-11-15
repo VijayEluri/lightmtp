@@ -23,15 +23,11 @@ import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
-import com.ok2c.lightmtp.protocol.EnvelopValidator;
 
 public class HeloHandler implements CommandHandler<ServerState> {
 
-    private final EnvelopValidator validator;
-    
-    public HeloHandler(final EnvelopValidator validator) {
+    public HeloHandler() {
         super();
-        this.validator = validator;
     }
 
     public Action<SMTPReply> handle(
@@ -48,12 +44,10 @@ public class HeloHandler implements CommandHandler<ServerState> {
                     null,
                     "domain not given");
         }
-        
-        if (this.validator != null) {
-            this.validator.validateClientDomain(domain);
+        synchronized (sessionState) {
+            sessionState.setClientType(ClientType.BASIC);
+            sessionState.setClientDomain(domain);
         }
-        sessionState.setClientType(ClientType.BASIC);
-        sessionState.setClientDomain(domain);
         return new SimpleAction(new SMTPReply(SMTPCodes.OK, null, "Welcome " + domain));
     }
 

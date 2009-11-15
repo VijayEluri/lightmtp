@@ -47,6 +47,9 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
         if (workingDir == null) {
             throw new IllegalArgumentException("Working dir may not be null");
         }
+        if (validator == null) {
+            throw new IllegalArgumentException("Envelop validator may not be null");
+        }
         if (deliveryHandler == null) {
             throw new IllegalArgumentException("Delivery handler may not be null");
         }
@@ -74,8 +77,8 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
     protected ProtocolHandler<ServerState> createProtocolHandler(
             final EnvelopValidator validator) {
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
-        handler.register("HELO", new HeloHandler(validator));
-        handler.register("EHLO", new EhloHandler(validator));
+        handler.register("HELO", new HeloHandler());
+        handler.register("EHLO", new EhloHandler());
         handler.register("RSET", new RsetHandler());
         handler.register("NOOP", new NoopHandler());
         handler.register("QUIT", new QuitHandler());

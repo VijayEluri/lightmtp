@@ -12,19 +12,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol;
+package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.protocol.Action;
+import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
-public interface EnvelopValidator {
+class VerifyRecipientAction implements Action<SMTPReply> {
 
-    Future<SMTPReply> validateSender(
-            String sender, FutureCallback<SMTPReply> callback);
+    private final String recipient;
+    private final EnvelopValidator validator;
     
-    Future<SMTPReply> validateRecipient(
-            String recipient, FutureCallback<SMTPReply> callback);
+    public VerifyRecipientAction(
+            final String recipient,
+            final EnvelopValidator validator) {
+        super();
+        this.recipient = recipient;
+        this.validator = validator;
+    }
 
+    public Future<SMTPReply> execute(final FutureCallback<SMTPReply> callback) {
+        return this.validator.validateRecipient(this.recipient, callback);
+    }
+    
 }

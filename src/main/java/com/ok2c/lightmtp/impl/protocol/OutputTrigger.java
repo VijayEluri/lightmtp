@@ -15,7 +15,6 @@
 package com.ok2c.lightmtp.impl.protocol;
 
 import java.nio.channels.SelectionKey;
-import java.util.concurrent.Future;
 
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.concurrent.FutureCallback;
@@ -37,15 +36,15 @@ class OutputTrigger<T> implements FutureCallback<T>{
         }
     }
     
-    public void cancelled(final Future<T> future) {
+    public void cancelled() {
         resume();
     }
 
-    public void completed(final Future<T> future) {
+    public void completed(final T result) {
         resume();
     }
 
-    public void failed(final Future<T> future) {
+    public void failed(final Exception ex) {
         resume();
     }
     
