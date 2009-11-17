@@ -23,20 +23,20 @@ import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
-class CheckRecipientAction extends AbstractAsyncAction<ServerState> {
+class MailFromAction extends AbstractAsyncAction<ServerState> {
 
-    private final String recipient;
+    private final String sender;
     private final EnvelopValidator validator;
     
-    public CheckRecipientAction(final String recipient, final EnvelopValidator validator) {
+    public MailFromAction(final String sender, final EnvelopValidator validator) {
         super();
-        this.recipient = recipient;
+        this.sender = sender;
         this.validator = validator;
     }
 
     @Override
     protected SMTPReply internalValidateState(final ServerState state) {
-        if (state.getClientType() == null || state.getSender() == null) {
+        if (state.getClientType() == null || state.getSender() != null) {
             SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
                     new SMTPCode(5, 5, 1),
                     "bad sequence of commands");
@@ -48,14 +48,14 @@ class CheckRecipientAction extends AbstractAsyncAction<ServerState> {
 
     @Override
     protected Future<SMTPReply> internalAsyncExecute(final FutureCallback<SMTPReply> callback) {
-        return this.validator.validateRecipient(this.recipient, callback);
+        return this.validator.validateSender(this.sender, callback);
     }
 
     @Override
     protected void internalUpdateState(final SMTPReply reply, final ServerState state) {
         if (reply.getCode() == SMTPCodes.OK) {
-            state.getRecipients().add(this.recipient);
+            state.setSender(this.sender);
         }
     }
-    
+
 }
