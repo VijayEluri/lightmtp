@@ -14,22 +14,29 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import java.util.List;
+import java.util.concurrent.Future;
 
-import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.impl.protocol.ServerState;
+import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightmtp.protocol.CommandHandler;
+import com.ok2c.lightnio.concurrent.BasicFuture;
+import com.ok2c.lightnio.concurrent.FutureCallback;
 
-public class DataHandler implements CommandHandler<ServerState> {
+public abstract class AbstractAction<T> implements Action<T> {
 
-    public DataHandler() {
+    public AbstractAction() {
         super();
     }
 
-    public Action<ServerState> handle(
-            final String argument, final List<String> params) throws SMTPErrorException {
-        return new DataAction();
+    public Future<SMTPReply> execute(
+            final T state, 
+            final FutureCallback<SMTPReply> callback) {
+        synchronized (state) {
+            BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
+            future.completed(internalExecute(state));
+            return future;
+        }
     }
-
+    
+    protected abstract SMTPReply internalExecute(T state);
+    
 }

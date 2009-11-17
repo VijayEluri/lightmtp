@@ -16,8 +16,6 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.List;
 
-import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
@@ -32,10 +30,7 @@ public class VrfyHandler implements CommandHandler<ServerState> {
         this.validator = validator;
     }
 
-    public Action<SMTPReply> handle(
-            final String argument, 
-            final List<String> params,
-            final ServerState sessionState) throws SMTPErrorException {
+    public Action<ServerState> handle(final String argument, final List<String> params) {
         String recipient = null;
         int fromIdx = argument.indexOf('<');
         if (fromIdx != -1) {
@@ -47,7 +42,7 @@ public class VrfyHandler implements CommandHandler<ServerState> {
         if (recipient == null) {
             recipient = argument;
         }
-        return new VerifyRecipientAction(recipient, this.validator);
+        return new VrfyAction(recipient, this.validator);
     }
 
 }

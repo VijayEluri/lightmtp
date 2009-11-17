@@ -16,10 +16,11 @@ package com.ok2c.lightmtp.protocol;
 
 import java.util.concurrent.Future;
 
+import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface Action<T> {
 
-    Future<T> execute(FutureCallback<T> callback);
+    Future<SMTPReply> execute(T state, FutureCallback<SMTPReply> callback);
 
 }

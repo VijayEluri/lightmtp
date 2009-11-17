@@ -14,22 +14,22 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import java.util.List;
-
-import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
-import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightmtp.protocol.CommandHandler;
 
-public class DataHandler implements CommandHandler<ServerState> {
+public class QuitAction extends AbstractAction<ServerState> {
 
-    public DataHandler() {
+    public QuitAction() {
         super();
     }
 
-    public Action<ServerState> handle(
-            final String argument, final List<String> params) throws SMTPErrorException {
-        return new DataAction();
+    @Override
+    protected SMTPReply internalExecute(final ServerState state) {
+        state.terminated();
+        return new SMTPReply(SMTPCodes.SERVICE_TERMINATING, new SMTPCode(2, 0, 0),
+                state.getServerId() + " service terminating");
     }
 
 }

@@ -17,11 +17,9 @@ package com.ok2c.lightmtp.protocol;
 import java.util.List;
 
 import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.SMTPReply;
 
 public interface CommandHandler<T> {
 
-    Action<SMTPReply> handle(
-            String argument, List<String> params, T state) throws SMTPErrorException;
+    Action<T> handle(String argument, List<String> params) throws SMTPErrorException;
 
 }

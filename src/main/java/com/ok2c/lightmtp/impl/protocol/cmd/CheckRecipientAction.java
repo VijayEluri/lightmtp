@@ -16,64 +16,46 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
+import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
-import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
-class CheckRecipientAction implements Action<SMTPReply> {
+class CheckRecipientAction extends AbstractAsyncAction<ServerState> {
 
     private final String recipient;
-    private final ServerState state;
     private final EnvelopValidator validator;
     
-    public CheckRecipientAction(
-            final String recipient,
-            final ServerState state, 
-            final EnvelopValidator validator) {
+    public CheckRecipientAction(final String recipient, final EnvelopValidator validator) {
         super();
         this.recipient = recipient;
-        this.state = state;
         this.validator = validator;
     }
 
-    public Future<SMTPReply> execute(final FutureCallback<SMTPReply> callback) {
-        return this.validator.validateRecipient(this.recipient, new InternalCallback(callback));
+    @Override
+    protected SMTPReply internalValidateState(final ServerState state) {
+        if (state.getClientType() == null || state.getSender() == null) {
+            SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+                    new SMTPCode(5, 5, 1),
+                    "bad sequence of commands");
+            return reply;
+        } else {
+            return null;
+        }
     }
-    
-    class InternalCallback implements FutureCallback<SMTPReply> {
 
-        private final FutureCallback<SMTPReply> callback;
-        
-        InternalCallback(final FutureCallback<SMTPReply> callback) {
-            this.callback = callback;
-        }
+    @Override
+    protected Future<SMTPReply> internalAsyncExecute(final FutureCallback<SMTPReply> callback) {
+        return this.validator.validateRecipient(this.recipient, callback);
+    }
 
-        public void completed(final SMTPReply reply) {
-            synchronized (state) {
-                if (reply.getCode() == SMTPCodes.OK) {
-                    state.getRecipients().add(recipient);
-                }
-            }
-            if (this.callback != null) {
-                this.callback.completed(reply);
-            }
+    @Override
+    protected void internalUpdateState(final SMTPReply reply, final ServerState state) {
+        if (reply.getCode() == SMTPCodes.OK) {
+            state.getRecipients().add(this.recipient);
         }
-        
-        public void cancelled() {
-            if (this.callback != null) {
-                this.callback.cancelled();
-            }
-        }
-
-        public void failed(final Exception ex) {
-            if (this.callback != null) {
-                this.callback.failed(ex);
-            }
-        }
-
     }
     
 }
