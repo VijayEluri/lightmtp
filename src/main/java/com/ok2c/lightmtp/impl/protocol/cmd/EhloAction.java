@@ -14,29 +14,32 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
-import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightmtp.protocol.CommandHandler;
 
-public class EhloHandler implements CommandHandler<ServerState> {
+public class EhloAction extends AbstractAction<ServerState> {
 
-    public EhloHandler() {
+    private final String domain;
+    
+    public EhloAction(final String domain) {
         super();
+        this.domain = domain;
     }
 
-    public Action<ServerState> handle(
-            final String argument, final List<String> params) throws SMTPErrorException {
-        if (argument == null) {
-            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
-                    new SMTPCode(5, 5, 2),
-                    "domain not given");
-        }
-        return new EhloAction(argument);
+    @Override
+    protected SMTPReply internalExecute(final ServerState state) {
+        state.reset();
+        state.setClientType(ClientType.EXTENDED);
+        state.setClientDomain(this.domain);
+        List<String> lines = new ArrayList<String>();
+        lines.add("Welcome " + this.domain);
+        lines.addAll(state.getExtensions());
+        return new SMTPReply(SMTPCodes.OK, null, lines);
     }
 
 }

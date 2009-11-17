@@ -653,6 +653,102 @@ public class TestMailDelivery extends BaseTransportTest {
     }
 
     @Test
+    public void testDelayedValidationPipelinedDelivery() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root@somewhere.com", 
+                Arrays.asList("testuser1"), 
+                new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
+        requests.add(new BasicDeliveryRequest(
+                "root@somewhere.com", 
+                Arrays.asList("testuser1", "testuser2"), 
+                new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
+        this.mta.start(new DelayedEnvelopValidator(), deliveryHandler);
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(deliveryRequestHandler);
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(2, results.size());
+        
+        DeliveryResult res1 = results.get(0);
+        Assert.assertTrue(res1.getFailures().isEmpty());
+        Assert.assertEquals(250, res1.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res1.getReply().getEnhancedCode());
+        
+        DeliveryResult res2 = results.get(1);
+        Assert.assertTrue(res2.getFailures().isEmpty());
+        Assert.assertEquals(250, res2.getReply().getCode());
+        Assert.assertEquals(new SMTPCode(2, 6, 0), res2.getReply().getEnhancedCode());
+    }
+
+    @Test
+    public void testDelayedValidationNonPipelinedDelivery() throws Exception {
+        
+        List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
+        requests.add(new BasicDeliveryRequest(
+                "root@somewhere.com", 
+                Arrays.asList("testuser1"), 
+                new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
+        requests.add(new BasicDeliveryRequest(
+                "root@somewhere.com", 
+                Arrays.asList("testuser1", "testuser2"), 
+                new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
+        
+        SimpleTestJob testJob = new SimpleTestJob(requests);
+
+        SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
+        this.mta.start(new OldServerSessionFactory(new DelayedEnvelopValidator(), deliveryHandler));
+        ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
+        endpoint.waitFor();
+        SocketAddress address = endpoint.getAddress();
+        Assert.assertNotNull(address);
+        Assert.assertNull(endpoint.getException());
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
+        
+        SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
+        this.mua.start(deliveryRequestHandler);
+        
+        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        sessionRequest.waitFor();
+        Assert.assertNotNull(sessionRequest.getSession());
+        Assert.assertNull(sessionRequest.getException());
+        
+        List<DeliveryResult> results = testJob.waitForResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(2, results.size());
+        
+        DeliveryResult res1 = results.get(0);
+        Assert.assertTrue(res1.getFailures().isEmpty());
+        Assert.assertEquals(250, res1.getReply().getCode());
+        Assert.assertNull(res1.getReply().getEnhancedCode());
+        
+        DeliveryResult res2 = results.get(1);
+        Assert.assertTrue(res2.getFailures().isEmpty());
+        Assert.assertEquals(250, res2.getReply().getCode());
+        Assert.assertNull(res2.getReply().getEnhancedCode());
+    }
+
+    @Test
     public void testDeliveryFailure() throws Exception {
         
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();

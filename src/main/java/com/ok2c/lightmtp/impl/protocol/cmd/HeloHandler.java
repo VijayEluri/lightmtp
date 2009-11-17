@@ -18,8 +18,6 @@ import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
@@ -30,25 +28,14 @@ public class HeloHandler implements CommandHandler<ServerState> {
         super();
     }
 
-    public Action<SMTPReply> handle(
-            final String argument, 
-            final List<String> params,
-            final ServerState sessionState) throws SMTPErrorException {
-
-        // Reset session
-        sessionState.reset();
-
-        String domain = argument;
-        if (domain == null) {
+    public Action<ServerState> handle(
+            final String argument, final List<String> params) throws SMTPErrorException {
+        if (argument == null) {
             throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
                     null,
                     "domain not given");
         }
-        synchronized (sessionState) {
-            sessionState.setClientType(ClientType.BASIC);
-            sessionState.setClientDomain(domain);
-        }
-        return new SimpleAction(new SMTPReply(SMTPCodes.OK, null, "Welcome " + domain));
+        return new HeloAction(argument);
     }
 
 }

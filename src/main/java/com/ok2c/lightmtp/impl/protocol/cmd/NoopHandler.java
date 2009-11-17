@@ -29,10 +29,7 @@ public class NoopHandler implements CommandHandler<ServerState> {
         super();
     }
 
-    public Action<SMTPReply> handle(
-            final String argument, 
-            final List<String> params,
-            final ServerState sessionState) {
+    public Action<ServerState> handle(final String argument, final List<String> params) {
         return new SimpleAction(new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 0, 0), "OK"));
     }
 

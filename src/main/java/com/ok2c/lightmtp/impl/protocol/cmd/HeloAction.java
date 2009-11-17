@@ -14,28 +14,26 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import java.util.concurrent.Future;
-
+import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightmtp.protocol.EnvelopValidator;
-import com.ok2c.lightnio.concurrent.FutureCallback;
+import com.ok2c.lightmtp.impl.protocol.ClientType;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 
-class VerifyRecipientAction implements Action<SMTPReply> {
+public class HeloAction extends AbstractAction<ServerState> {
 
-    private final String recipient;
-    private final EnvelopValidator validator;
+    private final String domain;
     
-    public VerifyRecipientAction(
-            final String recipient,
-            final EnvelopValidator validator) {
+    public HeloAction(final String domain) {
         super();
-        this.recipient = recipient;
-        this.validator = validator;
+        this.domain = domain;
     }
 
-    public Future<SMTPReply> execute(final FutureCallback<SMTPReply> callback) {
-        return this.validator.validateRecipient(this.recipient, callback);
+    @Override
+    protected SMTPReply internalExecute(final ServerState state) {
+        state.reset();
+        state.setClientType(ClientType.BASIC);
+        state.setClientDomain(this.domain);
+        return new SMTPReply(SMTPCodes.OK, null, "Welcome " + this.domain);
     }
-    
+
 }

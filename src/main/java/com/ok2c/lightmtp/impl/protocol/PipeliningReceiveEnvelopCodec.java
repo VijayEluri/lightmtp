@@ -27,6 +27,7 @@ import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.impl.protocol.cmd.SimpleAction;
 import com.ok2c.lightmtp.message.SMTPCommandParser;
 import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
@@ -38,7 +39,6 @@ import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.concurrent.BasicFuture;
 
 public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState> {
 
@@ -46,8 +46,9 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
     private final ProtocolHandler<ServerState> commandHandler;
     private final SMTPMessageParser<SMTPCommand> parser;
     private final SMTPMessageWriter<SMTPReply> writer;
-    private final Queue<Future<SMTPReply>> pendingReplies;
+    private final Queue<Action<ServerState>> pendingActions;
 
+    private Future<SMTPReply> actionFuture;
     private boolean idle;
     private boolean completed;
 
@@ -65,7 +66,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         this.commandHandler = commandHandler;
         this.parser = new SMTPCommandParser();
         this.writer = new SMTPReplyWriter(true);
-        this.pendingReplies = new LinkedList<Future<SMTPReply>>();
+        this.pendingActions = new LinkedList<Action<ServerState>>();
         this.idle = true;
         this.completed = false;
     }
@@ -78,11 +79,28 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
             final ServerState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
-        this.pendingReplies.clear();
+        this.pendingActions.clear();
+        this.actionFuture = null;
         this.idle = true;
         this.completed = false;
     }
 
+    private SMTPReply getReply(final Future<SMTPReply> future) {
+        try {
+            return future.get();
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause == null) {
+                cause = ex;
+            }
+            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0), 
+                    ex.getMessage());
+        } catch (InterruptedException ex) {
+            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0), 
+                    ex.getMessage());
+        }
+    }
+    
     public void produceData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
@@ -96,35 +114,29 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
         
         synchronized (sessionState) {
-            if (sessionState.isTerminated()) {
-                this.completed = true;
-                return;
+            
+            if (this.actionFuture != null) {
+                SMTPReply reply = getReply(this.actionFuture);
+                this.actionFuture = null;
+                this.writer.write(reply, buf);
             }
 
-            while (!this.pendingReplies.isEmpty()) {
-                Future<SMTPReply> future = this.pendingReplies.peek();
-                if (future.isDone()) {
-                    future = this.pendingReplies.remove();
-                    SMTPReply reply;
-                    try {
-                        reply = future.get();
-                    } catch (ExecutionException ex) {
-                        Throwable cause = ex.getCause();
-                        if (cause == null) {
-                            cause = ex;
-                        }
-                        reply = new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, 
-                                new SMTPCode(5, 3, 0), ex.getMessage());
-                    } catch (InterruptedException ex) {
-                        reply = new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, 
-                                new SMTPCode(5, 3, 0), ex.getMessage());
+            if (this.actionFuture == null) {
+                while (!this.pendingActions.isEmpty()) {
+                    Action<ServerState> action = this.pendingActions.remove();
+                    Future<SMTPReply> future = action.execute(
+                            sessionState,
+                            new OutputTrigger<SMTPReply>(sessionState, iosession));
+                    if (future.isDone()) {
+                        SMTPReply reply = getReply(future);
+                        this.writer.write(reply, buf);
+                    } else {
+                        this.actionFuture = future;
+                        break;
                     }
-                    this.writer.write(reply, buf);
-                } else {
-                    break;
                 }
             }
-
+            
             if (buf.hasData()) {
                 buf.flush(iosession.channel());
             }
@@ -165,18 +177,23 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                             break;
                         }
                     }
-                    Action<SMTPReply> action = this.commandHandler.handle(command, sessionState);
-                    Future<SMTPReply> future = action.execute(
-                            new OutputTrigger<SMTPReply>(sessionState, iosession));
-                    this.pendingReplies.add(future);
+                    Action<ServerState> action = this.commandHandler.handle(command);
+                    this.pendingActions.add(action);
                 } catch (SMTPErrorException ex) {
-                    SMTPReply reply = new SMTPReply(ex.getCode(), ex.getEnhancedCode(), 
+                    SMTPReply reply = new SMTPReply(ex.getCode(), 
+                            ex.getEnhancedCode(), 
                             ex.getMessage());
-                    BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(null);
-                    future.completed(reply);
-                    this.pendingReplies.add(future);
-                    iosession.setEvent(SelectionKey.OP_WRITE);
+                    this.pendingActions.add(new SimpleAction(reply));
+                } catch (SMTPProtocolException ex) {
+                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+                            new SMTPCode(5, 3, 0), 
+                            ex.getMessage());
+                    this.pendingActions.add(new SimpleAction(reply));
                 }
+            }
+            
+            if (!this.pendingActions.isEmpty()) {
+                iosession.setEvent(SelectionKey.OP_WRITE);
             }
             
             this.idle = (sessionState.getSender() == null);

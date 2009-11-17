@@ -35,6 +35,7 @@ public class IOSessionRegistry {
             return;
         }
         this.sessions.add(iosession);
+        notifyAll();
     }
 
     public synchronized void remove(final IOSession iosession) {
@@ -42,6 +43,7 @@ public class IOSessionRegistry {
             return;
         }
         this.sessions.remove(iosession);
+        notifyAll();
     }
 
     public synchronized boolean isEmpty() {

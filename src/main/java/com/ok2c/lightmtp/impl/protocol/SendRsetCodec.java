@@ -80,11 +80,6 @@ public class SendRsetCodec implements ProtocolCodec<ClientState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
 
-        if (sessionState.isTerminated()) {
-            this.codecState = CodecState.COMPLETED;
-            return;
-        }
-        
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
         switch (this.codecState) {

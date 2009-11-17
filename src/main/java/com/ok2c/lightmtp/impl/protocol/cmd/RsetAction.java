@@ -12,13 +12,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.protocol;
+package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import com.ok2c.lightmtp.SMTPCommand;
-import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.impl.protocol.ServerState;
 
-public interface ProtocolHandler<T> {
+public class RsetAction extends AbstractAction<ServerState> {
 
-    Action<T> handle(SMTPCommand command) throws SMTPErrorException;
+    public RsetAction() {
+        super();
+    }
+
+    @Override
+    protected SMTPReply internalExecute(final ServerState state) {
+        state.reset();
+        return new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 0, 0), "OK");
+    }
 
 }

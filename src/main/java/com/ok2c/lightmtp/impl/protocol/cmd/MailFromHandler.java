@@ -16,10 +16,7 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.List;
 
-import com.ok2c.lightmtp.SMTPCode;
-import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
-import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
@@ -36,18 +33,11 @@ public class MailFromHandler implements CommandHandler<ServerState> {
         this.argParser = new AddressArgParser("FROM:");
     }
 
-    public Action<SMTPReply> handle(
+    public Action<ServerState> handle(
             final String argument, 
-            final List<String> params,
-            final ServerState sessionState) throws SMTPErrorException {
-        if (sessionState.getClientType() == null || sessionState.getSender() != null) {
-            throw new SMTPErrorException(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
-                    new SMTPCode(5, 5, 1),
-                    "bad sequence of commands");
-        }
-
+            final List<String> params) throws SMTPErrorException {
         String sender = this.argParser.parse(argument);
-        return new CheckSenderAction(sender, sessionState, validator);
+        return new CheckSenderAction(sender, this.validator);
     }
     
 }
