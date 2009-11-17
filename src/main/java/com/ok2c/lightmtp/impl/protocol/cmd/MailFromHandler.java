@@ -37,7 +37,7 @@ public class MailFromHandler implements CommandHandler<ServerState> {
             final String argument, 
             final List<String> params) throws SMTPErrorException {
         String sender = this.argParser.parse(argument);
-        return new CheckSenderAction(sender, this.validator);
+        return new MailFromAction(sender, this.validator);
     }
     
 }

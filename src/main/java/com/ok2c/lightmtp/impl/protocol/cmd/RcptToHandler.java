@@ -37,7 +37,7 @@ public class RcptToHandler implements CommandHandler<ServerState> {
             final String argument, 
             final List<String> params) throws SMTPErrorException {
         String recipient = this.argParser.parse(argument);
-        return new CheckRecipientAction(recipient, this.validator);
+        return new RcptToAction(recipient, this.validator);
     }
 
 }
