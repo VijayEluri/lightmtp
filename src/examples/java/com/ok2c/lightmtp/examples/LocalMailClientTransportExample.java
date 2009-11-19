@@ -15,31 +15,25 @@
 package com.ok2c.lightmtp.examples;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
-import com.ok2c.lightmtp.agent.IOSessionRegistry;
-import com.ok2c.lightmtp.impl.agent.ClientIOEventDispatch;
-import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
+import com.ok2c.lightmtp.agent.MailClientTransport;
+import com.ok2c.lightmtp.impl.agent.LocalMailClientTransport;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.SessionContext;
-import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionRequest;
-import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
-import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
-public class SMTPClientRequestHandlerExample {
+public class LocalMailClientTransportExample {
 
     public static void main(String[] args) throws Exception {
 
@@ -83,44 +77,16 @@ public class SMTPClientRequestHandlerExample {
         queue.add(request3);
         
         final CountDownLatch messageCount = new CountDownLatch(queue.size());
-        final MyDeliveryRequestHandler handler = new MyDeliveryRequestHandler(messageCount);
-        final ClientSessionFactory sessionFactory = new ClientSessionFactory(handler);
-        final IOSessionRegistry sessionRegistry = new IOSessionRegistry();
-        final IOEventDispatch ioEventDispatch = new ClientIOEventDispatch(
-                sessionRegistry, sessionFactory);
-        final DefaultConnectingIOReactor ioReactor = new DefaultConnectingIOReactor(
-                new IOReactorConfig());
+
+        final IOReactorConfig config = new IOReactorConfig(); 
+        config.setWorkerCount(1);
         
-        Thread t = new Thread(new Runnable() {
-            
-            public void run() {
-                try {
-                    ioReactor.execute(ioEventDispatch);
-                } catch (InterruptedIOException ex) {
-                    System.err.println("Interrupted");
-                } catch (IOException e) {
-                    System.err.println("I/O error: " + e.getMessage());
-                }
-                
-                List<ExceptionEvent> events = ioReactor.getAuditLog();
-                if (events != null) {
-                    for (ExceptionEvent event: events) {
-                        event.getCause().printStackTrace();
-                    }
-                }
-                
-                while (messageCount.getCount() > 0) {
-                    messageCount.countDown();
-                }
-                System.out.println("Shutdown");
-            }
-            
-        });
-        t.start();
+        final MailClientTransport mua = new LocalMailClientTransport(config);
+        mua.start(new MyDeliveryRequestHandler(messageCount));
+
+        final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
         
-        SessionRequest sessionRequest = ioReactor.connect(
-                new InetSocketAddress("192.168.44.128", 25), null, queue, null);
-        
+        SessionRequest sessionRequest = mua.connect(sockaddress, queue, null);
         sessionRequest.waitFor();
         
         IOSession iosession = sessionRequest.getSession();
@@ -134,7 +100,11 @@ public class SMTPClientRequestHandlerExample {
         }
         
         System.out.println("Shutting down I/O reactor");
-        ioReactor.shutdown();
+        try {
+            mua.shutdown();
+        } catch (IOException ex) {
+            mua.forceShutdown();
+        }
         System.out.println("Done");
     }
 
@@ -169,6 +139,7 @@ public class SMTPClientRequestHandlerExample {
                 final DeliveryRequest request, 
                 final DeliveryResult result, 
                 final SessionContext context) {
+            this.messageCount.countDown();
             System.out.println("Message delivery succeeded: " + request + "; " + result);
         }
 
@@ -176,6 +147,7 @@ public class SMTPClientRequestHandlerExample {
                 final DeliveryRequest request, 
                 final DeliveryResult result, 
                 final SessionContext context) {
+            this.messageCount.countDown();
             System.out.println("Message delivery failed: " + request + "; " + result);
         }
 

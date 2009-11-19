@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightmtp.agent.IOSessionRegistry;
+import com.ok2c.lightmtp.agent.MailServerTransport;
 import com.ok2c.lightmtp.impl.protocol.ProtocolState;
 import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
@@ -41,7 +42,7 @@ import com.ok2c.lightnio.impl.DefaultListeningIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
-public class DefaultMailTransferAgent {
+public class DefaultMailServerTransport implements MailServerTransport {
 
     private final File workingDir;
     private final DefaultListeningIOReactor ioReactor;
@@ -51,7 +52,7 @@ public class DefaultMailTransferAgent {
     
     private volatile IOReactorThread thread;
 
-    public DefaultMailTransferAgent(
+    public DefaultMailServerTransport(
             final File workingDir,
             final IOReactorConfig config) throws IOException {
         super();
@@ -64,6 +65,10 @@ public class DefaultMailTransferAgent {
         this.sessionRegistry = new IOSessionRegistry();
 
         this.log = LogFactory.getLog(getClass());
+    }
+    
+    protected File getWorkingDir() {
+        return this.workingDir;
     }
 
     public ListenerEndpoint listen(final SocketAddress address) {
@@ -91,7 +96,7 @@ public class DefaultMailTransferAgent {
         start(sessionFactory);
     }
 
-    public void start(final SessionFactory<ServerSession> sessionFactory) {
+    protected void start(final SessionFactory<ServerSession> sessionFactory) {
         this.log.debug("Start I/O reactor");
         
         ServerIOEventDispatch iodispatch = new ServerIOEventDispatch(
@@ -136,7 +141,11 @@ public class DefaultMailTransferAgent {
             }
         } catch (InterruptedException ignore) {
         }
-        this.ioReactor.shutdown(30000);
+        forceShutdown(30000);        
+    }
+
+    protected void forceShutdown(long gracePeriod) throws IOException {
+        this.ioReactor.shutdown(gracePeriod);
         IOReactorThread t = this.thread;
         try {
             if (t != null) {
@@ -146,4 +155,11 @@ public class DefaultMailTransferAgent {
         }
     }
 
+    public void forceShutdown() {
+        try {
+            forceShutdown(1000);
+        } catch (IOException ignore) {
+        }
+    }
+    
 }

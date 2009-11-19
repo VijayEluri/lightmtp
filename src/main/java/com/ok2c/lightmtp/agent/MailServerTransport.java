@@ -14,12 +14,19 @@
  */
 package com.ok2c.lightmtp.agent;
 
-public interface DeliveryCallback {
+import java.net.SocketAddress;
+import java.util.Set;
 
-    void completed(DeliveryJob job);
-    
-    void failed(DeliveryJob job);
+import com.ok2c.lightmtp.protocol.DeliveryHandler;
+import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightnio.ListenerEndpoint;
 
-    void aborted(DeliveryJob job);
+public interface MailServerTransport extends MailTransport {
+
+    ListenerEndpoint listen(SocketAddress address);
+
+    Set<ListenerEndpoint> getEndpoints();
+
+    void start(EnvelopValidator envelopValidator, DeliveryHandler deliveryHandler);
 
 }

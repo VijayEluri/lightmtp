@@ -20,26 +20,26 @@ import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 
-import com.ok2c.lightmtp.impl.agent.DefaultMailTransferAgent;
-import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
+import com.ok2c.lightmtp.impl.agent.DefaultMailServerTransport;
+import com.ok2c.lightmtp.impl.agent.DefaultMailClientTransport;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public abstract class BaseTransportTest {
 
     protected static File TMP_DIR = new File(System.getProperty("java.io.tmpdir", "."));
     
-    protected DefaultMailTransferAgent mta;
-    protected DefaultMailUserAgent mua;
+    protected DefaultMailServerTransport mta;
+    protected DefaultMailClientTransport mua;
     
     @Before
     public void setUp() throws Exception {
         
         IOReactorConfig config = new IOReactorConfig();
         config.setWorkerCount(2);
-        this.mta = new DefaultMailTransferAgent(TMP_DIR, config);
+        this.mta = new DefaultMailServerTransport(TMP_DIR, config);
         this.mta.setExceptionHandler(new BasicExceptionHandler());
         
-        this.mua = new DefaultMailUserAgent(config);
+        this.mua = new DefaultMailClientTransport(config);
         this.mua.setExceptionHandler(new BasicExceptionHandler());
     }
     
