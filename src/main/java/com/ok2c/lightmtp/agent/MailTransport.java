@@ -14,17 +14,22 @@
  */
 package com.ok2c.lightmtp.agent;
 
-import com.ok2c.lightmtp.protocol.DeliveryRequest;
-import com.ok2c.lightmtp.protocol.DeliveryResult;
+import java.io.IOException;
+import java.util.List;
 
-public interface DeliveryJob {
+import com.ok2c.lightnio.IOReactorStatus;
+import com.ok2c.lightnio.impl.ExceptionEvent;
 
-    DeliveryRequest getRequest();
+public interface MailTransport {
 
-    boolean isCompleted();
+    IOReactorStatus getStatus();
+
+    Exception getException();
     
-    void waitFor() throws InterruptedException;
-
-    DeliveryResult getResult();
+    List<ExceptionEvent> getAuditLog();
     
+    void shutdown() throws IOException;
+
+    void forceShutdown();
+
 }
