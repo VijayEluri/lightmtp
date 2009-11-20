@@ -34,6 +34,12 @@ public class FileSource implements SMTPContent<ReadableByteChannel> {
         this.rafile = null;
     }
     
+    @Override
+    protected void finalize() throws Throwable {
+        reset();
+        super.finalize();
+    }
+
     public ReadableByteChannel channel() throws FileNotFoundException {
         if (this.rafile == null) {
             this.rafile = new RandomAccessFile(this.file, "r");
@@ -41,7 +47,11 @@ public class FileSource implements SMTPContent<ReadableByteChannel> {
         return this.rafile.getChannel();
     }
 
-    public void finish() {
+    public long length() {
+        return this.file.length();
+    }
+
+    public void reset() {
         if (this.rafile != null) {
             try {
                 this.rafile.close();

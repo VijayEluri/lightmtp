@@ -20,7 +20,9 @@ import java.nio.channels.Channel;
 public interface SMTPContent<T extends Channel> {
 
     T channel() throws IOException;
+
+    long length();
     
-    void finish();
+    void reset();
     
 }

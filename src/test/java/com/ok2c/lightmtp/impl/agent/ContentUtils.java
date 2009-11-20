@@ -47,7 +47,7 @@ final class ContentUtils {
                 chars.compact();
             }
         } finally {
-            content.finish();
+            content.reset();
         }
         return buffer.toString();
     }
