@@ -14,7 +14,6 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
-import com.ok2c.lightmtp.agent.IOSessionRegistry;
 import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOEventDispatch;

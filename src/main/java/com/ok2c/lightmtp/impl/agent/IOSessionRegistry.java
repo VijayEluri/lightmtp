@@ -12,7 +12,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.agent;
+package com.ok2c.lightmtp.impl.agent;
 
 import java.util.HashSet;
 import java.util.Iterator;

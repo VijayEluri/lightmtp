@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ok2c.lightmtp.agent.IOSessionRegistry;
 import com.ok2c.lightmtp.agent.MailClientTransport;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
