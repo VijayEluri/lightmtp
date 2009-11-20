@@ -34,6 +34,12 @@ public class FileStore implements SMTPContent<WritableByteChannel> {
         this.rafile = null;
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        reset();
+        super.finalize();
+    }
+
     public File getFile() {
         return this.file;
     }
@@ -45,7 +51,11 @@ public class FileStore implements SMTPContent<WritableByteChannel> {
         return this.rafile.getChannel();
     }
 
-    public void finish() {
+    public long length() {
+        return this.file.length();
+    }
+
+    public void reset() {
         if (this.rafile != null) {
             try {
                 this.rafile.close();

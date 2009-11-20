@@ -141,7 +141,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
     public void cleanUp() {
         if (this.fileStore != null) {
-            this.fileStore.finish();
+            this.fileStore.reset();
             this.fileStore = null;
         }
         if (this.tempFile != null) {
@@ -283,7 +283,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
                 this.contentBuf.flush(this.fileStore.channel());
             }
             if (this.dataReceived) {
-                this.fileStore.finish();
+                this.fileStore.reset();
 
                 File file = this.fileStore.getFile();
                 SMTPContent<ReadableByteChannel> content = new FileSource(file);

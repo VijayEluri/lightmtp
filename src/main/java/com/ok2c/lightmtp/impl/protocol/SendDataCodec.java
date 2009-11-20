@@ -166,7 +166,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
                     buf.writeLine(this.lineBuf);
                     this.lineBuf.clear();
 
-                    this.content.finish();
+                    this.content.reset();
                     this.contentSent = true;
                     this.codecState = CodecState.CONTENT_RESPONSE_EXPECTED;
                     break;

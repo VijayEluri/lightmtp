@@ -39,8 +39,12 @@ public class ByteArraySource implements SMTPContent<ReadableByteChannel> {
         }
         return Channels.newChannel(this.stream);
     }
+    
+    public long length() {
+        return this.content.length;
+    }
 
-    public void finish() {
+    public void reset() {
         this.stream = null;
     }
     
