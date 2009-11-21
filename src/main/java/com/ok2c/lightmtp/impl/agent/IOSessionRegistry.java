@@ -20,12 +20,14 @@ import java.util.Set;
 
 import com.ok2c.lightnio.IOSession;
 
-public class IOSessionRegistry {
+class IOSessionRegistry {
 
     private final Set<IOSession> sessions;
+    private final IOSessionRegistryCallback callback; 
     
-    public IOSessionRegistry() {
+    public IOSessionRegistry(final IOSessionRegistryCallback callback) {
         super();
+        this.callback = callback;
         this.sessions = new HashSet<IOSession>();
     }
     
@@ -34,6 +36,9 @@ public class IOSessionRegistry {
             return;
         }
         this.sessions.add(iosession);
+        if (this.callback != null) {
+            this.callback.added(iosession);
+        }
         notifyAll();
     }
 
@@ -42,6 +47,9 @@ public class IOSessionRegistry {
             return;
         }
         this.sessions.remove(iosession);
+        if (this.callback != null) {
+            this.callback.removed(iosession);
+        }
         notifyAll();
     }
 

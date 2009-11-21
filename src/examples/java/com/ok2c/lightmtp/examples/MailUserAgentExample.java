@@ -88,7 +88,7 @@ public class MailUserAgentExample {
             }
             
         } finally {
-            mua.shutdown();
+            //mua.shutdown();
         }
     }
     
