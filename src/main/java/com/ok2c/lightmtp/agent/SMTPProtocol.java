@@ -14,19 +14,9 @@
  */
 package com.ok2c.lightmtp.agent;
 
-import java.net.SocketAddress;
+public enum SMTPProtocol {
 
-import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
-import com.ok2c.lightnio.SessionRequest;
-import com.ok2c.lightnio.SessionRequestCallback;
+    SMTP,
+    LMTP,
 
-public interface MailClientTransport extends MailTransport {
-
-    SessionRequest connect(
-            SocketAddress remoteAddress, Object attachment, SessionRequestCallback callback);
-    
-    void start(DeliveryRequestHandler deliveryRequestHandler);
-    
-    void closeActiveSessions();
-    
 }

@@ -21,8 +21,14 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.agent.MailTransport;
+import com.ok2c.lightmtp.agent.SMTPProtocol;
+import com.ok2c.lightmtp.impl.protocol.ClientSession;
+import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
+import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
+import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
+import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 import com.ok2c.lightnio.impl.ExceptionEvent;
@@ -34,15 +40,32 @@ public class DefaultMailUserAgent implements MailTransport {
 
     private final DefaultMailClientTransport transport;    
     private final IOSessionManager<SocketAddress> sessionManager;
+    final SMTPProtocol proto;
     
-    public DefaultMailUserAgent(final IOReactorConfig config) throws IOException {
+    public DefaultMailUserAgent(
+            final SMTPProtocol proto,
+            final IOReactorConfig config) throws IOException {
         super();
+        this.proto = proto;
         this.transport = new DefaultMailClientTransport(config);
         this.sessionManager = new BasicIOSessionManager(this.transport.getIOReactor());
     }
 
     public void start() {
-        this.transport.start(new PendingDeliveryHandler(this.sessionManager));
+        DeliveryRequestHandler handler = new PendingDeliveryHandler(this.sessionManager);
+        SessionFactory<ClientSession> sessionFactory;
+        switch (this.proto) {
+        case SMTP:
+            sessionFactory = new ClientSessionFactory(handler);
+            break;
+        case LMTP:
+            sessionFactory = new LocalClientSessionFactory(handler);
+            break;
+        default:
+            sessionFactory = new ClientSessionFactory(handler);
+        }
+        
+        this.transport.start(sessionFactory);
     }
 
     public Future<DeliveryResult> deliver(
@@ -67,6 +90,7 @@ public class DefaultMailUserAgent implements MailTransport {
     }
 
     public void shutdown() throws IOException {
+        this.transport.closeActiveSessions();
         this.sessionManager.shutdown();
         this.transport.shutdown();
     }

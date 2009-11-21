@@ -107,10 +107,9 @@ public class DefaultMailClientTransport implements MailClientTransport {
             return null;
         }
     }
-
-    public void shutdown() throws IOException {
-        this.log.debug("Shut down I/O reactor");
-        
+    
+    public void closeActiveSessions() {
+        this.log.debug("Close active sessions");
         synchronized (this.sessionRegistry) {
             Iterator<IOSession> sessions = this.sessionRegistry.iterator();
             while (sessions.hasNext()) {
@@ -125,10 +124,15 @@ public class DefaultMailClientTransport implements MailClientTransport {
             }
         } catch (InterruptedException ignore) {
         }
+    }
+
+    public void shutdown() throws IOException {
+        closeActiveSessions();        
         forceShutdown(30000);        
     }
 
     protected void forceShutdown(long gracePeriod) throws IOException {
+        this.log.debug("Shut down I/O reactor");
         this.ioReactor.shutdown(gracePeriod);
         IOReactorThread t = this.thread;
         try {
