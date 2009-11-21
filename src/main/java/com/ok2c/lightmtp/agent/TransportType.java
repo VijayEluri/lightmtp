@@ -14,7 +14,7 @@
  */
 package com.ok2c.lightmtp.agent;
 
-public enum SMTPProtocol {
+public enum TransportType {
 
     SMTP,
     LMTP,

@@ -16,48 +16,42 @@ package com.ok2c.lightmtp.impl.agent;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.nio.channels.SelectionKey;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightmtp.agent.MailClientTransport;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
-import com.ok2c.lightmtp.impl.protocol.ProtocolState;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.ConnectingIOReactor;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionRequest;
 import com.ok2c.lightnio.SessionRequestCallback;
 import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
-public class DefaultMailClientTransport implements MailClientTransport {
+public class DefaultMailClientTransport extends AbstractMailTransport 
+                                        implements MailClientTransport {
 
     private final DefaultConnectingIOReactor ioReactor;
-    private final IOSessionRegistry sessionRegistry;
 
-    private final Log log;
-    
-    private volatile IOReactorThread thread;
-
-    public DefaultMailClientTransport(final IOReactorConfig config) throws IOException {
-        super();
+    public DefaultMailClientTransport(
+            final IOSessionRegistry sessionRegistry,
+            final IOReactorConfig config) throws IOException {
+        super(sessionRegistry);
         this.ioReactor = new DefaultConnectingIOReactor(config, 
                 new SimpleThreadFactory("MTU"));
-        this.sessionRegistry = new IOSessionRegistry();
-        
-        this.log = LogFactory.getLog(getClass());
     }
 
+    public DefaultMailClientTransport(
+            final IOReactorConfig config) throws IOException {
+        this(new IOSessionRegistry(), config);
+    }
+
+    @Override
     protected ConnectingIOReactor getIOReactor() {
         return this.ioReactor;
     }
@@ -77,13 +71,10 @@ public class DefaultMailClientTransport implements MailClientTransport {
     }
     
     protected void start(final SessionFactory<ClientSession> sessionFactory) {
-        this.log.debug("Start I/O reactor");
-        
         ClientIOEventDispatch iodispatch = new ClientIOEventDispatch(
-                this.sessionRegistry, 
+                getSessionRegistry(), 
                 sessionFactory);
-        this.thread = new IOReactorThread(this.ioReactor, iodispatch);
-        this.thread.start();
+        start(iodispatch);
     }
 
     public void start(final DeliveryRequestHandler deliveryRequestHandler) {
@@ -99,54 +90,10 @@ public class DefaultMailClientTransport implements MailClientTransport {
         return this.ioReactor.getAuditLog();
     }
 
-    public Exception getException() {
-        IOReactorThread t = this.thread;
-        if (t != null) {
-            return t.getException();
-        } else {
-            return null;
-        }
-    }
-    
     public void closeActiveSessions() {
-        this.log.debug("Close active sessions");
-        synchronized (this.sessionRegistry) {
-            Iterator<IOSession> sessions = this.sessionRegistry.iterator();
-            while (sessions.hasNext()) {
-                IOSession session = sessions.next(); 
-                session.setAttribute(ClientSession.TERMINATE, ProtocolState.QUIT);
-                session.setEvent(SelectionKey.OP_WRITE);
-            }
-        }
         try {
-            if (!this.sessionRegistry.awaitShutdown(30, TimeUnit.SECONDS)) {
-                this.log.warn("Failed to shut down active sessions within 30 seconds");
-            }
+            closeActiveSessions(30, TimeUnit.SECONDS);
         } catch (InterruptedException ignore) {
-        }
-    }
-
-    public void shutdown() throws IOException {
-        closeActiveSessions();        
-        forceShutdown(30000);        
-    }
-
-    protected void forceShutdown(long gracePeriod) throws IOException {
-        this.log.debug("Shut down I/O reactor");
-        this.ioReactor.shutdown(gracePeriod);
-        IOReactorThread t = this.thread;
-        try {
-            if (t != null) {
-                t.join(1000);
-            }
-        } catch (InterruptedException ignore) {
-        }
-    }
-
-    public void forceShutdown() {
-        try {
-            forceShutdown(1000);
-        } catch (IOException ignore) {
         }
     }
 
