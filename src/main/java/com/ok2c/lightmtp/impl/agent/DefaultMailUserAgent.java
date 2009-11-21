@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.agent.MailTransport;
-import com.ok2c.lightmtp.agent.SMTPProtocol;
+import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
@@ -29,6 +29,7 @@ import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.SessionFactory;
+import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 import com.ok2c.lightnio.impl.ExceptionEvent;
@@ -40,13 +41,13 @@ public class DefaultMailUserAgent implements MailTransport {
 
     private final DefaultMailClientTransport transport;    
     private final IOSessionManager<SocketAddress> sessionManager;
-    final SMTPProtocol proto;
+    private final TransportType type;
     
     public DefaultMailUserAgent(
-            final SMTPProtocol proto,
+            final TransportType type,
             final IOReactorConfig config) throws IOException {
         super();
-        this.proto = proto;
+        this.type = type;
         this.transport = new DefaultMailClientTransport(config);
         this.sessionManager = new BasicIOSessionManager(this.transport.getIOReactor());
     }
@@ -54,7 +55,7 @@ public class DefaultMailUserAgent implements MailTransport {
     public void start() {
         DeliveryRequestHandler handler = new PendingDeliveryHandler(this.sessionManager);
         SessionFactory<ClientSession> sessionFactory;
-        switch (this.proto) {
+        switch (this.type) {
         case SMTP:
             sessionFactory = new ClientSessionFactory(handler);
             break;
@@ -77,6 +78,10 @@ public class DefaultMailUserAgent implements MailTransport {
         return future;
     }
     
+    public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
+        this.transport.setExceptionHandler(exceptionHandler);
+    }
+
     public IOReactorStatus getStatus() {
         return this.transport.getStatus();
     }

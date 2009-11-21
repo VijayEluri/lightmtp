@@ -17,7 +17,6 @@ package com.ok2c.lightmtp.impl.agent;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import com.ok2c.lightnio.IOSession;
 
@@ -54,24 +53,6 @@ public class IOSessionRegistry {
         return this.sessions.iterator();
     }
     
-    public synchronized boolean awaitShutdown(
-            int timeout, final TimeUnit unit) throws InterruptedException{
-        long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
-        long remaining = timeout;
-        boolean empty = false;
-        while (!empty) {
-            wait(remaining);
-            empty = this.sessions.isEmpty();            
-            if (timeout > 0) {
-                remaining = deadline - System.currentTimeMillis();
-                if (remaining <= 0) {
-                    break;
-                }
-            }
-        }
-        return empty;
-    }
-
     @Override
     public synchronized String toString() {
         return this.sessions.toString();

@@ -25,11 +25,18 @@ import com.ok2c.lightnio.impl.IOReactorConfig;
 public class LocalMailServerTransport extends DefaultMailServerTransport {
 
     public LocalMailServerTransport(
+            final IOSessionRegistry sessionRegistry,
             final File workingDir,
             final IOReactorConfig config) throws IOException {
-        super(workingDir, config);
+        super(sessionRegistry, workingDir, config);
     }
 
+    public LocalMailServerTransport(
+            final File workingDir,
+            final IOReactorConfig config) throws IOException {
+        this(new IOSessionRegistry(), workingDir, config);
+    }
+    
     public void start(
             final EnvelopValidator envelopValidator,
             final DeliveryHandler deliveryHandler) {
