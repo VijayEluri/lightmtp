@@ -37,9 +37,9 @@ abstract class AbstractMailTransport implements MailTransport {
 
     private volatile IOReactorThread thread;
 
-    public AbstractMailTransport(final IOSessionRegistry sessionRegistry) {
+    public AbstractMailTransport(final IOSessionRegistryCallback sessionRegistryCallback) {
         super();
-        this.sessionRegistry = sessionRegistry;
+        this.sessionRegistry = new IOSessionRegistry(sessionRegistryCallback);
     }
     
     protected abstract IOReactor getIOReactor();

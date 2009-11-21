@@ -23,14 +23,14 @@ import com.ok2c.lightnio.impl.IOReactorConfig;
 public class LocalMailClientTransport extends DefaultMailClientTransport {
 
     public LocalMailClientTransport(
-            final IOSessionRegistry sessionRegistry,
+            final IOSessionRegistryCallback sessionRegistryCallback,
             final IOReactorConfig config) throws IOException {
-        super(sessionRegistry, config);
+        super(sessionRegistryCallback, config);
     }
 
     public LocalMailClientTransport(
             final IOReactorConfig config) throws IOException {
-        this(new IOSessionRegistry(), config);
+        this(null, config);
     }
 
     public void start(final DeliveryRequestHandler deliveryRequestHandler) {

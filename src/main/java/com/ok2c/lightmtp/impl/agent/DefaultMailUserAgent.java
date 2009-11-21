@@ -31,6 +31,7 @@ import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
+import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
@@ -39,8 +40,8 @@ import com.ok2c.lightnio.pool.IOSessionManager;
 
 public class DefaultMailUserAgent implements MailTransport {
 
-    private final DefaultMailClientTransport transport;    
     private final IOSessionManager<SocketAddress> sessionManager;
+    private final DefaultMailClientTransport transport;    
     private final TransportType type;
     
     public DefaultMailUserAgent(
@@ -48,7 +49,18 @@ public class DefaultMailUserAgent implements MailTransport {
             final IOReactorConfig config) throws IOException {
         super();
         this.type = type;
-        this.transport = new DefaultMailClientTransport(config);
+        this.transport = new DefaultMailClientTransport(
+                new IOSessionRegistryCallback() {
+                    
+                    public void removed(final IOSession iosession) {
+                        sessionManager.removeExpired(iosession);
+                    }
+                    
+                    public void added(final IOSession iosession) {
+                    }
+                    
+                },
+                config);
         this.sessionManager = new BasicIOSessionManager(this.transport.getIOReactor());
     }
 

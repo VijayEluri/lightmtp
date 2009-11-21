@@ -41,10 +41,10 @@ public class DefaultMailServerTransport extends AbstractMailTransport
     private final DefaultListeningIOReactor ioReactor;
 
     public DefaultMailServerTransport(
-            final IOSessionRegistry sessionRegistry,
+            final IOSessionRegistryCallback sessionRegistryCallback,
             final File workingDir,
             final IOReactorConfig config) throws IOException {
-        super(sessionRegistry);
+        super(sessionRegistryCallback);
         if (workingDir == null) {
             throw new IllegalArgumentException("Working dir may not be null");
         }
@@ -56,7 +56,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
     public DefaultMailServerTransport(
             final File workingDir,
             final IOReactorConfig config) throws IOException {
-        this(new IOSessionRegistry(), workingDir, config);
+        this(null, workingDir, config);
     }
     
     @Override
