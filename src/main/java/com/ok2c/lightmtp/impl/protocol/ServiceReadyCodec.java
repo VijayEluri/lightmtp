@@ -89,10 +89,6 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
             final ServerState sessionState) throws IOException, SMTPProtocolException {
     }
 
-    public boolean isIdle() {
-        return this.completed;
-    }
-
     public boolean isCompleted() {
         return this.completed;
     }

@@ -102,6 +102,9 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
         if (sessionState.getRequest() == null) {
+            if (sessionState.isTerminated()) {
+                this.codecState = CodecState.COMPLETED;
+            }
             return;
         }
         
@@ -192,10 +195,6 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
                 }
             }
         }
-    }
-
-    public boolean isIdle() {
-        return this.codecState == CodecState.MAIL_REQUEST_READY;
     }
 
     public boolean isCompleted() {

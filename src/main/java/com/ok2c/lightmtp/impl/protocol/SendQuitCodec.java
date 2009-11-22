@@ -130,10 +130,6 @@ public class SendQuitCodec implements ProtocolCodec<ClientState> {
         return this.codecState == CodecState.COMPLETED;
     }
 
-    public boolean isIdle() {
-        return this.codecState == CodecState.QUIT_READY;
-    }
-
     public String next(
             final ProtocolCodecs<ClientState> codecs,
             final ClientState sessionState) {

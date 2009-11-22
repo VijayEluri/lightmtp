@@ -105,6 +105,9 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientState> {
             throw new IllegalArgumentException("Session state may not be null");
         }
         if (sessionState.getRequest() == null) {
+            if (sessionState.isTerminated()) {
+                this.codecState = CodecState.COMPLETED;
+            }
             return;
         }
 
@@ -218,10 +221,6 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientState> {
         if (bytesRead == -1 && !sessionState.isTerminated()) {
             throw new UnexpectedEndOfStreamException();
         }
-    }
-
-    public boolean isIdle() {
-        return this.codecState == CodecState.MAIL_REQUEST_READY;
     }
 
     public boolean isCompleted() {

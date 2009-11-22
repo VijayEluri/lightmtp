@@ -35,8 +35,6 @@ import com.ok2c.lightnio.IOSession;
 
 public class ClientSession {
 
-    public static final String TERMINATE = "com.ok2c.lighmtp.terminate";
-    
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
     private final ClientState sessionState;
@@ -226,10 +224,6 @@ public class ClientSession {
 
     private void doProduceData() throws IOException, SMTPProtocolException {
         this.log.debug("Produce data");
-        if (this.sessionState.isTerminated() 
-                && this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
-            quit();
-        }
         this.currentCodec.produceData(this.iosession, this.sessionState);
         updateSession();
     }
@@ -238,36 +232,38 @@ public class ClientSession {
         if (this.currentCodec.isCompleted()) {
 
             SMTPReply reply = this.sessionState.getReply();
-            if (this.log.isDebugEnabled()) {
-                this.log.debug(this.state + " codec completed with reply: " + reply);
-            }
+            if (reply != null) {
+                if (this.log.isDebugEnabled()) {
+                    this.log.debug(this.state + " codec completed with reply: " + reply);
+                }
 
-            switch (this.state) {
-            case HELO:
-                if (reply.getCode() != SMTPCodes.OK) {
-                    throw new ServiceRefusedException(reply);
-                }
-                break;
-            case MAIL:
-                if (reply.getCode() != SMTPCodes.START_MAIL_INPUT) {
-                    if (this.sessionState.getRequest() == null) {
-                        break;
+                switch (this.state) {
+                case HELO:
+                    if (reply.getCode() != SMTPCodes.OK) {
+                        throw new ServiceRefusedException(reply);
                     }
-                    signalDeliveryFailure();
+                    break;
+                case MAIL:
+                    if (reply.getCode() != SMTPCodes.START_MAIL_INPUT) {
+                        if (this.sessionState.getRequest() == null) {
+                            break;
+                        }
+                        signalDeliveryFailure();
+                    }
+                    break;
+                case DATA:
+                    if (reply.getCode() == SMTPCodes.OK) {
+                        signalDeliverySuccess();
+                    } else {
+                        signalDeliveryFailure();
+                    }
+                    break;
                 }
-                break;
-            case DATA:
-                if (reply.getCode() == SMTPCodes.OK) {
-                    signalDeliverySuccess();
-                } else {
-                    signalDeliveryFailure();
+                
+                if (reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
+                    this.sessionState.terminated();
+                    this.iosession.close();
                 }
-                break;
-            }
-            
-            if (reply != null && reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
-                this.sessionState.terminated();
-                this.iosession.close();
             }
         }
 
@@ -285,7 +281,7 @@ public class ClientSession {
             }
         }
         
-        ProtocolState token = (ProtocolState) this.iosession.getAttribute(TERMINATE);
+        ProtocolState token = (ProtocolState) this.iosession.getAttribute(ProtocolState.ATTRIB);
         if (token != null && token.equals(ProtocolState.QUIT)) {
             this.log.debug("Session termination requested");
             this.sessionState.terminated();
@@ -293,22 +289,10 @@ public class ClientSession {
         }
     }
 
-    private void quit() throws IOException, SMTPProtocolException {
-        this.currentCodec = this.codecs.getCodec(ProtocolState.QUIT.name());
-        this.currentCodec.reset(this.iosession, this.sessionState);
-        this.state = ProtocolState.QUIT;
-        if (this.log.isDebugEnabled()) {
-            this.log.debug("Next codec: " + this.state);
-        }
-    }
-
     private void doTimeout() throws IOException, SMTPProtocolException {
         this.log.debug("Session timed out");
-        if (this.state != ProtocolState.QUIT && this.currentCodec.isIdle()) {
-            quit();
-        } else {
-            this.iosession.close();
-        }
+        this.sessionState.terminated();
+        this.iosession.setEvent(SelectionKey.OP_WRITE);
     }
     
 }

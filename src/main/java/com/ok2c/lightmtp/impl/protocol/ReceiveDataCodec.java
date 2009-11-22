@@ -314,10 +314,6 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         }
     }
 
-    public boolean isIdle() {
-        return this.completed;
-    }
-
     public boolean isCompleted() {
         return this.completed;
     }

@@ -162,10 +162,6 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
         }
     }
 
-    public boolean isIdle() {
-        return this.codecState == CodecState.SERVICE_READY_EXPECTED;
-    }
-
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED;
     }
