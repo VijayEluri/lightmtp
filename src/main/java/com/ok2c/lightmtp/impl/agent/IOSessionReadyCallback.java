@@ -34,7 +34,6 @@ class IOSessionReadyCallback implements FutureCallback<ManagedIOSession> {
         IOSession iosession = managedSession.getSession();
         iosession.setAttribute(PendingDeliveryHandler.PENDING_DELIVERY, this.pendingDelivery);
         iosession.setEvent(SelectionKey.OP_WRITE);
-        iosession.setSocketTimeout(10000);
     }
 
     public void failed(final Exception ex) {
