@@ -282,7 +282,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
             if (this.contentBuf.hasData()) {
                 this.contentBuf.flush(this.fileStore.channel());
             }
-            if (this.dataReceived) {
+            if (this.dataReceived && this.pendingDelivery == null) {
                 this.fileStore.reset();
 
                 File file = this.fileStore.getFile();
