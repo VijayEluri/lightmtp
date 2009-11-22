@@ -35,7 +35,6 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
-import com.ok2c.lightnio.impl.pool.BasicIOSessionManager;
 import com.ok2c.lightnio.pool.IOSessionManager;
 
 public class DefaultMailUserAgent implements MailTransport {
@@ -61,7 +60,7 @@ public class DefaultMailUserAgent implements MailTransport {
                     
                 },
                 config);
-        this.sessionManager = new BasicIOSessionManager(this.transport.getIOReactor());
+        this.sessionManager = new MailIOSessionManager(this.transport.getIOReactor());
     }
 
     public void start() {
