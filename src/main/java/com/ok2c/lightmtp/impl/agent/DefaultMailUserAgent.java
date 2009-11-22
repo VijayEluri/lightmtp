@@ -18,7 +18,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.agent.MailTransport;
@@ -48,6 +51,7 @@ public class DefaultMailUserAgent implements MailTransport {
     private final IOSessionManager<SocketAddress> sessionManager;
     private final DefaultMailClientTransport transport;    
     private final TransportType type;
+    private final Set<PendingDelivery> pendingDeliveries;
     
     private volatile boolean shutdown;
     
@@ -61,6 +65,7 @@ public class DefaultMailUserAgent implements MailTransport {
                 new InternalIOReactorThreadCallback(),
                 config);
         this.sessionManager = new MailIOSessionManager(this.transport.getIOReactor());
+        this.pendingDeliveries = Collections.synchronizedSet(new HashSet<PendingDelivery>());
     }
 
     public void start() {
@@ -88,6 +93,7 @@ public class DefaultMailUserAgent implements MailTransport {
         }
         BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(null);
         PendingDelivery delivery = new PendingDelivery(request, future);
+        this.pendingDeliveries.add(delivery);        
         this.sessionManager.leaseSession(address, null, new IOSessionReadyCallback(delivery));
         return future;
     }
@@ -132,12 +138,23 @@ public class DefaultMailUserAgent implements MailTransport {
     
     class InternalIOReactorThreadCallback implements IOReactorThreadCallback {
 
+        private void cancelDeliveries() {
+            synchronized (pendingDeliveries) {
+                for (PendingDelivery delivery: pendingDeliveries) {
+                    delivery.getDeliveryFuture().cancel(true);
+                }
+                pendingDeliveries.clear();
+            }
+        }
+        
         public void terminated() {
             shutdown = true;
+            cancelDeliveries();
         }
 
-        public void terminated(Exception ex) {
+        public void terminated(final Exception ex) {
             shutdown = true;
+            cancelDeliveries();
         }
 
     }
@@ -151,7 +168,12 @@ public class DefaultMailUserAgent implements MailTransport {
             this.pendingDelivery = pendingDelivery;
         }
         
+        private void deliveryDone() {
+            pendingDeliveries.remove(this.pendingDelivery);        
+        }
+        
         public void completed(final ManagedIOSession managedSession) {
+            deliveryDone();
             this.pendingDelivery.setManagedSession(managedSession);
             IOSession iosession = managedSession.getSession();
             iosession.setAttribute(PENDING_DELIVERY, this.pendingDelivery);
@@ -159,10 +181,12 @@ public class DefaultMailUserAgent implements MailTransport {
         }
 
         public void failed(final Exception ex) {
+            deliveryDone();
             this.pendingDelivery.getDeliveryFuture().failed(ex);
         }
         
         public void cancelled() {
+            deliveryDone();
             this.pendingDelivery.getDeliveryFuture().cancel(true);
         }
         
