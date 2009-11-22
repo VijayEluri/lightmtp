@@ -37,7 +37,7 @@ public class DataAction extends AbstractAction<ServerState> {
                     new SMTPCode(5, 5, 1),
                     "no valid recipients");
         } else {
-            state.setDataType(DataType.ASCII);
+            state.setDataType(DataType.MIME);
             return new SMTPReply(SMTPCodes.START_MAIL_INPUT, 
                     null, 
                     "send message, ending in <CRLF>.<CRLF>");

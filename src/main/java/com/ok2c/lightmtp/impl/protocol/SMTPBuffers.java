@@ -36,7 +36,7 @@ public class SMTPBuffers implements SessionBufferStatus {
     }
 
     protected SessionInputBuffer createSessionInputBuffer() {
-        return new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+        return new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
     }
 
     protected SessionOutputBuffer createSessionOutputBuffer() {

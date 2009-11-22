@@ -14,6 +14,7 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
+import java.util.Arrays;
 import java.util.concurrent.Future;
 
 import junit.framework.Assert;
@@ -26,6 +27,7 @@ import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.agent.SimpleEnvelopValidator;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.DataType;
+import com.ok2c.lightmtp.impl.protocol.MIMEEncoding;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightnio.concurrent.FutureCallback;
@@ -163,6 +165,7 @@ public class TestCommandHandler {
         Assert.assertEquals(250, reply.getCode());
         Assert.assertEquals(new SMTPCode(2, 1, 0), reply.getEnhancedCode());
         Assert.assertEquals("someone@somedomain.com", state.getSender());
+        Assert.assertEquals(MIMEEncoding.MIME_7BIT, state.getMimeEncoding());
     }
 
     @Test
@@ -203,6 +206,80 @@ public class TestCommandHandler {
         } catch (SMTPErrorException ex) {
             Assert.assertEquals(500, ex.getCode());
             Assert.assertEquals(new SMTPCode(5, 5, 1), ex.getEnhancedCode());
+        }
+    }
+
+    @Test
+    public void testMailFromHandler7BitMime() throws Exception {
+        ServerState state = new ServerState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
+        Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ", 
+                Arrays.asList("body=7bit"));
+        Future<SMTPReply> future = action.execute(state, null);
+        SMTPReply reply = future.get();
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertEquals(new SMTPCode(2, 1, 0), reply.getEnhancedCode());
+        Assert.assertEquals("someone@somedomain.com", state.getSender());
+        Assert.assertEquals(MIMEEncoding.MIME_7BIT, state.getMimeEncoding());
+    }
+
+    @Test
+    public void testMailFromHandler8BitMime() throws Exception {
+        ServerState state = new ServerState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
+        Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ", 
+                Arrays.asList("body=8bitmime"));
+        Future<SMTPReply> future = action.execute(state, null);
+        SMTPReply reply = future.get();
+        Assert.assertNotNull(reply);
+        Assert.assertEquals(250, reply.getCode());
+        Assert.assertEquals(new SMTPCode(2, 1, 0), reply.getEnhancedCode());
+        Assert.assertEquals("someone@somedomain.com", state.getSender());
+        Assert.assertEquals(MIMEEncoding.MIME_8BIT, state.getMimeEncoding());
+    }
+
+    @Test
+    public void testMailFromHandlerInvalidParam1() throws Exception {
+        ServerState state = new ServerState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        MailFromHandler handler = new MailFromHandler(null);
+        try {
+            handler.handle("from:<someone@somedomain.com> ", 
+                    Arrays.asList("whatever"));
+        } catch (SMTPErrorException ex) {
+            Assert.assertEquals(501, ex.getCode());
+            Assert.assertEquals(new SMTPCode(5, 5, 4), ex.getEnhancedCode());
+        }
+    }
+
+    @Test
+    public void testMailFromHandlerInvalidParam2() throws Exception {
+        ServerState state = new ServerState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        MailFromHandler handler = new MailFromHandler(null);
+        try {
+            handler.handle("from:<someone@somedomain.com> ", 
+                    Arrays.asList("body=whatever"));
+        } catch (SMTPErrorException ex) {
+            Assert.assertEquals(501, ex.getCode());
+            Assert.assertEquals(new SMTPCode(5, 5, 4), ex.getEnhancedCode());
+        }
+    }
+
+    @Test
+    public void testMailFromHandlerInvalidParam3() throws Exception {
+        ServerState state = new ServerState("whatever");
+        state.setClientType(ClientType.EXTENDED);
+        MailFromHandler handler = new MailFromHandler(null);
+        try {
+            handler.handle("from:<someone@somedomain.com> ", 
+                    Arrays.asList("body=7bit", "whatever"));
+        } catch (SMTPErrorException ex) {
+            Assert.assertEquals(501, ex.getCode());
+            Assert.assertEquals(new SMTPCode(5, 5, 4), ex.getEnhancedCode());
         }
     }
 
@@ -288,7 +365,7 @@ public class TestCommandHandler {
         Assert.assertNotNull(reply);
         Assert.assertEquals(354, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
-        Assert.assertEquals(DataType.ASCII, state.getDataType());
+        Assert.assertEquals(DataType.MIME, state.getDataType());
     }
 
     @Test
@@ -304,7 +381,7 @@ public class TestCommandHandler {
         Assert.assertNotNull(reply);
         Assert.assertEquals(354, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
-        Assert.assertEquals(DataType.ASCII, state.getDataType());
+        Assert.assertEquals(DataType.MIME, state.getDataType());
     }
 
     @Test
