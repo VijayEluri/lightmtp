@@ -14,10 +14,15 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactor;
 
 class IOReactorThread extends Thread {
+
+    private final Log log = LogFactory.getLog(getClass());
 
     private final IOReactor ioReactor;
     private final IOEventDispatch iodispatch;
@@ -44,6 +49,7 @@ class IOReactorThread extends Thread {
             }
         } catch (Exception ex) {
             this.ex = ex;
+            this.log.error("I/O reactor terminated abnormally", ex);
             if (this.callback != null) {
                 this.callback.terminated(ex);
             }
