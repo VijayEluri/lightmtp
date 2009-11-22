@@ -24,13 +24,14 @@ public class LocalMailClientTransport extends DefaultMailClientTransport {
 
     public LocalMailClientTransport(
             final IOSessionRegistryCallback sessionRegistryCallback,
+            final IOReactorThreadCallback reactorThreadCallback,
             final IOReactorConfig config) throws IOException {
-        super(sessionRegistryCallback, config);
+        super(sessionRegistryCallback, reactorThreadCallback, config);
     }
 
     public LocalMailClientTransport(
             final IOReactorConfig config) throws IOException {
-        this(null, config);
+        this(null, null, config);
     }
 
     public void start(final DeliveryRequestHandler deliveryRequestHandler) {

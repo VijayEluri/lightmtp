@@ -40,15 +40,16 @@ public class DefaultMailClientTransport extends AbstractMailTransport
 
     public DefaultMailClientTransport(
             final IOSessionRegistryCallback sessionRegistryCallback,
+            final IOReactorThreadCallback reactorThreadCallback,
             final IOReactorConfig config) throws IOException {
-        super(sessionRegistryCallback);
+        super(sessionRegistryCallback, reactorThreadCallback);
         this.ioReactor = new DefaultConnectingIOReactor(config, 
                 new SimpleThreadFactory("MTU"));
     }
 
     public DefaultMailClientTransport(
             final IOReactorConfig config) throws IOException {
-        this(null, config);
+        this(null, null, config);
     }
 
     @Override

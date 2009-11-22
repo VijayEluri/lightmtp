@@ -26,15 +26,16 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
 
     public LocalMailServerTransport(
             final IOSessionRegistryCallback sessionRegistryCallback,
+            final IOReactorThreadCallback reactorThreadCallback,
             final File workingDir,
             final IOReactorConfig config) throws IOException {
-        super(sessionRegistryCallback, workingDir, config);
+        super(sessionRegistryCallback, reactorThreadCallback, workingDir, config);
     }
 
     public LocalMailServerTransport(
             final File workingDir,
             final IOReactorConfig config) throws IOException {
-        this(null, workingDir, config);
+        this(null, null, workingDir, config);
     }
     
     public void start(
