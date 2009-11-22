@@ -138,8 +138,8 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
 
         switch (this.codecState) {
         case CONTENT_READY:
+            int bytesRead = 0;
             while (buf.length() < LIMIT) {
-                int bytesRead = 0;
                 if (!this.contentBuf.hasData()) {
                     bytesRead = this.contentBuf.fill(this.contentChannel);
                 }
