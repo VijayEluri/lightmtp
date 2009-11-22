@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 
+import com.ok2c.lightmtp.agent.MailUserAgent;
 import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
 import com.ok2c.lightmtp.message.content.FileSource;
@@ -57,15 +58,14 @@ public class SendMailExample {
         
         DeliveryRequest request = new BasicDeliveryRequest(sender, recipients, new FileSource(src));
         
-        DefaultMailUserAgent mua = new DefaultMailUserAgent(
-                TransportType.LMTP, new IOReactorConfig());
+        MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
         mua.start();
         
         try {
             
             InetSocketAddress address = new InetSocketAddress("localhost", 2525);
             
-            Future<DeliveryResult> future = mua.deliver(address, request);
+            Future<DeliveryResult> future = mua.deliver(address, request, null);
             
             DeliveryResult result = future.get();
             System.out.println("Delivery result: " + result);

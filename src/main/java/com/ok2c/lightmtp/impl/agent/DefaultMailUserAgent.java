@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import com.ok2c.lightmtp.agent.MailTransport;
+import com.ok2c.lightmtp.agent.MailUserAgent;
 import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
@@ -44,7 +44,7 @@ import com.ok2c.lightnio.impl.IOReactorConfig;
 import com.ok2c.lightnio.pool.IOSessionManager;
 import com.ok2c.lightnio.pool.ManagedIOSession;
 
-public class DefaultMailUserAgent implements MailTransport {
+public class DefaultMailUserAgent implements MailUserAgent {
 
     private static final String PENDING_DELIVERY = "com.ok2c.lightmtp.delivery";
     
@@ -87,11 +87,12 @@ public class DefaultMailUserAgent implements MailTransport {
 
     public Future<DeliveryResult> deliver(
             final InetSocketAddress address, 
-            final DeliveryRequest request) {
+            final DeliveryRequest request,
+            final FutureCallback<DeliveryResult> callback) {
         if (this.shutdown) {
             throw new IllegalStateException("Mail transport has been shut down");
         }
-        BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(null);
+        BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
         PendingDelivery delivery = new PendingDelivery(request, future);
         this.pendingDeliveries.add(delivery);        
         this.sessionManager.leaseSession(address, null, new IOSessionReadyCallback(delivery));
