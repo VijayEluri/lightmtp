@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Future;
 
+import com.ok2c.lightmtp.agent.MailUserAgent;
 import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
@@ -68,8 +69,7 @@ public class MailUserAgentExample {
                 new ByteArraySource(text3.getBytes("US-ASCII"))));
 
         
-        DefaultMailUserAgent mua = new DefaultMailUserAgent(
-                TransportType.LMTP, new IOReactorConfig());
+        MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
         mua.start();
         
         try {
@@ -78,7 +78,7 @@ public class MailUserAgentExample {
             
             Queue<Future<DeliveryResult>> queue = new LinkedList<Future<DeliveryResult>>();
             for (DeliveryRequest request: requests) {
-                queue.add(mua.deliver(address, request));
+                queue.add(mua.deliver(address, request, null));
             }
 
             while (!queue.isEmpty()) {
