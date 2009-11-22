@@ -27,8 +27,6 @@ import com.ok2c.lightnio.IOSession;
 
 public class ServerSession {
 
-    public static final String TERMINATE = "com.ok2c.lighmtp.terminate";
-    
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
     private final ServerState sessionState;
@@ -163,7 +161,7 @@ public class ServerSession {
                 this.log.debug("Next codec: " + this.state);
             }
         }
-        ProtocolState token = (ProtocolState) this.iosession.getAttribute(TERMINATE);
+        ProtocolState token = (ProtocolState) this.iosession.getAttribute(ProtocolState.ATTRIB);
         if (token != null && token.equals(ProtocolState.QUIT)) {
             this.log.debug("Session termination requested");
             this.sessionState.terminated();

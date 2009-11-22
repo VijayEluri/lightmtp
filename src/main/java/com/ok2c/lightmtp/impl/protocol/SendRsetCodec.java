@@ -130,10 +130,6 @@ public class SendRsetCodec implements ProtocolCodec<ClientState> {
         return this.codecState == CodecState.COMPLETED;
     }
 
-    public boolean isIdle() {
-        return this.codecState == CodecState.RSET_READY;
-    }
-
     public String next(
             final ProtocolCodecs<ClientState> codecs,
             final ClientState sessionState) {

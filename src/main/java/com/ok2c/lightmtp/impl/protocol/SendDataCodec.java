@@ -228,10 +228,6 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         }
     }
 
-    public boolean isIdle() {
-        return this.codecState == CodecState.CONTENT_READY;
-    }
-
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED;
     }

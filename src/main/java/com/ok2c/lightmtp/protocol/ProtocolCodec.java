@@ -33,8 +33,6 @@ public interface ProtocolCodec<T> {
             IOSession iosession,
             T state) throws IOException, SMTPProtocolException;
 
-    boolean isIdle();
-
     boolean isCompleted();
 
     String next(ProtocolCodecs<T> codecs, T state);

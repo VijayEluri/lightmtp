@@ -49,7 +49,6 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
     private final Queue<Action<ServerState>> pendingActions;
 
     private Future<SMTPReply> actionFuture;
-    private boolean idle;
     private boolean completed;
 
     public PipeliningReceiveEnvelopCodec(
@@ -67,7 +66,6 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         this.parser = new SMTPCommandParser();
         this.writer = new SMTPReplyWriter(true);
         this.pendingActions = new LinkedList<Action<ServerState>>();
-        this.idle = true;
         this.completed = false;
     }
 
@@ -81,7 +79,6 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         this.writer.reset();
         this.pendingActions.clear();
         this.actionFuture = null;
-        this.idle = true;
         this.completed = false;
     }
 
@@ -195,13 +192,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
             if (!this.pendingActions.isEmpty()) {
                 iosession.setEvent(SelectionKey.OP_WRITE);
             }
-            
-            this.idle = (sessionState.getSender() == null);
         }        
-    }
-
-    public boolean isIdle() {
-        return this.idle;
     }
 
     public boolean isCompleted() {

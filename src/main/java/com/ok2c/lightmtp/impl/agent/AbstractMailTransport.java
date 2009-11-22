@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 
 import com.ok2c.lightmtp.agent.MailTransport;
 import com.ok2c.lightmtp.impl.protocol.ProtocolState;
-import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactor;
 import com.ok2c.lightnio.IOSession;
@@ -70,7 +69,7 @@ abstract class AbstractMailTransport implements MailTransport {
             Iterator<IOSession> sessions = this.sessionRegistry.iterator();
             while (sessions.hasNext()) {
                 IOSession session = sessions.next(); 
-                session.setAttribute(ServerSession.TERMINATE, ProtocolState.QUIT);
+                session.setAttribute(ProtocolState.ATTRIB, ProtocolState.QUIT);
                 session.setEvent(SelectionKey.OP_WRITE);
             }
             long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
