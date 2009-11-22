@@ -23,5 +23,6 @@ public final class SMTPConsts {
     public static final int MAX_REPLY_LEN            = 512;
 
     public final static Charset ASCII = Charset.forName("ASCII");
+    public final static Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
     
 }

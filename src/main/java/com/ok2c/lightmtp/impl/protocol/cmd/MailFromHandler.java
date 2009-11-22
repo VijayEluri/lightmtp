@@ -15,8 +15,12 @@
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.List;
+import java.util.Locale;
 
+import com.ok2c.lightmtp.SMTPCode;
+import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPErrorException;
+import com.ok2c.lightmtp.impl.protocol.MIMEEncoding;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
@@ -37,7 +41,27 @@ public class MailFromHandler implements CommandHandler<ServerState> {
             final String argument, 
             final List<String> params) throws SMTPErrorException {
         String sender = this.argParser.parse(argument);
-        return new MailFromAction(sender, this.validator);
+        MIMEEncoding mimeEncoding = null;
+        if (params == null || params.size() == 0) {
+            mimeEncoding = MIMEEncoding.MIME_7BIT;
+        } else if (params.size() == 1) {
+            String s = params.get(0).toUpperCase(Locale.US);
+            if (s.startsWith("BODY=")) {
+                s = s.substring(5);
+                if (s.equals("7BIT")) {
+                    mimeEncoding = MIMEEncoding.MIME_7BIT;
+                } else if (s.equals("8BITMIME")) {
+                    mimeEncoding = MIMEEncoding.MIME_8BIT;
+                }
+            }
+        }
+        if (mimeEncoding == null) {
+            throw new SMTPErrorException(
+                    SMTPCodes.ERR_PERM_SYNTAX_ERR_PARAM,
+                    new SMTPCode(5, 5, 4),
+                    "invalid parameter(s): " + params);
+        }
+        return new MailFromAction(sender, mimeEncoding, this.validator);
     }
     
 }

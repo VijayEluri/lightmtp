@@ -14,9 +14,9 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
-public enum DataType {
+public enum MIMEEncoding {
 
-    MIME,
-    BINARY,
+    MIME_7BIT,
+    MIME_8BIT;
 
 }

@@ -32,6 +32,7 @@ public class ServerState {
     private String clientDomain;
     private String sender;
     private DataType dataType;
+    private MIMEEncoding mimeEncoding;
     private boolean terminated;
 
     public ServerState(final String serverId) {
@@ -87,6 +88,14 @@ public class ServerState {
 
     public void setDataType(final DataType dataType) {
         this.dataType = dataType;
+    }
+
+    public MIMEEncoding getMimeEncoding() {
+        return this.mimeEncoding;
+    }
+
+    public void setMimeEncoding(final MIMEEncoding mimeEncoding) {
+        this.mimeEncoding = mimeEncoding;
     }
 
     public boolean isTerminated() {
