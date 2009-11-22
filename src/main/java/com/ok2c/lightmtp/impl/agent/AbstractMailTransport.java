@@ -33,12 +33,16 @@ abstract class AbstractMailTransport implements MailTransport {
     protected final Log log = LogFactory.getLog(getClass());
 
     private final IOSessionRegistry sessionRegistry;
-
+    private final IOReactorThreadCallback reactorThreadCallback;
+    
     private volatile IOReactorThread thread;
 
-    public AbstractMailTransport(final IOSessionRegistryCallback sessionRegistryCallback) {
+    public AbstractMailTransport(
+            final IOSessionRegistryCallback sessionRegistryCallback,
+            final IOReactorThreadCallback reactorThreadCallback) {
         super();
         this.sessionRegistry = new IOSessionRegistry(sessionRegistryCallback);
+        this.reactorThreadCallback = reactorThreadCallback;
     }
     
     protected abstract IOReactor getIOReactor();
@@ -49,7 +53,7 @@ abstract class AbstractMailTransport implements MailTransport {
     
     protected void start(final IOEventDispatch iodispatch) {
         this.log.debug("Start I/O reactor");
-        this.thread = new IOReactorThread(getIOReactor(), iodispatch);
+        this.thread = new IOReactorThread(getIOReactor(), iodispatch, this.reactorThreadCallback);
         this.thread.start();
     }
 

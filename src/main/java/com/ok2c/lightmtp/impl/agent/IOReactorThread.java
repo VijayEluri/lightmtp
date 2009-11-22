@@ -21,21 +21,32 @@ class IOReactorThread extends Thread {
 
     private final IOReactor ioReactor;
     private final IOEventDispatch iodispatch;
-
+    private final IOReactorThreadCallback callback;
+    
     private volatile Exception ex;
 
-    public IOReactorThread(final IOReactor ioReactor, final IOEventDispatch iodispatch) {
+    public IOReactorThread(
+            final IOReactor ioReactor, 
+            final IOEventDispatch iodispatch,
+            final IOReactorThreadCallback callback) {
         super();
         this.ioReactor = ioReactor;
         this.iodispatch = iodispatch;
+        this.callback = callback;
     }
     
     @Override
     public void run() {
         try {
             this.ioReactor.execute(this.iodispatch);
+            if (this.callback != null) {
+                this.callback.terminated();
+            }
         } catch (Exception ex) {
             this.ex = ex;
+            if (this.callback != null) {
+                this.callback.terminated(ex);
+            }
         }
     }
 
