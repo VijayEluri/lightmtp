@@ -166,6 +166,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
             if (this.pendingDelivery != null) {
                 if (this.pendingDelivery.isDone()) {
                     deliveryCompleted(sessionState);
+                    cleanUp();
                 }
                 while (!this.pendingReplies.isEmpty()) {
                     this.writer.write(this.pendingReplies.removeFirst(), buf);
