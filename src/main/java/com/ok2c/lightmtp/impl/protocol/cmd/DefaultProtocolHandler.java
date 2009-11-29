@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
@@ -29,6 +32,8 @@ import com.ok2c.lightmtp.protocol.ProtocolHandler;
 
 public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
 
+    private final Log log = LogFactory.getLog(getClass());
+    
     private final Map<String, CommandHandler<ServerState>> map;
 
     public DefaultProtocolHandler() {
@@ -60,6 +65,9 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
         String cmd = command.getVerb();
         CommandHandler<ServerState> handler = this.map.get(cmd.toUpperCase(Locale.US));
         if (handler != null) {
+            if (this.log.isDebugEnabled()) {
+                this.log.debug("Command " + command);
+            }
             return handler.handle(command.getArgument(), command.getParams());
         } else {
             throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 

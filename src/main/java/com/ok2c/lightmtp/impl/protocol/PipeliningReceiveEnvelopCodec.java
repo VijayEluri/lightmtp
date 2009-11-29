@@ -168,7 +168,8 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                 try {
                     SMTPCommand command = this.parser.parse(buf, bytesRead == -1);
                     if (command == null) {
-                        if (bytesRead == -1 && !sessionState.isTerminated()) {
+                        if (bytesRead == -1 && !sessionState.isTerminated() 
+                                && this.pendingActions.isEmpty()) {
                             throw new UnexpectedEndOfStreamException();
                         } else {
                             break;
