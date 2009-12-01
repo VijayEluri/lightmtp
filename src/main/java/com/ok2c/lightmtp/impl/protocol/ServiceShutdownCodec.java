@@ -19,6 +19,7 @@ import java.nio.channels.SelectionKey;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
@@ -56,6 +57,7 @@ public class ServiceShutdownCodec implements ProtocolCodec<ServerState> {
                 new SMTPCode(4, 3, 0),
                 sessionState.getServerId() + " service shutting down " +
                         "and closing transmission channel");
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.completed = false;
 
         iosession.setEventMask(SelectionKey.OP_WRITE);

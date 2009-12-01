@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -66,6 +67,7 @@ public class SendRsetCodec implements ProtocolCodec<ClientState> {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.RSET_READY;
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
 
         iosession.setEvent(SelectionKey.OP_WRITE);
     }

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -65,6 +66,7 @@ public class SendQuitCodec implements ProtocolCodec<ClientState> {
             final ClientState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.QUIT_READY;
 
         iosession.setEvent(SelectionKey.OP_WRITE);

@@ -27,6 +27,7 @@ import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPContent;
@@ -135,7 +136,13 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.pendingReplies.clear();        
         this.dataReceived = false;
         this.pendingDelivery = null;
-
+        
+        MIMEEncoding enc = sessionState.getMimeEncoding();
+        if (enc != null && enc.equals(MIMEEncoding.MIME_8BIT)) {
+            this.iobuffers.setInputCharset(SMTPConsts.ISO_8859_1);
+        } else {
+            this.iobuffers.setInputCharset(SMTPConsts.ASCII);
+        }
         this.completed = false;
     }
 

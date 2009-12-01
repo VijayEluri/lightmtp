@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
@@ -79,6 +80,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         this.writer.reset();
         this.pendingActions.clear();
         this.actionFuture = null;
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.completed = false;
     }
 

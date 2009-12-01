@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 import com.ok2c.lightmtp.SMTPCodes;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
@@ -53,6 +54,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
         this.writer.reset();
         this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.completed = false;
 
         iosession.setEventMask(SelectionKey.OP_WRITE);
