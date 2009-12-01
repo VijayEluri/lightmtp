@@ -14,35 +14,34 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
-import com.ok2c.lightmtp.SMTPConsts;
+import java.nio.charset.Charset;
+
 import com.ok2c.lightnio.SessionBufferStatus;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 public class SMTPBuffers implements SessionBufferStatus {
 
     private final static int BUF_SIZE = 8 * 1024;
     private final static int LINE_SIZE = 1 * 1024;
 
-    private final SessionInputBuffer inbuf;
-    private final SessionOutputBuffer outbuf;
+    private final SMTPInputBuffer inbuf;
+    private final SMTPOutputBuffer outbuf;
     
     public SMTPBuffers() {
         super();
-        this.inbuf = createSessionInputBuffer();
-        this.outbuf = createSessionOutputBuffer();
+        this.inbuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
+        this.outbuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
     }
 
-    protected SessionInputBuffer createSessionInputBuffer() {
-        return new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
+    public void setInputCharset(final Charset charset) {
+        this.inbuf.resetCharset(charset);
     }
-
-    protected SessionOutputBuffer createSessionOutputBuffer() {
-        return new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+    
+    public void setOutputCharset(final Charset charset) {
+        this.outbuf.resetCharset(charset);
     }
-
+    
     public boolean hasBufferedInput() {
         return this.inbuf.hasData();
     }

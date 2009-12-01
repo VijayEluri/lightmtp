@@ -119,6 +119,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         this.content = request.getContent();
         this.contentChannel = this.content.channel();
         this.contentSent = false;
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.CONTENT_READY;
 
         iosession.setEvent(SelectionKey.OP_WRITE);

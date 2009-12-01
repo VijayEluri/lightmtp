@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -85,6 +86,7 @@ public class SimpleSendEnvelopCodec implements ProtocolCodec<ClientState> {
         this.writer.reset();
         this.parser.reset();
         this.recipients.clear();
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.MAIL_REQUEST_READY;
         this.deliveryFailed = false;
 

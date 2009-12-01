@@ -20,6 +20,7 @@ import java.util.LinkedList;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -82,6 +83,7 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
         this.writer.reset();
         this.parser.reset();
         this.recipients.clear();
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.MAIL_REQUEST_READY;
         this.deliveryFailed = false;
 

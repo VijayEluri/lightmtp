@@ -22,6 +22,7 @@ import java.util.Set;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
+import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
@@ -72,6 +73,7 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
+        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
 
         iosession.setEventMask(SelectionKey.OP_READ);
     }
