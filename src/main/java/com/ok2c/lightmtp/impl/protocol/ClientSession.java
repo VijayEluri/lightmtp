@@ -160,6 +160,7 @@ public class ClientSession {
             this.iosession.close();
         } catch (SMTPProtocolException ex) {
             signalException(ex);
+            this.iosession.close();
         }
     }
 
@@ -170,8 +171,8 @@ public class ClientSession {
             signalException(ex);
             this.iosession.close();
         } catch (SMTPProtocolException ex) {
-            this.state = ProtocolState.QUIT;
             signalException(ex);
+            this.iosession.close();
         }
     }
 
@@ -180,9 +181,10 @@ public class ClientSession {
             doProduceData();
         } catch (IOException ex) {
             signalException(ex);
+            this.iosession.close();
         } catch (SMTPProtocolException ex) {
-            this.state = ProtocolState.QUIT;
             signalException(ex);
+            this.iosession.close();
         }
     }
     

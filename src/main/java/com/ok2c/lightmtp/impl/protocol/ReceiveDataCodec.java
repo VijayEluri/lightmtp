@@ -46,6 +46,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
+import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
@@ -59,7 +60,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private final SMTPMessageWriter<SMTPReply> writer;
     private final LinkedList<SMTPReply> pendingReplies;
     private final CharArrayBuffer lineBuf;
-    private final SMTPOutputBuffer contentBuf;
+    private final SessionOutputBufferImpl contentBuf;
     
     private File tempFile;
     private FileStore fileStore;
@@ -89,7 +90,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.writer = new SMTPReplyWriter(true);
         this.pendingReplies = new LinkedList<SMTPReply>();       
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
-        this.contentBuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
+        this.contentBuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
         
         this.dataReceived = false;
         this.pendingDelivery = null;
