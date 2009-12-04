@@ -35,6 +35,7 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
+import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 
 public class SendDataCodec implements ProtocolCodec<ClientState> {
 
@@ -55,7 +56,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
     private final int maxLineLen;
     private final DataAckMode mode;
     private final SMTPMessageParser<SMTPReply> parser;
-    private final SMTPInputBuffer contentBuf;
+    private final SessionInputBufferImpl contentBuf;
     private final CharArrayBuffer lineBuf;
     private final LinkedList<String> recipients;
 
@@ -75,7 +76,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         this.maxLineLen = maxLineLen;
         this.mode = mode != null ? mode : DataAckMode.SINGLE;
         this.parser = new SMTPReplyParser(enhancedCodes);
-        this.contentBuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
+        this.contentBuf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.recipients = new LinkedList<String>();
         this.codecState = CodecState.CONTENT_READY;
