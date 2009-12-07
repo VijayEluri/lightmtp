@@ -51,7 +51,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
         }
         this.workingDir = workingDir;
         this.ioReactor = new DefaultListeningIOReactor(config,
-                new SimpleThreadFactory("MUA"));
+                new SimpleThreadFactory("MTA"));
     }
     
     public DefaultMailServerTransport(
