@@ -12,7 +12,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.ok2c.lightmtp.message;
+package com.ok2c.lightmtp.util;
 
 /**
  * This class represents a context of a parsing operation: 
@@ -20,10 +20,8 @@ package com.ok2c.lightmtp.message;
  *  <li>the current position the parsing operation is expected to start at</li>
  *  <li>the bounds limiting the scope of the parsing operation</li>
  * </ul>
- * 
- * @since 4.0
  */
-class ParserCursor {
+public class ParserCursor {
 
     private final int lowerBound;
     private final int upperBound;

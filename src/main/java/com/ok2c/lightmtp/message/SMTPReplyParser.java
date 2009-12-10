@@ -23,6 +23,7 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.util.ParserCursor;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
