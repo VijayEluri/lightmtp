@@ -14,12 +14,15 @@
  */
 package com.ok2c.lightmtp.util;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 
 public final class InetAddressRange {
 
     private final InetAddress address;
     private final int mask;
+    private final int shiftBy;
+    private final BigInteger bigint;
     
     public InetAddressRange(final InetAddress address, int mask) {
         super();
@@ -31,6 +34,24 @@ public final class InetAddressRange {
         }
         this.address = address;
         this.mask = mask;
+
+        byte[] addr = address.getAddress();
+        BigInteger bigint = new BigInteger(addr);
+        int shiftBy = 0;
+        if (mask > 0) {
+            if (addr.length == 4) {
+                shiftBy = 32 - mask;
+            } else if (addr.length == 16) {
+                shiftBy = 128 - mask;
+            } else {
+                throw new IllegalArgumentException("Unsupported address: " + address);
+            }
+        }
+        if (shiftBy > 0) {
+            bigint = bigint.shiftRight(shiftBy);
+        }
+        this.bigint = bigint;
+        this.shiftBy = shiftBy;
     }
 
     public InetAddress getAddress() {
@@ -41,6 +62,14 @@ public final class InetAddressRange {
         return this.mask;
     }
 
+    public boolean contains(final InetAddress ip) {
+        BigInteger bigint2 = new BigInteger(ip.getAddress());
+        if (this.shiftBy > 0) {
+            bigint2 = bigint2.shiftRight(this.shiftBy);
+        }
+        return this.bigint.compareTo(bigint2) == 0;
+    }
+    
     @Override
     public boolean equals(final Object obj) {
         if (obj == null) return false;

@@ -85,4 +85,34 @@ public class TestInetAddressRangeParser {
         Assert.assertEquals(0, ranges.size());
     }
 
+    @Test
+    public void testInetAddressRangeContains() throws Exception {
+        InetAddressRangeParser parser = new InetAddressRangeParser();
+        InetAddressRange range = parser.parse("127.0.0.0/8");
+        InetAddress addr1 = InetAddress.getByName("127.1.1.1");
+        Assert.assertTrue(range.contains(addr1));
+        InetAddress addr2 = InetAddress.getByName("128.1.1.1");
+        Assert.assertFalse(range.contains(addr2));
+    }
+
+    @Test
+    public void testInetAddressRangeIPv4ContainsIPv6() throws Exception {
+        InetAddressRangeParser parser = new InetAddressRangeParser();
+        InetAddressRange range = parser.parse("127.0.0.0/8");
+        InetAddress addr1 = InetAddress.getByName("0::7f00:1");
+        Assert.assertTrue(range.contains(addr1));
+        InetAddress addr2 = InetAddress.getByName("0::7f00:7f00");
+        Assert.assertTrue(range.contains(addr2));
+    }
+
+    @Test
+    public void testInetAddressRangeIPv6ContainsIPv6() throws Exception {
+        InetAddressRangeParser parser = new InetAddressRangeParser();
+        InetAddressRange range = parser.parse("0::7f00:0:0:0/104");
+        InetAddress addr1 = InetAddress.getByName("0::7f00:0:0:1");
+        Assert.assertTrue(range.contains(addr1));
+        InetAddress addr2 = InetAddress.getByName("0::7e00:0:0:1");
+        Assert.assertFalse(range.contains(addr2));
+    }
+
 }
