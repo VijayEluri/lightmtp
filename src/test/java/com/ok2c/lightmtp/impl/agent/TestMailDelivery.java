@@ -238,7 +238,7 @@ public class TestMailDelivery extends BaseTransportTest {
         public OldServerSessionFactory(
                 final EnvelopValidator validator,
                 final DeliveryHandler deliveryHandler) {
-            super(TMP_DIR, validator, deliveryHandler);
+            super(TMP_DIR, null, validator, deliveryHandler);
         }
 
         @Override
@@ -829,7 +829,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
         this.mta.start(new LocalServerSessionFactory(
-                TMP_DIR, new SimpleEnvelopValidator(), deliveryHandler));
+                TMP_DIR, null, new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -912,7 +912,7 @@ public class TestMailDelivery extends BaseTransportTest {
         };
         
         this.mta.start(new LocalServerSessionFactory(
-                TMP_DIR, new SimpleEnvelopValidator(), deliveryHandler));
+                TMP_DIR, null, new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();

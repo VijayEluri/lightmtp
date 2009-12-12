@@ -16,6 +16,7 @@ package com.ok2c.lightmtp.examples;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -36,10 +37,11 @@ import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
+import com.ok2c.lightmtp.util.InetAddressRange;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 import com.ok2c.lightnio.impl.IOReactorConfig;
-
 
 public class LocalMailServerTransportExample {
 
@@ -47,12 +49,17 @@ public class LocalMailServerTransportExample {
         final File workingDir = new File(".");
         final IOReactorConfig config = new IOReactorConfig(); 
         config.setWorkerCount(1);
-        
+
         final MailServerTransport mta = new LocalMailServerTransport(workingDir, config);
 
         final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
         
-        mta.start(new MyEnvelopValidator(), new MyDeliveryHandler());
+        InetAddressRange iprange = new InetAddressRange(InetAddress.getByName("127.0.0.0"), 8);
+        
+        mta.start(
+                new MyRemoteAddressValidator(iprange),
+                new MyEnvelopValidator(), 
+                new MyDeliveryHandler());
         mta.listen(sockaddress);
         
         System.out.println("LMTP server listening on "  + sockaddress); 
@@ -72,6 +79,21 @@ public class LocalMailServerTransportExample {
         });
     }
     
+    static class MyRemoteAddressValidator implements RemoteAddressValidator {
+
+        private final InetAddressRange iprange;
+        
+        public MyRemoteAddressValidator(final InetAddressRange iprange) {
+            super();
+            this.iprange = iprange;
+        }
+        
+        public boolean validateAddress(final InetAddress address, final String helo) {
+            return this.iprange.contains(address);
+        }
+        
+    }
+
     static class MyEnvelopValidator implements EnvelopValidator {
 
         public Future<SMTPReply> validateRecipient(

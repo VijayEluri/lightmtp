@@ -20,6 +20,7 @@ import java.io.IOException;
 import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class LocalMailServerTransport extends DefaultMailServerTransport {
@@ -39,13 +40,21 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
     }
     
     public void start(
+            final RemoteAddressValidator addressValidator,
             final EnvelopValidator envelopValidator,
             final DeliveryHandler deliveryHandler) {
         LocalServerSessionFactory sessionFactory = new LocalServerSessionFactory(
                 getWorkingDir(),
+                addressValidator,
                 envelopValidator,
                 deliveryHandler);
         start(sessionFactory);
+    }
+
+    public void start(
+            final EnvelopValidator envelopValidator,
+            final DeliveryHandler deliveryHandler) {
+        start(null, envelopValidator, deliveryHandler);
     }
 
 }
