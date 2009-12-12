@@ -64,7 +64,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
         InetAddress clientAddress = socketAddress.getAddress();
         
         if (this.addressValidator != null) {
-            if (!this.addressValidator.validateAddress(clientAddress, null)) {
+            if (!this.addressValidator.validateAddress(clientAddress)) {
                 sessionState.terminated();
                 iosession.close();
                 return;

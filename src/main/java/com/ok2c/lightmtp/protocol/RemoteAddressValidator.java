@@ -18,6 +18,6 @@ import java.net.InetAddress;
 
 public interface RemoteAddressValidator {
 
-    boolean validateAddress(InetAddress address, String helo);
+    boolean validateAddress(InetAddress address);
 
 }
