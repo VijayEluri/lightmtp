@@ -88,7 +88,7 @@ public class LocalMailServerTransportExample {
             this.iprange = iprange;
         }
         
-        public boolean validateAddress(final InetAddress address, final String helo) {
+        public boolean validateAddress(final InetAddress address) {
             return this.iprange.contains(address);
         }
         
