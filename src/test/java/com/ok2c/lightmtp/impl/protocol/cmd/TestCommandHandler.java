@@ -14,6 +14,7 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
@@ -437,10 +438,11 @@ public class TestCommandHandler {
 
             @Override
             public Future<SMTPReply> validateRecipient(
+                    final InetAddress client,
                     final String recipient,
                     final FutureCallback<SMTPReply> callback) {
                 Assert.assertEquals("someaddress", recipient);
-                return super.validateRecipient(recipient, callback);
+                return super.validateRecipient(client, recipient, callback);
             }
 
         });
@@ -461,10 +463,11 @@ public class TestCommandHandler {
 
             @Override
             public Future<SMTPReply> validateRecipient(
+                    final InetAddress client,
                     final String recipient,
                     final FutureCallback<SMTPReply> callback) {
                 Assert.assertEquals("Some name <someaddress", recipient);
-                return super.validateRecipient(recipient, callback);
+                return super.validateRecipient(client, recipient, callback);
             }
 
         });

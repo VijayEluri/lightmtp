@@ -14,6 +14,7 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
+import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -29,6 +30,7 @@ public class ServerState {
     private final LinkedList<String> recipients;
 
     private ClientType clientType;
+    private InetAddress client;
     private String clientDomain;
     private String sender;
     private DataType dataType;
@@ -52,6 +54,14 @@ public class ServerState {
 
     public Set<String> getExtensions() {
         return this.extensions;
+    }
+    
+    public InetAddress getClient() {
+        return this.client;
+    }
+
+    public void setClientAddress(final InetAddress address) {
+        this.client = address;
     }
 
     public ClientType getClientType() {

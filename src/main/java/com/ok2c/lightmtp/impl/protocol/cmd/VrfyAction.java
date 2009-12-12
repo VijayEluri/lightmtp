@@ -38,7 +38,7 @@ class VrfyAction implements Action<ServerState> {
     public Future<SMTPReply> execute(
             final ServerState state,
             final FutureCallback<SMTPReply> callback) {
-        return this.validator.validateRecipient(this.recipient, callback);
+        return this.validator.validateRecipient(state.getClient(), this.recipient, callback);
     }
     
 }

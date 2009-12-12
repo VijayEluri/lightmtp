@@ -47,8 +47,11 @@ class RcptToAction extends AbstractAsyncAction<ServerState> {
     }
 
     @Override
-    protected Future<SMTPReply> internalAsyncExecute(final FutureCallback<SMTPReply> callback) {
-        return this.validator.validateRecipient(this.recipient, callback);
+    protected Future<SMTPReply> internalAsyncExecute(
+            final ServerState state,
+            final FutureCallback<SMTPReply> callback) {
+        return this.validator.validateRecipient(
+                state.getClient(), this.recipient, callback);
     }
 
     @Override
