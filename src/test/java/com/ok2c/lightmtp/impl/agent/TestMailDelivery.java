@@ -15,6 +15,7 @@
 package com.ok2c.lightmtp.impl.agent;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -352,6 +353,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
             @Override
             public Future<SMTPReply> validateRecipient(
+                    final InetAddress client,
                     final String recipient,
                     final FutureCallback<SMTPReply> callback) {
                 if (recipient.equals("testuser1")) {
@@ -362,7 +364,7 @@ public class TestMailDelivery extends BaseTransportTest {
                     future.completed(reply);
                     return future;
                 }
-                return super.validateRecipient(recipient, callback);
+                return super.validateRecipient(client, recipient, callback);
             }
 
         };
@@ -438,6 +440,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
             @Override
             public Future<SMTPReply> validateRecipient(
+                    final InetAddress client,
                     final String recipient,
                     final FutureCallback<SMTPReply> callback) {
                 if (recipient.equals("testuser1")) {
@@ -448,7 +451,7 @@ public class TestMailDelivery extends BaseTransportTest {
                     future.completed(reply);
                     return future;
                 }
-                return super.validateRecipient(recipient, callback);
+                return super.validateRecipient(client, recipient, callback);
             }
 
         };
@@ -524,6 +527,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
             @Override
             public Future<SMTPReply> validateSender(
+                    final InetAddress client,
                     final String sender,
                     final FutureCallback<SMTPReply> callback) {
                 if (sender.equals("root@somewhere.com")) {
@@ -534,7 +538,7 @@ public class TestMailDelivery extends BaseTransportTest {
                     future.completed(reply);
                     return future;
                 }
-                return super.validateSender(sender, callback);
+                return super.validateSender(client, sender, callback);
             }
 
         };
@@ -605,6 +609,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
             @Override
             public Future<SMTPReply> validateSender(
+                    final InetAddress client,
                     final String sender,
                     final FutureCallback<SMTPReply> callback) {
                 if (sender.equals("root@somewhere.com")) {
@@ -615,7 +620,7 @@ public class TestMailDelivery extends BaseTransportTest {
                     future.completed(reply);
                     return future;
                 }
-                return super.validateSender(sender, callback);
+                return super.validateSender(client, sender, callback);
             }
             
         };

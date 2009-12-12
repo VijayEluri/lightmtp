@@ -29,7 +29,8 @@ abstract class AbstractAsyncAction<T> implements Action<T> {
 
     protected abstract SMTPReply internalValidateState(T state);
 
-    protected abstract Future<SMTPReply> internalAsyncExecute(FutureCallback<SMTPReply> callback);
+    protected abstract Future<SMTPReply> internalAsyncExecute(T state, 
+            FutureCallback<SMTPReply> callback);
     
     protected abstract void internalUpdateState(SMTPReply reply, T state);
     
@@ -43,7 +44,7 @@ abstract class AbstractAsyncAction<T> implements Action<T> {
                 future.completed(reply);
                 return future;
             } else {
-                return internalAsyncExecute(new InternalCallback(state, callback));
+                return internalAsyncExecute(state, new InternalCallback(state, callback));
             }
         }
     }

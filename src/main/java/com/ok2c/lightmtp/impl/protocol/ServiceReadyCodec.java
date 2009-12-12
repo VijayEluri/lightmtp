@@ -15,6 +15,7 @@
 package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 
@@ -58,15 +59,19 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
+
+        InetSocketAddress socketAddress = (InetSocketAddress) iosession.getRemoteAddress();
+        InetAddress clientAddress = socketAddress.getAddress();
         
         if (this.addressValidator != null) {
-            InetSocketAddress socketAddress = (InetSocketAddress) iosession.getRemoteAddress();
-            if (!this.addressValidator.validateAddress(socketAddress.getAddress(), null)) {
+            if (!this.addressValidator.validateAddress(clientAddress, null)) {
                 sessionState.terminated();
                 iosession.close();
                 return;
             }
         }
+        
+        sessionState.setClientAddress(clientAddress);
         
         this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");

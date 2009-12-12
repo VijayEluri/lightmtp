@@ -53,8 +53,10 @@ class MailFromAction extends AbstractAsyncAction<ServerState> {
     }
 
     @Override
-    protected Future<SMTPReply> internalAsyncExecute(final FutureCallback<SMTPReply> callback) {
-        return this.validator.validateSender(this.sender, callback);
+    protected Future<SMTPReply> internalAsyncExecute(
+            final ServerState state,
+            final FutureCallback<SMTPReply> callback) {
+        return this.validator.validateSender(state.getClient(), this.sender, callback);
     }
 
     @Override

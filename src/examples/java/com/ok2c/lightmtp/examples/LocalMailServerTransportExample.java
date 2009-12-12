@@ -97,6 +97,7 @@ public class LocalMailServerTransportExample {
     static class MyEnvelopValidator implements EnvelopValidator {
 
         public Future<SMTPReply> validateRecipient(
+                final InetAddress client,
                 final String recipient, 
                 final FutureCallback<SMTPReply> callback) {
             BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
@@ -107,6 +108,7 @@ public class LocalMailServerTransportExample {
         }
 
         public Future<SMTPReply> validateSender(
+                final InetAddress client,
                 final String sender, 
                 final FutureCallback<SMTPReply> callback) {
             BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);

@@ -14,6 +14,7 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import java.net.InetAddress;
 import java.util.concurrent.Future;
 
 import com.ok2c.lightmtp.SMTPCode;
@@ -26,6 +27,7 @@ import com.ok2c.lightnio.concurrent.FutureCallback;
 public class DelayedEnvelopValidator implements EnvelopValidator {
 
     public Future<SMTPReply> validateRecipient(
+            final InetAddress client,
             final String recipient, 
             final FutureCallback<SMTPReply> callback) {
         final BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
@@ -49,6 +51,7 @@ public class DelayedEnvelopValidator implements EnvelopValidator {
     }
 
     public Future<SMTPReply> validateSender(
+            final InetAddress client,
             final String sender, 
             final FutureCallback<SMTPReply> callback) {
         final BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
