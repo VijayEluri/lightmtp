@@ -15,6 +15,7 @@
 package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 
 import com.ok2c.lightmtp.SMTPCodes;
@@ -25,23 +26,28 @@ import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyWriter;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
+import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
 
     private final SMTPBuffers iobuffers;
+    private final RemoteAddressValidator addressValidator;
     private final SMTPMessageWriter<SMTPReply> writer;
 
     private SMTPReply pendingReply;
     private boolean completed;
 
-    public ServiceReadyCodec(final SMTPBuffers iobuffers) {
+    public ServiceReadyCodec(
+            final SMTPBuffers iobuffers,
+            final RemoteAddressValidator addressValidator) {
         super();
         if (iobuffers == null) {
             throw new IllegalArgumentException("IO buffers may not be null");
         }
         this.iobuffers = iobuffers;
+        this.addressValidator = addressValidator;
         this.writer = new SMTPReplyWriter();
     }
 
@@ -52,6 +58,16 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
         this.writer.reset();
+        
+        if (this.addressValidator != null) {
+            InetSocketAddress socketAddress = (InetSocketAddress) iosession.getRemoteAddress();
+            if (!this.addressValidator.validateAddress(socketAddress.getAddress(), null)) {
+                sessionState.terminated();
+                iosession.close();
+                return;
+            }
+        }
+        
         this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");
         this.iobuffers.setInputCharset(SMTPConsts.ASCII);

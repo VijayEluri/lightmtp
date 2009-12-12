@@ -29,17 +29,20 @@ import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
+import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOSession;
 
 public class LocalServerSessionFactory implements SessionFactory<ServerSession> {
 
     private final File workingDir;
+    private final RemoteAddressValidator addressValidator;
     private final EnvelopValidator validator;
     private final DeliveryHandler deliveryHandler;
     
     public LocalServerSessionFactory(
             final File workingDir,
+            final RemoteAddressValidator addressValidator,
             final EnvelopValidator validator,
             final DeliveryHandler deliveryHandler) {
         super();
@@ -53,6 +56,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
             throw new IllegalArgumentException("Delivery handler may not be null");
         }
         this.workingDir = workingDir;
+        this.addressValidator = addressValidator;
         this.validator = validator;
         this.deliveryHandler = deliveryHandler;
     }
@@ -61,7 +65,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ServerState> codecs = new ProtocolCodecRegistry<ServerState>();
         codecs.register(ProtocolState.INIT.name(),
-                new ServiceReadyCodec(iobuffers));
+                new ServiceReadyCodec(iobuffers, this.addressValidator));
         codecs.register(ProtocolState.MAIL.name(),
                 new PipeliningReceiveEnvelopCodec(iobuffers, 
                         createProtocolHandler(this.validator)));

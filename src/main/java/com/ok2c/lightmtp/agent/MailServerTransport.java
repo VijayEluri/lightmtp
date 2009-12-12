@@ -19,6 +19,7 @@ import java.util.Set;
 
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightnio.ListenerEndpoint;
 
 public interface MailServerTransport extends MailTransport {
@@ -27,6 +28,9 @@ public interface MailServerTransport extends MailTransport {
 
     Set<ListenerEndpoint> getEndpoints();
 
-    void start(EnvelopValidator envelopValidator, DeliveryHandler deliveryHandler);
+    void start(
+            RemoteAddressValidator addressValidator,
+            EnvelopValidator envelopValidator, 
+            DeliveryHandler deliveryHandler);
 
 }

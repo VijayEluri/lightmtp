@@ -25,6 +25,7 @@ import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
@@ -85,13 +86,21 @@ public class DefaultMailServerTransport extends AbstractMailTransport
     }
 
     public void start(
+            final RemoteAddressValidator addressValidator,
             final EnvelopValidator envelopValidator,
             final DeliveryHandler deliveryHandler) {
         ServerSessionFactory sessionFactory = new ServerSessionFactory(
                 this.workingDir,
+                addressValidator,
                 envelopValidator,
                 deliveryHandler);
         start(sessionFactory);
+    }
+
+    public void start(
+            final EnvelopValidator envelopValidator,
+            final DeliveryHandler deliveryHandler) {
+        start(null, envelopValidator, deliveryHandler);
     }
 
     protected void start(final SessionFactory<ServerSession> sessionFactory) {
