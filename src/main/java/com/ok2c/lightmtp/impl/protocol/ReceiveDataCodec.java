@@ -90,7 +90,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.writer = new SMTPReplyWriter(true);
         this.pendingReplies = new LinkedList<SMTPReply>();       
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
-        this.contentBuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+        this.contentBuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
         
         this.dataReceived = false;
         this.pendingDelivery = null;
