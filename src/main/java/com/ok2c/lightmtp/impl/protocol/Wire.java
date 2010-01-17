@@ -2,15 +2,15 @@ package com.ok2c.lightmtp.impl.protocol;
 
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 class Wire {
 
     protected static final String WIRELOG_CAT = "com.ok2c.lightmtp.wire"; 
     
-    private final Log log;
+    private final Logger log;
     
-    public Wire(final Log log) {
+    public Wire(final Logger log) {
         super();
         this.log = log;
     }

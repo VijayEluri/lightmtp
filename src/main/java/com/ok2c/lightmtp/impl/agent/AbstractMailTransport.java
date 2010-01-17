@@ -19,8 +19,8 @@ import java.nio.channels.SelectionKey;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.agent.MailTransport;
 import com.ok2c.lightmtp.impl.protocol.ProtocolState;
@@ -30,7 +30,7 @@ import com.ok2c.lightnio.IOSession;
 
 abstract class AbstractMailTransport implements MailTransport {
 
-    protected final Log log = LogFactory.getLog(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private final IOSessionRegistry sessionRegistry;
     private final IOReactorThreadCallback reactorThreadCallback;

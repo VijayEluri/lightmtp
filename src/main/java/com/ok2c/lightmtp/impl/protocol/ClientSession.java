@@ -17,8 +17,8 @@ package com.ok2c.lightmtp.impl.protocol;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPProtocolException;
@@ -35,14 +35,14 @@ import com.ok2c.lightnio.IOSession;
 
 public class ClientSession {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
     private final ClientState sessionState;
     private final SessionContext context;
     private final DeliveryRequestHandler handler;
     private final ProtocolCodecs<ClientState> codecs;
-
-    private final Log log;
 
     private ProtocolCodec<ClientState> currentCodec;
 
@@ -66,8 +66,8 @@ public class ClientSession {
         if (codecs == null) {
             throw new IllegalArgumentException("Protocol codecs may not be null");
         }
-        Log log = LogFactory.getLog(iosession.getClass());
-        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
+        Logger log = LoggerFactory.getLogger(iosession.getClass());
+        Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
         if (log.isDebugEnabled() || wirelog.isDebugEnabled()) {
             this.iosession = new LoggingIOSession(iosession, "client", log, new Wire(wirelog));
         } else {
@@ -81,8 +81,6 @@ public class ClientSession {
         this.codecs = codecs;
 
         this.state = ProtocolState.INIT;
-
-        this.log = LogFactory.getLog(getClass());
     }
 
     private void signalDeliveryReady() {

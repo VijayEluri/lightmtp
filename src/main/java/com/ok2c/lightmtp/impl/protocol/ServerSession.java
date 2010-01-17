@@ -17,8 +17,8 @@ package com.ok2c.lightmtp.impl.protocol;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
@@ -27,12 +27,12 @@ import com.ok2c.lightnio.IOSession;
 
 public class ServerSession {
 
+    private Logger log = LoggerFactory.getLogger(getClass());
+
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
     private final ServerState sessionState;
     private final ProtocolCodecs<ServerState> codecs;
-
-    private final Log log;
 
     private ProtocolCodec<ServerState> currentCodec;
     private ProtocolState state;
@@ -51,8 +51,8 @@ public class ServerSession {
         if (codecs == null) {
             throw new IllegalArgumentException("Protocol codecs may not be null");
         }
-        Log log = LogFactory.getLog(iosession.getClass());
-        Log wirelog = LogFactory.getLog(Wire.WIRELOG_CAT);
+        Logger log = LoggerFactory.getLogger(iosession.getClass());
+        Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
         if (log.isDebugEnabled() || wirelog.isDebugEnabled()) {
             this.iosession = new LoggingIOSession(iosession, "server", log, new Wire(wirelog));
         } else {
@@ -63,8 +63,6 @@ public class ServerSession {
         this.sessionState = new ServerState("LightMTP SMTP");
         this.codecs = codecs;
         this.state = ProtocolState.INIT;
-
-        this.log = LogFactory.getLog(getClass());
     }
 
     private void terminate() {

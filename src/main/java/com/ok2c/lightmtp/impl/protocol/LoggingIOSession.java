@@ -22,7 +22,7 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionBufferStatus;
@@ -38,13 +38,13 @@ class LoggingIOSession implements IOSession {
     private final IOSession session;
     private final ByteChannel channel;
     private final String id;
-    private final Log log;
+    private final Logger log;
     private final Wire wirelog;
     
     public LoggingIOSession(
             final IOSession session, 
             final String id, 
-            final Log log,
+            final Logger log,
             final Wire wirelog) {
         super();
         if (session == null) {
