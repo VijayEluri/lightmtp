@@ -17,8 +17,8 @@ package com.ok2c.lightmtp.impl.agent;
 import java.net.SocketAddress;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightnio.ConnectingIOReactor;
 import com.ok2c.lightnio.IOSession;
@@ -34,8 +34,8 @@ import com.ok2c.lightnio.pool.PoolStats;
 
 class MailIOSessionManager implements IOSessionManager<SocketAddress> {
 
-    private final Log log = LogFactory.getLog(getClass());
-    
+    protected final Logger log = LoggerFactory.getLogger(getClass());
+
     private final SessionPool<SocketAddress> pool;
 
     public MailIOSessionManager(final ConnectingIOReactor ioreactor) {
