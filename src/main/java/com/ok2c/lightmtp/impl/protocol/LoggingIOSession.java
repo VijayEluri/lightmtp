@@ -28,22 +28,22 @@ import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionBufferStatus;
 
 /**
- * Decorator class intended to transparently extend an {@link IOSession} 
- * with basic event logging capabilities using Commons Logging. 
+ * Decorator class intended to transparently extend an {@link IOSession}
+ * with basic event logging capabilities using Commons Logging.
  */
 class LoggingIOSession implements IOSession {
 
     private static AtomicLong COUNT = new AtomicLong(0);
-    
+
     private final IOSession session;
     private final ByteChannel channel;
     private final String id;
     private final Logger log;
     private final Wire wirelog;
-    
+
     public LoggingIOSession(
-            final IOSession session, 
-            final String id, 
+            final IOSession session,
+            final String id,
             final Logger log,
             final Wire wirelog) {
         super();
@@ -91,10 +91,10 @@ class LoggingIOSession implements IOSession {
         buffer.append(']');
         return buffer.toString();
     }
-    
+
     public void setEventMask(int ops) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("I/O session " + this.id + " " + this.session + ": Set event mask " 
+            this.log.debug("I/O session " + this.id + " " + this.session + ": Set event mask "
                     + formatOps(ops));
         }
         this.session.setEventMask(ops);
@@ -102,7 +102,7 @@ class LoggingIOSession implements IOSession {
 
     public void setEvent(int op) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("I/O session " + this.id + " " + this.session + ": Set event " 
+            this.log.debug("I/O session " + this.id + " " + this.session + ": Set event "
                     + formatOps(op));
         }
         this.session.setEvent(op);
@@ -110,7 +110,7 @@ class LoggingIOSession implements IOSession {
 
     public void clearEvent(int op) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("I/O session " + this.id + " " + this.session + ": Clear event " 
+            this.log.debug("I/O session " + this.id + " " + this.session + ": Clear event "
                     + formatOps(op));
         }
         this.session.clearEvent(op);
@@ -144,7 +144,7 @@ class LoggingIOSession implements IOSession {
 
     public void setSocketTimeout(int timeout) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("I/O session " + this.id + " " + this.session + ": Set timeout " 
+            this.log.debug("I/O session " + this.id + " " + this.session + ": Set timeout "
                     + timeout);
         }
         this.session.setSocketTimeout(timeout);
@@ -168,7 +168,7 @@ class LoggingIOSession implements IOSession {
 
     public void setAttribute(final String name, final Object obj) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("I/O session " + this.id + " " + this.session + ": Set attribute " 
+            this.log.debug("I/O session " + this.id + " " + this.session + ": Set attribute "
                     + name);
         }
         this.session.setAttribute(name, obj);
@@ -176,7 +176,7 @@ class LoggingIOSession implements IOSession {
 
     public Object removeAttribute(final String name) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("I/O session " + this.id + " " + this.session + ": Remove attribute " 
+            this.log.debug("I/O session " + this.id + " " + this.session + ": Remove attribute "
                     + name);
         }
         return this.session.removeAttribute(name);
@@ -224,7 +224,7 @@ class LoggingIOSession implements IOSession {
         public boolean isOpen() {
             return session.channel().isOpen();
         }
-        
-    }    
-    
+
+    }
+
 }

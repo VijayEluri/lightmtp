@@ -35,7 +35,7 @@ import com.ok2c.lightnio.impl.DefaultListeningIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
-public class DefaultMailServerTransport extends AbstractMailTransport 
+public class DefaultMailServerTransport extends AbstractMailTransport
                                         implements MailServerTransport {
 
     private final File workingDir;
@@ -54,18 +54,18 @@ public class DefaultMailServerTransport extends AbstractMailTransport
         this.ioReactor = new DefaultListeningIOReactor(config,
                 new SimpleThreadFactory("MTA"));
     }
-    
+
     public DefaultMailServerTransport(
             final File workingDir,
             final IOReactorConfig config) throws IOException {
         this(null, null, workingDir, config);
     }
-    
+
     @Override
     protected ListeningIOReactor getIOReactor() {
         return this.ioReactor;
     }
-    
+
     protected File getWorkingDir() {
         return this.workingDir;
     }
@@ -105,7 +105,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
 
     protected void start(final SessionFactory<ServerSession> sessionFactory) {
         ServerIOEventDispatch iodispatch = new ServerIOEventDispatch(
-                getSessionRegistry(), 
+                getSessionRegistry(),
                 sessionFactory);
         start(iodispatch);
     }

@@ -91,7 +91,7 @@ public class ClientSession {
 
         DeliveryRequest request = this.handler.submitRequest(this.context);
         this.sessionState.reset(request);
-        
+
         if (request == null) {
             this.iosession.clearEvent(SelectionKey.OP_WRITE);
             this.log.debug("No delivery request submitted");
@@ -185,7 +185,7 @@ public class ClientSession {
             this.iosession.close();
         }
     }
-    
+
     public void timeout() {
         try {
             doTimeout();
@@ -259,7 +259,7 @@ public class ClientSession {
                     }
                     break;
                 }
-                
+
                 if (reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
                     this.sessionState.terminated();
                     this.iosession.close();
@@ -280,7 +280,7 @@ public class ClientSession {
                 signalDeliveryReady();
             }
         }
-        
+
         ProtocolState token = (ProtocolState) this.iosession.getAttribute(ProtocolState.ATTRIB);
         if (token != null && token.equals(ProtocolState.QUIT)) {
             this.log.debug("Session termination requested");
@@ -294,5 +294,5 @@ public class ClientSession {
         this.sessionState.terminated();
         this.iosession.setEvent(SelectionKey.OP_WRITE);
     }
-    
+
 }

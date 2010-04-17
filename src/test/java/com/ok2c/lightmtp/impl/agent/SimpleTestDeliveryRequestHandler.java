@@ -35,8 +35,8 @@ public class SimpleTestDeliveryRequestHandler implements DeliveryRequestHandler 
     }
 
     public void completed(
-            final DeliveryRequest request, 
-            final DeliveryResult result, 
+            final DeliveryRequest request,
+            final DeliveryResult result,
             final SessionContext context) {
         SimpleTestJob job = (SimpleTestJob) context.getAttribute(IOSession.ATTACHMENT_KEY);
         job.addResult(result);
@@ -49,8 +49,8 @@ public class SimpleTestDeliveryRequestHandler implements DeliveryRequestHandler 
     }
 
     public void failed(
-            final DeliveryRequest request, 
-            final DeliveryResult result, 
+            final DeliveryRequest request,
+            final DeliveryResult result,
             final SessionContext context) {
         SimpleTestJob job = (SimpleTestJob) context.getAttribute(IOSession.ATTACHMENT_KEY);
         job.addResult(result);

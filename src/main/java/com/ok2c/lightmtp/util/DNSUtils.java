@@ -45,7 +45,7 @@ public class DNSUtils {
         if (hostname == null) {
             hostname = "localdomain";
         }
-        return hostname; 
+        return hostname;
     }
-    
+
 }

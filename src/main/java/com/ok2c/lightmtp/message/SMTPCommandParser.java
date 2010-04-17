@@ -27,21 +27,21 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
 
     private final CharArrayBuffer lineBuf;
     private final int maxLineLen;
-    
+
     public SMTPCommandParser(int maxLineLen) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.maxLineLen = maxLineLen;
     }
-    
+
     public SMTPCommandParser() {
         this(SMTPConsts.MAX_COMMAND_LEN);
     }
-    
+
     public void reset() {
         this.lineBuf.clear();
     }
-    
+
     public SMTPCommand parse(
             final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         if (buf == null) {
@@ -64,7 +64,7 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
                 }
                 String s = this.lineBuf.substringTrimmed(i, idx);
                 if (s.length() == 0) {
-                    throw new SMTPProtocolException("Malformed command line: " 
+                    throw new SMTPProtocolException("Malformed command line: "
                             + this.lineBuf.toString());
                 }
                 i += s.length() + 1;
@@ -79,18 +79,18 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
                 argument = lines.removeFirst();
             }
             this.lineBuf.clear();
-            return new SMTPCommand(code, argument, lines); 
+            return new SMTPCommand(code, argument, lines);
         } else {
             return null;
         }
     }
-    
+
     private boolean readLine(
             final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         try {
             boolean lineComplete = buf.readLine(this.lineBuf, endOfStream);
-            if (this.maxLineLen > 0 && 
-                    (this.lineBuf.length() > this.maxLineLen || 
+            if (this.maxLineLen > 0 &&
+                    (this.lineBuf.length() > this.maxLineLen ||
                             (!lineComplete && buf.length() > this.maxLineLen))) {
                 throw new SMTPProtocolException("Maximum command length limit exceeded");
             }
@@ -99,5 +99,5 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }
     }
-    
+
 }

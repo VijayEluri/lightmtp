@@ -33,7 +33,7 @@ import com.ok2c.lightmtp.protocol.ProtocolHandler;
 public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final Map<String, CommandHandler<ServerState>> map;
 
     public DefaultProtocolHandler() {
@@ -70,7 +70,7 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
             }
             return handler.handle(command.getArgument(), command.getParams());
         } else {
-            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND,
                     new SMTPCode(5, 5, 1),
                     "command not recognized");
         }

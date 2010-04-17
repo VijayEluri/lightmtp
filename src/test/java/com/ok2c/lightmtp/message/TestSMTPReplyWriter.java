@@ -32,7 +32,7 @@ import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 public class TestSMTPReplyWriter {
 
     private final static Charset ASCII = Charset.forName("ASCII");
-    
+
     @Test
     public void testConstructor() throws Exception {
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
@@ -42,7 +42,7 @@ public class TestSMTPReplyWriter {
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConstructorParam1() throws Exception {
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         writer.write(null, outbuf);
     }
 
@@ -54,12 +54,12 @@ public class TestSMTPReplyWriter {
 
     @Test
     public void testBasicReplyWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
 
         SMTPReply reply = new SMTPReply(250, null, "OK");
         writer.write(reply, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -69,12 +69,12 @@ public class TestSMTPReplyWriter {
 
     @Test
     public void testReplyWithEnhancedCodeWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(true);
 
         SMTPReply reply = new SMTPReply(250, new SMTPCode(2, 5, 0), "OK");
         writer.write(reply, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -84,14 +84,14 @@ public class TestSMTPReplyWriter {
 
     @Test
     public void testMultilineReplyWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter();
 
         SMTPReply reply = new SMTPReply(250, null,
                 new ArrayList<String>(
                         Arrays.asList("whatever.com", "PIPELINING", "ENHANCEDSTATUSCODES")));
         writer.write(reply, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -104,14 +104,14 @@ public class TestSMTPReplyWriter {
 
     @Test
     public void testMultilineReplyWithEnhancedCodeWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(true);
 
         SMTPReply reply = new SMTPReply(250, new SMTPCode(2, 5, 0),
                 new ArrayList<String>(
                         Arrays.asList("whatever.com", "PIPELINING", "ENHANCEDSTATUSCODES")));
         writer.write(reply, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -124,11 +124,11 @@ public class TestSMTPReplyWriter {
 
     @Test(expected=SMTPProtocolException.class)
     public void testOverMaxLenReplyWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPReply> writer = new SMTPReplyWriter(16, true);
 
         SMTPReply reply = new SMTPReply(250, null, "BLAHBLAHBLAHBLAH");
         writer.write(reply, outbuf);
     }
-    
+
 }

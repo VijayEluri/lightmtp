@@ -20,16 +20,16 @@ import com.ok2c.lightnio.IOSession;
 class SessionContextImpl implements SessionContext {
 
     private final IOSession iosession;
-    
+
     public SessionContextImpl(final IOSession iosession) {
         super();
         this.iosession = iosession;
     }
-    
+
     public void setAttribute(final String name, final Object obj) {
         this.iosession.setAttribute(name, obj);
     }
-    
+
     public Object getAttribute(final String name) {
         return this.iosession.getAttribute(name);
     }

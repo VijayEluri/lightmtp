@@ -28,9 +28,9 @@ public class WritableByteChannelMockup implements WritableByteChannel {
     private final ByteArrayOutputStream buffer;
     private final WritableByteChannel channel;
     private final Charset charset;
-    
+
     private boolean closed;
-    
+
     public WritableByteChannelMockup(final Charset charset) {
         super();
         this.buffer = new ByteArrayOutputStream();
@@ -62,5 +62,5 @@ public class WritableByteChannelMockup implements WritableByteChannel {
             return new String(raw);
         }
     }
-    
+
 }

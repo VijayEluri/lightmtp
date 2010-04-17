@@ -25,7 +25,7 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 public final class InetAddressRangeParser {
 
     public InetAddressRange parse(
-            final CharArrayBuffer buffer, 
+            final CharArrayBuffer buffer,
             final ParserCursor cursor,
             final char delimiter) throws ParseException, UnknownHostException {
 
@@ -35,11 +35,11 @@ public final class InetAddressRangeParser {
         if (cursor == null) {
             throw new IllegalArgumentException("Parser cursor may not be null");
         }
-        
+
         int pos = cursor.getPos();
         int indexFrom = cursor.getPos();
         int indexTo = cursor.getUpperBound();
-        
+
         while (pos < indexTo) {
             char ch = buffer.charAt(pos);
             if (ch == '/') {
@@ -50,10 +50,10 @@ public final class InetAddressRangeParser {
             }
             pos++;
         }
-        
+
         InetAddress address = InetAddress.getByName(buffer.substringTrimmed(indexFrom, pos));
         int mask = 0;
-        
+
         if (pos < indexTo && buffer.charAt(pos) == '/') {
             pos++;
             indexFrom = pos;
@@ -84,9 +84,9 @@ public final class InetAddressRangeParser {
         ParserCursor cursor = new ParserCursor(0, s.length());
         return parse(buffer, cursor, (char) 0);
     }
-    
+
     public List<InetAddressRange> parseAll(
-            final CharArrayBuffer buffer, 
+            final CharArrayBuffer buffer,
             final ParserCursor cursor,
             final char delimiter) throws ParseException, UnknownHostException {
 
@@ -96,7 +96,7 @@ public final class InetAddressRangeParser {
         if (cursor == null) {
             throw new IllegalArgumentException("Parser cursor may not be null");
         }
-        
+
         List<InetAddressRange> ranges = new ArrayList<InetAddressRange>();
         while (!cursor.atEnd()) {
             ranges.add(parse(buffer, cursor, ','));
@@ -115,5 +115,5 @@ public final class InetAddressRangeParser {
         ParserCursor cursor = new ParserCursor(0, s.length());
         return parseAll(buffer, cursor, (char) 0);
     }
-    
+
 }

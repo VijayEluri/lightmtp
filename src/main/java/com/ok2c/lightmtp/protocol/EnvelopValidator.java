@@ -24,7 +24,7 @@ public interface EnvelopValidator {
 
     Future<SMTPReply> validateSender(
             InetAddress client, String sender, FutureCallback<SMTPReply> callback);
-    
+
     Future<SMTPReply> validateRecipient(
             InetAddress client, String recipient, FutureCallback<SMTPReply> callback);
 

@@ -22,7 +22,7 @@ import com.ok2c.lightmtp.impl.protocol.ServerState;
 public class HeloAction extends AbstractAction<ServerState> {
 
     private final String domain;
-    
+
     public HeloAction(final String domain) {
         super();
         this.domain = domain;

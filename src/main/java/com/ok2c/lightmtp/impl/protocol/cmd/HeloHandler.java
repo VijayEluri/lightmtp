@@ -31,7 +31,7 @@ public class HeloHandler implements CommandHandler<ServerState> {
     public Action<ServerState> handle(
             final String argument, final List<String> params) throws SMTPErrorException {
         if (argument == null) {
-            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
+            throw new SMTPErrorException(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND,
                     null,
                     "domain not given");
         }

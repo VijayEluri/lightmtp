@@ -72,25 +72,25 @@ public class TestMailDelivery extends BaseTransportTest {
             "\r\n" +
             "This is a short test message 3\r\n" +
             ". Period.\r\n");
-    
+
     @Test
     public void testBasicPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
@@ -100,17 +100,17 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(3, results.size());
@@ -126,52 +126,52 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertTrue(res3.getFailures().isEmpty());
         Assert.assertEquals(250, res3.getReply().getCode());
         Assert.assertEquals(new SMTPCode(2, 6, 0), res3.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
         Assert.assertNotNull(deliveries);
         SimpleTestDelivery delivery1 = deliveries.poll();
-        Assert.assertNotNull(delivery1); 
+        Assert.assertNotNull(delivery1);
         Assert.assertEquals("root", delivery1.getSender());
         Assert.assertEquals(1, delivery1.getRecipients().size());
         Assert.assertEquals("testuser1", delivery1.getRecipients().get(0));
         Assert.assertEquals(TEXT1, delivery1.getContent());
         SimpleTestDelivery delivery2 = deliveries.poll();
-        Assert.assertNotNull(delivery2); 
+        Assert.assertNotNull(delivery2);
         Assert.assertEquals("root", delivery2.getSender());
         Assert.assertEquals(2, delivery2.getRecipients().size());
         Assert.assertEquals("testuser1", delivery2.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery2.getRecipients().get(1));
         Assert.assertEquals(TEXT2, delivery2.getContent());
         SimpleTestDelivery delivery3 = deliveries.poll();
-        Assert.assertNotNull(delivery3); 
+        Assert.assertNotNull(delivery3);
         Assert.assertEquals("root", delivery3.getSender());
         Assert.assertEquals(3, delivery3.getRecipients().size());
         Assert.assertEquals("testuser1", delivery3.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery3.getRecipients().get(1));
         Assert.assertEquals("testuser3", delivery3.getRecipients().get(2));
         Assert.assertEquals(TEXT3, delivery3.getContent());
-        Assert.assertNull(deliveries.poll()); 
-        
+        Assert.assertNull(deliveries.poll());
+
     }
-    
+
     @Test
     public void testDelayedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         DelayedTestDeliveryHandler deliveryHandler = new DelayedTestDeliveryHandler();
@@ -181,17 +181,17 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(3, results.size());
@@ -207,35 +207,35 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertTrue(res3.getFailures().isEmpty());
         Assert.assertEquals(250, res3.getReply().getCode());
         Assert.assertEquals(new SMTPCode(2, 6, 0), res3.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
         Assert.assertNotNull(deliveries);
         SimpleTestDelivery delivery1 = deliveries.poll();
-        Assert.assertNotNull(delivery1); 
+        Assert.assertNotNull(delivery1);
         Assert.assertEquals("root", delivery1.getSender());
         Assert.assertEquals(1, delivery1.getRecipients().size());
         Assert.assertEquals("testuser1", delivery1.getRecipients().get(0));
         Assert.assertEquals(TEXT1, delivery1.getContent());
         SimpleTestDelivery delivery2 = deliveries.poll();
-        Assert.assertNotNull(delivery2); 
+        Assert.assertNotNull(delivery2);
         Assert.assertEquals("root", delivery2.getSender());
         Assert.assertEquals(2, delivery2.getRecipients().size());
         Assert.assertEquals("testuser1", delivery2.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery2.getRecipients().get(1));
         Assert.assertEquals(TEXT2, delivery2.getContent());
         SimpleTestDelivery delivery3 = deliveries.poll();
-        Assert.assertNotNull(delivery3); 
+        Assert.assertNotNull(delivery3);
         Assert.assertEquals("root", delivery3.getSender());
         Assert.assertEquals(3, delivery3.getRecipients().size());
         Assert.assertEquals("testuser1", delivery3.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery3.getRecipients().get(1));
         Assert.assertEquals("testuser3", delivery3.getRecipients().get(2));
         Assert.assertEquals(TEXT3, delivery3.getContent());
-        Assert.assertNull(deliveries.poll()); 
+        Assert.assertNull(deliveries.poll());
     }
 
     static class OldServerSessionFactory extends ServerSessionFactory {
-        
+
         public OldServerSessionFactory(
                 final EnvelopValidator validator,
                 final DeliveryHandler deliveryHandler) {
@@ -250,27 +250,27 @@ public class TestMailDelivery extends BaseTransportTest {
             handler.unregister("EHLO");
             return handler;
         }
-        
+
     };
-    
+
     @Test
     public void testBasicNonPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
@@ -280,17 +280,17 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(3, results.size());
@@ -306,47 +306,47 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertTrue(res3.getFailures().isEmpty());
         Assert.assertEquals(250, res3.getReply().getCode());
         Assert.assertNull(res3.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
         Assert.assertNotNull(deliveries);
         SimpleTestDelivery delivery1 = deliveries.poll();
-        Assert.assertNotNull(delivery1); 
+        Assert.assertNotNull(delivery1);
         Assert.assertEquals("root", delivery1.getSender());
         Assert.assertEquals(1, delivery1.getRecipients().size());
         Assert.assertEquals("testuser1", delivery1.getRecipients().get(0));
         Assert.assertEquals(TEXT1, delivery1.getContent());
         SimpleTestDelivery delivery2 = deliveries.poll();
-        Assert.assertNotNull(delivery2); 
+        Assert.assertNotNull(delivery2);
         Assert.assertEquals("root", delivery2.getSender());
         Assert.assertEquals(2, delivery2.getRecipients().size());
         Assert.assertEquals("testuser1", delivery2.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery2.getRecipients().get(1));
         Assert.assertEquals(TEXT2, delivery2.getContent());
         SimpleTestDelivery delivery3 = deliveries.poll();
-        Assert.assertNotNull(delivery3); 
+        Assert.assertNotNull(delivery3);
         Assert.assertEquals("root", delivery3.getSender());
         Assert.assertEquals(3, delivery3.getRecipients().size());
         Assert.assertEquals("testuser1", delivery3.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery3.getRecipients().get(1));
         Assert.assertEquals("testuser3", delivery3.getRecipients().get(2));
         Assert.assertEquals(TEXT3, delivery3.getContent());
-        Assert.assertNull(deliveries.poll()); 
-        
+        Assert.assertNull(deliveries.poll());
+
     }
 
     @Test
     public void testRecipientRejectionPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
@@ -359,8 +359,8 @@ public class TestMailDelivery extends BaseTransportTest {
                 if (recipient.equals("testuser1")) {
                     BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
                     SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
-                            new SMTPCode(5, 1, 1), 
-                            "requested action not taken: mailbox unavailable");        
+                            new SMTPCode(5, 1, 1),
+                            "requested action not taken: mailbox unavailable");
                     future.completed(reply);
                     return future;
                 }
@@ -368,8 +368,8 @@ public class TestMailDelivery extends BaseTransportTest {
             }
 
         };
-        
-        
+
+
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
         this.mta.start(envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
@@ -377,21 +377,21 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertEquals(1, res1.getFailures().size());
         RcptResult rcres1 = res1.getFailures().get(0);
@@ -400,7 +400,7 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals(new SMTPCode(5, 1, 1), rcres1.getReply().getEnhancedCode());
         Assert.assertEquals(503, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(5, 5, 1), res1.getReply().getEnhancedCode());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertEquals(1, res2.getFailures().size());
         RcptResult rcres2 = res2.getFailures().get(0);
@@ -409,31 +409,31 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals(new SMTPCode(5, 1, 1), rcres2.getReply().getEnhancedCode());
         Assert.assertEquals(250, res2.getReply().getCode());
         Assert.assertEquals(new SMTPCode(2, 6, 0), res2.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
         Assert.assertNotNull(deliveries);
         SimpleTestDelivery delivery1 = deliveries.poll();
-        Assert.assertNotNull(delivery1); 
+        Assert.assertNotNull(delivery1);
         Assert.assertEquals("root", delivery1.getSender());
         Assert.assertEquals(1, delivery1.getRecipients().size());
         Assert.assertEquals("testuser2", delivery1.getRecipients().get(0));
         Assert.assertEquals(TEXT2, delivery1.getContent());
-        Assert.assertNull(deliveries.poll()); 
+        Assert.assertNull(deliveries.poll());
     }
-    
+
     @Test
     public void testRecipientRejectionNonPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
@@ -446,8 +446,8 @@ public class TestMailDelivery extends BaseTransportTest {
                 if (recipient.equals("testuser1")) {
                     BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
                     SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_UNAVAILABLE,
-                            new SMTPCode(5, 1, 1), 
-                            "requested action not taken: mailbox unavailable");        
+                            new SMTPCode(5, 1, 1),
+                            "requested action not taken: mailbox unavailable");
                     future.completed(reply);
                     return future;
                 }
@@ -455,8 +455,8 @@ public class TestMailDelivery extends BaseTransportTest {
             }
 
         };
-        
-        
+
+
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
         this.mta.start(new OldServerSessionFactory(envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
@@ -464,21 +464,21 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertEquals(1, res1.getFailures().size());
         RcptResult rcres1 = res1.getFailures().get(0);
@@ -487,7 +487,7 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertNull(rcres1.getReply().getEnhancedCode());
         Assert.assertEquals(550, res1.getReply().getCode());
         Assert.assertNull(res1.getReply().getEnhancedCode());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertEquals(1, res2.getFailures().size());
         RcptResult rcres2 = res2.getFailures().get(0);
@@ -496,31 +496,31 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertNull(rcres2.getReply().getEnhancedCode());
         Assert.assertEquals(250, res2.getReply().getCode());
         Assert.assertNull(res2.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
         Assert.assertNotNull(deliveries);
         SimpleTestDelivery delivery1 = deliveries.poll();
-        Assert.assertNotNull(delivery1); 
+        Assert.assertNotNull(delivery1);
         Assert.assertEquals("root", delivery1.getSender());
         Assert.assertEquals(1, delivery1.getRecipients().size());
         Assert.assertEquals("testuser2", delivery1.getRecipients().get(0));
         Assert.assertEquals(TEXT2, delivery1.getContent());
-        Assert.assertNull(deliveries.poll()); 
+        Assert.assertNull(deliveries.poll());
     }
 
     @Test
     public void testSenderRejectionPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
@@ -533,8 +533,8 @@ public class TestMailDelivery extends BaseTransportTest {
                 if (sender.equals("root@somewhere.com")) {
                     BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
                     SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_NOT_ALLOWED,
-                            new SMTPCode(5, 1, 8), 
-                            "bad sender's system address");        
+                            new SMTPCode(5, 1, 8),
+                            "bad sender's system address");
                     future.completed(reply);
                     return future;
                 }
@@ -542,7 +542,7 @@ public class TestMailDelivery extends BaseTransportTest {
             }
 
         };
-        
+
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
         this.mta.start(envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
@@ -550,31 +550,31 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertEquals(1, res1.getFailures().size());
-        
+
         RcptResult rcres1 = res1.getFailures().get(0);
         Assert.assertEquals("testuser1", rcres1.getRecipient());
         Assert.assertEquals(503, rcres1.getReply().getCode());
-        
+
         Assert.assertEquals(503, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(5, 5, 1), res1.getReply().getEnhancedCode());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertEquals(2, res2.getFailures().size());
         RcptResult rcres2 = res2.getFailures().get(0);
@@ -585,24 +585,24 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals(503, rcres3.getReply().getCode());
         Assert.assertEquals(503, res2.getReply().getCode());
         Assert.assertEquals(new SMTPCode(5, 5, 1), res2.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
-        Assert.assertNull(deliveries.poll()); 
+        Assert.assertNull(deliveries.poll());
     }
-    
+
     @Test
     public void testSenderRejectionNonPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
@@ -615,16 +615,16 @@ public class TestMailDelivery extends BaseTransportTest {
                 if (sender.equals("root@somewhere.com")) {
                     BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
                     SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_MAILBOX_NOT_ALLOWED,
-                            new SMTPCode(5, 1, 8), 
-                            "bad sender's system address");        
+                            new SMTPCode(5, 1, 8),
+                            "bad sender's system address");
                     future.completed(reply);
                     return future;
                 }
                 return super.validateSender(client, sender, callback);
             }
-            
+
         };
-        
+
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
         this.mta.start(new OldServerSessionFactory(envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
@@ -632,44 +632,44 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertTrue(res1.getFailures().isEmpty());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertTrue(res2.getFailures().isEmpty());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
-        Assert.assertNull(deliveries.poll()); 
+        Assert.assertNull(deliveries.poll());
     }
 
     @Test
     public void testDelayedValidationPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
@@ -679,26 +679,26 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertTrue(res1.getFailures().isEmpty());
         Assert.assertEquals(250, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(2, 6, 0), res1.getReply().getEnhancedCode());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertTrue(res2.getFailures().isEmpty());
         Assert.assertEquals(250, res2.getReply().getCode());
@@ -707,17 +707,17 @@ public class TestMailDelivery extends BaseTransportTest {
 
     @Test
     public void testDelayedValidationNonPipelinedDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
@@ -727,26 +727,26 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertTrue(res1.getFailures().isEmpty());
         Assert.assertEquals(250, res1.getReply().getCode());
         Assert.assertNull(res1.getReply().getEnhancedCode());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertTrue(res2.getFailures().isEmpty());
         Assert.assertEquals(250, res2.getReply().getCode());
@@ -755,57 +755,57 @@ public class TestMailDelivery extends BaseTransportTest {
 
     @Test
     public void testDeliveryFailure() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root@somewhere.com", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root@somewhere.com",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
             public Future<DeliveryResult> handle(
-                    final DeliveryRequest request, 
+                    final DeliveryRequest request,
                     final FutureCallback<DeliveryResult> callback) {
                 BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
                 future.failed(new IOException("Oooopsie"));
                 return future;
             }
-            
+
         };
-        
+
         this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(2, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertTrue(res1.getFailures().isEmpty());
         Assert.assertEquals(451, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(4, 2, 0), res1.getReply().getEnhancedCode());
-        
+
         DeliveryResult res2 = results.get(1);
         Assert.assertTrue(res2.getFailures().isEmpty());
         Assert.assertEquals(451, res2.getReply().getCode());
@@ -814,22 +814,22 @@ public class TestMailDelivery extends BaseTransportTest {
 
     @Test
     public void testBasicLocalDelivery() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(TEXT1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(TEXT2.getBytes("US-ASCII"))));
-        
+
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
@@ -840,17 +840,17 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(new LocalClientSessionFactory(deliveryRequestHandler));
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(3, results.size());
@@ -866,56 +866,56 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertTrue(res3.getFailures().isEmpty());
         Assert.assertEquals(250, res3.getReply().getCode());
         Assert.assertEquals(new SMTPCode(2, 6, 0), res3.getReply().getEnhancedCode());
-        
+
         Queue<SimpleTestDelivery> deliveries = deliveryHandler.getDeliveries();
         Assert.assertNotNull(deliveries);
         SimpleTestDelivery delivery1 = deliveries.poll();
-        Assert.assertNotNull(delivery1); 
+        Assert.assertNotNull(delivery1);
         Assert.assertEquals("root", delivery1.getSender());
         Assert.assertEquals(1, delivery1.getRecipients().size());
         Assert.assertEquals("testuser1", delivery1.getRecipients().get(0));
         Assert.assertEquals(TEXT1, delivery1.getContent());
         SimpleTestDelivery delivery2 = deliveries.poll();
-        Assert.assertNotNull(delivery2); 
+        Assert.assertNotNull(delivery2);
         Assert.assertEquals("root", delivery2.getSender());
         Assert.assertEquals(2, delivery2.getRecipients().size());
         Assert.assertEquals("testuser1", delivery2.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery2.getRecipients().get(1));
         Assert.assertEquals(TEXT2, delivery2.getContent());
         SimpleTestDelivery delivery3 = deliveries.poll();
-        Assert.assertNotNull(delivery3); 
+        Assert.assertNotNull(delivery3);
         Assert.assertEquals("root", delivery3.getSender());
         Assert.assertEquals(3, delivery3.getRecipients().size());
         Assert.assertEquals("testuser1", delivery3.getRecipients().get(0));
         Assert.assertEquals("testuser2", delivery3.getRecipients().get(1));
         Assert.assertEquals("testuser3", delivery3.getRecipients().get(2));
         Assert.assertEquals(TEXT3, delivery3.getContent());
-        Assert.assertNull(deliveries.poll()); 
+        Assert.assertNull(deliveries.poll());
     }
 
     @Test
     public void testLocalDeliveryFailure() throws Exception {
-        
+
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(TEXT3.getBytes("US-ASCII"))));
-        
+
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
             public Future<DeliveryResult> handle(
-                    final DeliveryRequest request, 
+                    final DeliveryRequest request,
                     final FutureCallback<DeliveryResult> callback) {
                 BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
                 future.failed(new IOException("Oooopsie"));
                 return future;
             }
-            
+
         };
-        
+
         this.mta.start(new LocalServerSessionFactory(
                 TMP_DIR, null, new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
@@ -923,24 +923,24 @@ public class TestMailDelivery extends BaseTransportTest {
         SocketAddress address = endpoint.getAddress();
         Assert.assertNotNull(address);
         Assert.assertNull(endpoint.getException());
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.mta.getStatus());
-        
+
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(new LocalClientSessionFactory(deliveryRequestHandler));
-        
+
         SessionRequest sessionRequest = this.mua.connect(address, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
-        
+
         List<DeliveryResult> results = testJob.waitForResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(1, results.size());
-        
+
         DeliveryResult res1 = results.get(0);
         Assert.assertEquals(3, res1.getFailures().size());
-        
+
         RcptResult rcres1 = res1.getFailures().get(0);
         Assert.assertEquals("testuser1", rcres1.getRecipient());
         Assert.assertEquals(451, rcres1.getReply().getCode());
@@ -953,7 +953,7 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals("testuser3", rcres3.getRecipient());
         Assert.assertEquals(451, rcres3.getReply().getCode());
         Assert.assertEquals(new SMTPCode(4, 2, 0), rcres3.getReply().getEnhancedCode());
-        
+
         Assert.assertEquals(451, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(4, 2, 0), res1.getReply().getEnhancedCode());
     }

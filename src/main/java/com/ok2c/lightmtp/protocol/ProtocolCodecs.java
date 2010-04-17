@@ -23,7 +23,7 @@ public interface ProtocolCodecs<T> {
     void unregister(String name);
 
     Set<String> getCodecNames();
-    
+
     ProtocolCodec<T> getCodec(String name);
-    
+
 }

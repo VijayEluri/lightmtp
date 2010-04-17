@@ -27,7 +27,7 @@ public class SMTPBuffers implements SessionBufferStatus {
 
     private final SMTPInputBuffer inbuf;
     private final SMTPOutputBuffer outbuf;
-    
+
     public SMTPBuffers() {
         super();
         this.inbuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
@@ -37,11 +37,11 @@ public class SMTPBuffers implements SessionBufferStatus {
     public void setInputCharset(final Charset charset) {
         this.inbuf.resetCharset(charset);
     }
-    
+
     public void setOutputCharset(final Charset charset) {
         this.outbuf.resetCharset(charset);
     }
-    
+
     public boolean hasBufferedInput() {
         return this.inbuf.hasData();
     }

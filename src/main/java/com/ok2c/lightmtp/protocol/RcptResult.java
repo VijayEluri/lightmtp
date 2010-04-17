@@ -20,7 +20,7 @@ public final class RcptResult {
 
     private final SMTPReply reply;
     private final String recipient;
-    
+
     public RcptResult(final SMTPReply reply, final String recipient) {
         super();
         if (reply == null) {
@@ -53,5 +53,5 @@ public final class RcptResult {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
 }

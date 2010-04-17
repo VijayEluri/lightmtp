@@ -43,7 +43,7 @@ public class TestDefaultProtocolHandler {
         Action<ServerState> action1 = handler.handle(cmd1);
         Future<SMTPReply> future1 = action1.execute(state, null);
         SMTPReply reply1 = future1.get();
-        
+
         Assert.assertNotNull(reply1);
         Assert.assertEquals(250, reply1.getCode());
         Assert.assertNull(reply1.getEnhancedCode());
@@ -108,5 +108,5 @@ public class TestDefaultProtocolHandler {
         Assert.assertEquals(250, reply2.getCode());
         Assert.assertEquals(new SMTPCode(2, 0, 0), reply2.getEnhancedCode());
     }
-    
+
 }

@@ -42,7 +42,7 @@ public class TestCommandHandler {
         Action<ServerState> action = handler.handle("somedomain.com", null);
         Future<SMTPReply> future = action.execute(state, null);
         SMTPReply reply = future.get();
-        
+
         Assert.assertNotNull(reply);
         Assert.assertEquals(250, reply.getCode());
         Assert.assertNull(reply.getEnhancedCode());
@@ -215,7 +215,7 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
         MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
-        Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ", 
+        Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ",
                 Arrays.asList("body=7bit"));
         Future<SMTPReply> future = action.execute(state, null);
         SMTPReply reply = future.get();
@@ -231,7 +231,7 @@ public class TestCommandHandler {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
         MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
-        Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ", 
+        Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ",
                 Arrays.asList("body=8bitmime"));
         Future<SMTPReply> future = action.execute(state, null);
         SMTPReply reply = future.get();
@@ -248,7 +248,7 @@ public class TestCommandHandler {
         state.setClientType(ClientType.EXTENDED);
         MailFromHandler handler = new MailFromHandler(null);
         try {
-            handler.handle("from:<someone@somedomain.com> ", 
+            handler.handle("from:<someone@somedomain.com> ",
                     Arrays.asList("whatever"));
         } catch (SMTPErrorException ex) {
             Assert.assertEquals(501, ex.getCode());
@@ -262,7 +262,7 @@ public class TestCommandHandler {
         state.setClientType(ClientType.EXTENDED);
         MailFromHandler handler = new MailFromHandler(null);
         try {
-            handler.handle("from:<someone@somedomain.com> ", 
+            handler.handle("from:<someone@somedomain.com> ",
                     Arrays.asList("body=whatever"));
         } catch (SMTPErrorException ex) {
             Assert.assertEquals(501, ex.getCode());
@@ -276,7 +276,7 @@ public class TestCommandHandler {
         state.setClientType(ClientType.EXTENDED);
         MailFromHandler handler = new MailFromHandler(null);
         try {
-            handler.handle("from:<someone@somedomain.com> ", 
+            handler.handle("from:<someone@somedomain.com> ",
                     Arrays.asList("body=7bit", "whatever"));
         } catch (SMTPErrorException ex) {
             Assert.assertEquals(501, ex.getCode());

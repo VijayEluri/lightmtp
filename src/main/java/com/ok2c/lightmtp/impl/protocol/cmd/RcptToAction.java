@@ -27,7 +27,7 @@ class RcptToAction extends AbstractAsyncAction<ServerState> {
 
     private final String recipient;
     private final EnvelopValidator validator;
-    
+
     public RcptToAction(final String recipient, final EnvelopValidator validator) {
         super();
         this.recipient = recipient;
@@ -37,7 +37,7 @@ class RcptToAction extends AbstractAsyncAction<ServerState> {
     @Override
     protected SMTPReply internalValidateState(final ServerState state) {
         if (state.getClientType() == null || state.getSender() == null) {
-            SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+            SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE,
                     new SMTPCode(5, 5, 1),
                     "bad sequence of commands");
             return reply;
@@ -60,5 +60,5 @@ class RcptToAction extends AbstractAsyncAction<ServerState> {
             state.getRecipients().add(this.recipient);
         }
     }
-    
+
 }

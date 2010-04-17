@@ -39,7 +39,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
     private final RemoteAddressValidator addressValidator;
     private final EnvelopValidator validator;
     private final DeliveryHandler deliveryHandler;
-    
+
     public LocalServerSessionFactory(
             final File workingDir,
             final RemoteAddressValidator addressValidator,
@@ -60,17 +60,17 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
         this.validator = validator;
         this.deliveryHandler = deliveryHandler;
     }
-    
+
     public ServerSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ServerState> codecs = new ProtocolCodecRegistry<ServerState>();
         codecs.register(ProtocolState.INIT.name(),
                 new ServiceReadyCodec(iobuffers, this.addressValidator));
         codecs.register(ProtocolState.MAIL.name(),
-                new PipeliningReceiveEnvelopCodec(iobuffers, 
+                new PipeliningReceiveEnvelopCodec(iobuffers,
                         createProtocolHandler(this.validator)));
         codecs.register(ProtocolState.DATA.name(),
-                new ReceiveDataCodec(iobuffers, this.workingDir, this.deliveryHandler, 
+                new ReceiveDataCodec(iobuffers, this.workingDir, this.deliveryHandler,
                         DataAckMode.PER_RECIPIENT));
         codecs.register(ProtocolState.QUIT.name(),
                 new ServiceShutdownCodec(iobuffers));

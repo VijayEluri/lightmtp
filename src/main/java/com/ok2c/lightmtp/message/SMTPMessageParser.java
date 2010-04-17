@@ -20,7 +20,7 @@ import com.ok2c.lightnio.SessionInputBuffer;
 public interface SMTPMessageParser<T> {
 
     void reset();
-    
+
     T parse(SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException;
-    
+
 }

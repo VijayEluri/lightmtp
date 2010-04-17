@@ -25,9 +25,9 @@ public interface MailTransport {
     IOReactorStatus getStatus();
 
     Exception getException();
-    
+
     List<ExceptionEvent> getAuditLog();
-    
+
     void shutdown() throws IOException;
 
     void forceShutdown();

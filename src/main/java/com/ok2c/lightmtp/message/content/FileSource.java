@@ -27,13 +27,13 @@ public class FileSource implements SMTPContent<ReadableByteChannel> {
     private final File file;
 
     private RandomAccessFile rafile;
-    
+
     public FileSource(final File file) {
         super();
         this.file = file;
         this.rafile = null;
     }
-    
+
     @Override
     protected void finalize() throws Throwable {
         reset();
@@ -60,5 +60,5 @@ public class FileSource implements SMTPContent<ReadableByteChannel> {
         }
         this.rafile = null;
     }
-    
+
 }

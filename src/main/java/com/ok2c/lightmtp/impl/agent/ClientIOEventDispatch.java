@@ -22,10 +22,10 @@ import com.ok2c.lightnio.IOSession;
 public class ClientIOEventDispatch implements IOEventDispatch {
 
     private static final String CLIENT_SESSION = "smtp.client-session";
-    
+
     private final IOSessionRegistry sessionRegistry;
     private final SessionFactory<ClientSession> sessionFactory;
-    
+
     public ClientIOEventDispatch(
             final IOSessionRegistry sessionRegistry,
             final SessionFactory<ClientSession> sessionFactory) {
@@ -39,9 +39,9 @@ public class ClientIOEventDispatch implements IOEventDispatch {
         this.sessionRegistry = sessionRegistry;
         this.sessionFactory = sessionFactory;
     }
-    
+
     public void connected(final IOSession iosession) {
-        ClientSession clientSession = this.sessionFactory.create(iosession); 
+        ClientSession clientSession = this.sessionFactory.create(iosession);
         iosession.setAttribute(CLIENT_SESSION, clientSession);
         clientSession.connected();
         this.sessionRegistry.add(iosession);

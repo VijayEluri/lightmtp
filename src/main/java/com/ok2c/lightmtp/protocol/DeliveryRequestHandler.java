@@ -17,15 +17,15 @@ package com.ok2c.lightmtp.protocol;
 public interface DeliveryRequestHandler {
 
     void connected(SessionContext context);
-    
+
     void disconnected(SessionContext context);
-    
+
     DeliveryRequest submitRequest(SessionContext context);
 
     void completed(DeliveryRequest request, DeliveryResult result, SessionContext context);
-    
+
     void failed(DeliveryRequest request, DeliveryResult result, SessionContext context);
-    
+
     void exception(Exception ex, SessionContext context);
-    
+
 }

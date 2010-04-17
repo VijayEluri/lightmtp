@@ -26,7 +26,7 @@ class VrfyAction implements Action<ServerState> {
 
     private final String recipient;
     private final EnvelopValidator validator;
-    
+
     public VrfyAction(
             final String recipient,
             final EnvelopValidator validator) {
@@ -40,5 +40,5 @@ class VrfyAction implements Action<ServerState> {
             final FutureCallback<SMTPReply> callback) {
         return this.validator.validateRecipient(state.getClient(), this.recipient, callback);
     }
-    
+
 }

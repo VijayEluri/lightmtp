@@ -31,11 +31,11 @@ public class TestInetAddressRange {
         ip[3] = (byte) n4;
         return ip;
     }
-    
+
     private static InetAddress createAddressByIP(int n1, int n2, int n3, int n4) throws UnknownHostException {
         return InetAddress.getByAddress(createIP(n1, n2, n3, n4));
     }
-    
+
     @Test
     public void testConstructor() throws Exception {
         InetAddressRange range = new InetAddressRange(createAddressByIP(127, 0, 0, 254), 8);

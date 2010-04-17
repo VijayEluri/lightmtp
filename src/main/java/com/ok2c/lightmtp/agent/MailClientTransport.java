@@ -24,9 +24,9 @@ public interface MailClientTransport extends MailTransport {
 
     SessionRequest connect(
             SocketAddress remoteAddress, Object attachment, SessionRequestCallback callback);
-    
+
     void start(DeliveryRequestHandler deliveryRequestHandler);
-    
+
     void closeActiveSessions();
-    
+
 }

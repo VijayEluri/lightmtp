@@ -27,23 +27,23 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
 
     private final CharArrayBuffer lineBuf;
     private final int maxLineLen;
-    
+
     public SMTPCommandWriter(int maxLineLen) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.maxLineLen = maxLineLen;
     }
-    
+
     public SMTPCommandWriter() {
         this(SMTPConsts.MAX_COMMAND_LEN);
     }
-    
+
     public void reset() {
         this.lineBuf.clear();
     }
 
     public void write(
-            final SMTPCommand message, 
+            final SMTPCommand message,
             final SessionOutputBuffer buf) throws SMTPProtocolException {
         if (message == null) {
             throw new IllegalArgumentException("Command may not be null");
@@ -66,7 +66,7 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
         }
         writeLine(buf);
     }
-    
+
     private void writeLine(final SessionOutputBuffer buf) throws SMTPProtocolException {
         try {
             if (this.maxLineLen > 0 && this.lineBuf.length() > this.maxLineLen) {
@@ -77,5 +77,5 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }
     }
-    
+
 }

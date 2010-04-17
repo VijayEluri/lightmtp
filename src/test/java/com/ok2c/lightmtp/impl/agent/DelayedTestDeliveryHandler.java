@@ -32,18 +32,18 @@ import com.ok2c.lightnio.concurrent.FutureCallback;
 public class DelayedTestDeliveryHandler implements DeliveryHandler {
 
     private final Queue<SimpleTestDelivery> deliveries;
-    
+
     public DelayedTestDeliveryHandler() {
         super();
         this.deliveries = new ConcurrentLinkedQueue<SimpleTestDelivery>();
     }
-    
+
     public Queue<SimpleTestDelivery> getDeliveries() {
         return this.deliveries;
     }
 
     public Future<DeliveryResult> handle(
-            final DeliveryRequest request, 
+            final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
         final BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
         Thread t = new Thread() {
@@ -57,7 +57,7 @@ public class DelayedTestDeliveryHandler implements DeliveryHandler {
                     delivery.setRecipients(request.getRecipients());
                     delivery.setContent(ContentUtils.readToString(request.getContent()));
                     deliveries.add(delivery);
-                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 6, 0), 
+                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 6, 0),
                             "message accepted");
                     future.completed(new BasicDeliveryResult(reply));
                 } catch (InterruptedException ex) {
@@ -66,7 +66,7 @@ public class DelayedTestDeliveryHandler implements DeliveryHandler {
                     future.failed(ex);
                 }
             }
-            
+
         };
         t.start();
         return future;

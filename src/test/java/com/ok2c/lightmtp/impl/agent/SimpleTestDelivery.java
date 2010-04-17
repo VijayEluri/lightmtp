@@ -21,7 +21,7 @@ public class SimpleTestDelivery {
     private String sender;
     private List<String> recipients;
     private String content;
-    
+
     public SimpleTestDelivery() {
         super();
     }

@@ -33,7 +33,7 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
     private final LinkedList<ParsedLine> parsedLines;
     private final int maxLineLen;
     private final boolean useEnhancedCodes;
-    
+
     public SMTPReplyParser(int maxLineLen, boolean useEnhancedCodes) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
@@ -41,27 +41,27 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         this.maxLineLen = maxLineLen;
         this.useEnhancedCodes = useEnhancedCodes;
     }
-    
+
     public SMTPReplyParser(boolean useEnhancedCodes) {
         this(SMTPConsts.MAX_REPLY_LEN, useEnhancedCodes);
     }
-    
+
     public SMTPReplyParser() {
         this(false);
     }
-    
+
     public void reset() {
         this.parsedLines.clear();
         this.lineBuf.clear();
     }
-    
+
     public SMTPReply parse(
             final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         if (buf == null) {
             throw new IllegalArgumentException("Session input buffer may not be null");
         }
         while (readLine(buf, endOfStream)) {
-            ParsedLine current = parseLine(); 
+            ParsedLine current = parseLine();
             if (!this.parsedLines.isEmpty()) {
                 ParsedLine previous = this.parsedLines.getLast();
                 if (!sameCode(current, previous)) {
@@ -76,8 +76,8 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
                     lines.add(parsedLine.getText());
                 }
                 SMTPReply reply = new SMTPReply(
-                        current.getCode(), 
-                        current.getEnhancedCode(), 
+                        current.getCode(),
+                        current.getEnhancedCode(),
                         lines);
                 reset();
                 return reply;
@@ -85,13 +85,13 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         }
         return null;
     }
-    
+
     private boolean readLine(
             final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
         try {
             boolean lineComplete = buf.readLine(this.lineBuf, endOfStream);
-            if (this.maxLineLen > 0 && 
-                    (this.lineBuf.length() > this.maxLineLen || 
+            if (this.maxLineLen > 0 &&
+                    (this.lineBuf.length() > this.maxLineLen ||
                             (!lineComplete && buf.length() > this.maxLineLen))) {
                 throw new SMTPProtocolException("Maximum reply length limit exceeded");
             }
@@ -100,14 +100,14 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }
     }
-    
+
     private ParsedLine parseLine() throws SMTPProtocolException {
-        ParserCursor cursor = new ParserCursor(0, this.lineBuf.length()); 
-        int code = parseCode(cursor);        
-        
+        ParserCursor cursor = new ParserCursor(0, this.lineBuf.length());
+        int code = parseCode(cursor);
+
         int codeClass = code / (int) 100;
         if (codeClass <= 0) {
-            throw new SMTPProtocolException("Malformed SMTP reply (invalid code): " 
+            throw new SMTPProtocolException("Malformed SMTP reply (invalid code): "
                     + this.lineBuf.toString());
         }
         boolean terminal = parseCodeDelimiter(cursor);
@@ -115,7 +115,7 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         if (this.useEnhancedCodes && (codeClass == 2 || codeClass == 4 || codeClass == 5)) {
             enhancedCode = parseEnchancedCode(cursor);
             if (enhancedCode.getCodeClass() != codeClass) {
-                throw new SMTPProtocolException("Malformed SMTP reply (code class mismatch): " 
+                throw new SMTPProtocolException("Malformed SMTP reply (code class mismatch): "
                         + this.lineBuf.toString());
             }
         } else {
@@ -136,9 +136,9 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
             }
             i++;
         }
-        
+
         if (cursor.getUpperBound() - i < 4) {
-            throw new SMTPProtocolException("Malformed SMTP reply (no code): " 
+            throw new SMTPProtocolException("Malformed SMTP reply (no code): "
                     + this.lineBuf.toString());
         }
         try {
@@ -149,10 +149,10 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         cursor.updatePos(i + 3);
         return c;
     }
-    
+
     private boolean parseCodeDelimiter(final ParserCursor cursor) throws SMTPProtocolException {
         boolean terminal;
-        
+
         int i = cursor.getPos();
         int ch = this.lineBuf.charAt(i);
         if (ch == ' ') {
@@ -160,20 +160,20 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         } else if (ch == '-') {
             terminal = false;
         } else {
-            throw new SMTPProtocolException("Malformed SMTP reply (invalid code separator): " 
+            throw new SMTPProtocolException("Malformed SMTP reply (invalid code separator): "
                     + this.lineBuf.toString());
         }
         cursor.updatePos(i + 1);
         return terminal;
     }
-    
+
     private SMTPCode parseEnchancedCode(final ParserCursor cursor) throws SMTPProtocolException {
         int codeClass;
         int subject;
         int detail;
 
         int i1 = cursor.getPos();
-        
+
         int i2 = this.lineBuf.indexOf('.', i1, cursor.getUpperBound());
         if (i2 == -1) {
             throw new SMTPInvalidCodeException(this.lineBuf.toString());
@@ -212,14 +212,14 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         cursor.updatePos(cursor.getUpperBound());
         return text;
     }
-    
+
     private static class ParsedLine {
-        
+
         private final int code;
         private final boolean terminal;
         private final SMTPCode enhancedCode;
         private final String text;
-        
+
         ParsedLine(int code, boolean terminal, final SMTPCode enhancedCode, final String text) {
             super();
             this.code = code;
@@ -243,9 +243,9 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         public String getText() {
             return text;
         }
-        
+
     }
-    
+
     private static boolean sameCode(final ParsedLine l1, final ParsedLine l2) {
         int c1 = l1.getCode();
         int c2 = l2.getCode();
@@ -253,5 +253,5 @@ public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
         SMTPCode e2 = l2.getEnhancedCode();
         return c1 == c2 && (e1 == null ? e2 == null : e1.equals(e2));
     }
-    
+
 }

@@ -27,11 +27,11 @@ class IOReactorThread extends Thread {
     private final IOReactor ioReactor;
     private final IOEventDispatch iodispatch;
     private final IOReactorThreadCallback callback;
-    
+
     private volatile Exception ex;
 
     public IOReactorThread(
-            final IOReactor ioReactor, 
+            final IOReactor ioReactor,
             final IOEventDispatch iodispatch,
             final IOReactorThreadCallback callback) {
         super();
@@ -39,7 +39,7 @@ class IOReactorThread extends Thread {
         this.iodispatch = iodispatch;
         this.callback = callback;
     }
-    
+
     @Override
     public void run() {
         try {

@@ -38,7 +38,7 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
             final IOReactorConfig config) throws IOException {
         this(null, null, workingDir, config);
     }
-    
+
     public void start(
             final RemoteAddressValidator addressValidator,
             final EnvelopValidator envelopValidator,

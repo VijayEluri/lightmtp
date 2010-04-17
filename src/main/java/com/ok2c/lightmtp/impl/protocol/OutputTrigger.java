@@ -21,21 +21,21 @@ import com.ok2c.lightnio.concurrent.FutureCallback;
 
 class OutputTrigger<T> implements FutureCallback<T>{
 
-    final ServerState state;    
-    final IOSession iosession;    
-    
+    final ServerState state;
+    final IOSession iosession;
+
     public OutputTrigger(final ServerState state, final IOSession iosession) {
         super();
         this.iosession = iosession;
         this.state = state;
     }
-    
+
     private void resume() {
         synchronized (this.state) {
             this.iosession.setEvent(SelectionKey.OP_WRITE);
         }
     }
-    
+
     public void cancelled() {
         resume();
     }
@@ -47,5 +47,5 @@ class OutputTrigger<T> implements FutureCallback<T>{
     public void failed(final Exception ex) {
         resume();
     }
-    
+
 }

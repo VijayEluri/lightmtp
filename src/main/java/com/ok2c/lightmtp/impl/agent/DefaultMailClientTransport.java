@@ -33,7 +33,7 @@ import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
-public class DefaultMailClientTransport extends AbstractMailTransport 
+public class DefaultMailClientTransport extends AbstractMailTransport
                                         implements MailClientTransport {
 
     private final DefaultConnectingIOReactor ioReactor;
@@ -43,7 +43,7 @@ public class DefaultMailClientTransport extends AbstractMailTransport
             final IOReactorThreadCallback reactorThreadCallback,
             final IOReactorConfig config) throws IOException {
         super(sessionRegistryCallback, reactorThreadCallback);
-        this.ioReactor = new DefaultConnectingIOReactor(config, 
+        this.ioReactor = new DefaultConnectingIOReactor(config,
                 new SimpleThreadFactory("MUA"));
     }
 
@@ -56,7 +56,7 @@ public class DefaultMailClientTransport extends AbstractMailTransport
     protected ConnectingIOReactor getIOReactor() {
         return this.ioReactor;
     }
-    
+
     public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
@@ -70,10 +70,10 @@ public class DefaultMailClientTransport extends AbstractMailTransport
         }
         return this.ioReactor.connect(remoteAddress, null, attachment, callback);
     }
-    
+
     protected void start(final SessionFactory<ClientSession> sessionFactory) {
         ClientIOEventDispatch iodispatch = new ClientIOEventDispatch(
-                getSessionRegistry(), 
+                getSessionRegistry(),
                 sessionFactory);
         start(iodispatch);
     }

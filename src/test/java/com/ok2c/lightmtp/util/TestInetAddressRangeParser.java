@@ -50,7 +50,7 @@ public class TestInetAddressRangeParser {
         Assert.assertEquals(InetAddress.getByName("localhost"), range.getAddress());
         Assert.assertEquals(0, range.getMask());
     }
-    
+
     @Test(expected=ParseException.class)
     public void testInvalidMaskParsing() throws Exception {
         InetAddressRangeParser parser = new InetAddressRangeParser();

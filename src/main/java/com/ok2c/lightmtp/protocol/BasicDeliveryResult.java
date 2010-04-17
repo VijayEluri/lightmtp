@@ -24,7 +24,7 @@ public class BasicDeliveryResult implements DeliveryResult {
 
     private final SMTPReply reply;
     private final List<RcptResult> failures;
-    
+
     public BasicDeliveryResult(final SMTPReply reply, List<RcptResult> rcptFailures) {
         super();
         if (reply == null) {
@@ -45,7 +45,7 @@ public class BasicDeliveryResult implements DeliveryResult {
     public SMTPReply getReply() {
         return this.reply;
     }
-    
+
     public List<RcptResult> getFailures() {
         return this.failures;
     }
@@ -60,5 +60,5 @@ public class BasicDeliveryResult implements DeliveryResult {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
 }

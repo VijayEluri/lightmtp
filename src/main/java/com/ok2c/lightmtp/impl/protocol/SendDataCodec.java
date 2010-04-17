@@ -66,7 +66,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
     private CodecState codecState;
 
     public SendDataCodec(
-            final SMTPBuffers iobuffers, 
+            final SMTPBuffers iobuffers,
             int maxLineLen, boolean enhancedCodes, final DataAckMode mode) {
         super();
         if (iobuffers == null) {
@@ -82,7 +82,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         this.codecState = CodecState.CONTENT_READY;
     }
 
-    public SendDataCodec(final SMTPBuffers iobuffers, 
+    public SendDataCodec(final SMTPBuffers iobuffers,
             boolean enhancedCodes, final DataAckMode mode) {
         this(iobuffers, SMTPConsts.MAX_LINE_LEN, enhancedCodes, mode);
     }
@@ -106,9 +106,9 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         if (sessionState.getRequest() == null) {
             throw new IllegalArgumentException("Delivery request may not be null");
         }
-        
-        DeliveryRequest request = sessionState.getRequest();        
-        
+
+        DeliveryRequest request = sessionState.getRequest();
+
         this.parser.reset();
         this.contentBuf.clear();
         this.lineBuf.clear();
@@ -116,7 +116,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         if (this.mode.equals(DataAckMode.PER_RECIPIENT)) {
             this.recipients.addAll(request.getRecipients());
         }
-        
+
         this.content = request.getContent();
         this.contentChannel = this.content.channel();
         this.contentSent = false;
@@ -201,7 +201,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
 
         while (this.codecState != CodecState.COMPLETED) {
             int bytesRead = buf.fill(iosession.channel());
-            
+
             SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
             if (reply == null) {
                 if (bytesRead == -1 && !sessionState.isTerminated()) {
@@ -210,7 +210,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
                     break;
                 }
             }
-            
+
             switch (this.codecState) {
             case CONTENT_RESPONSE_EXPECTED:
                 if (this.mode.equals(DataAckMode.PER_RECIPIENT)) {

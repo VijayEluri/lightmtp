@@ -19,7 +19,7 @@ import com.ok2c.lightnio.IOSession;
 public interface IOSessionRegistryCallback {
 
     void added(IOSession iosession);
-    
+
     void removed(IOSession iosession);
-    
+
 }
