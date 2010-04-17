@@ -55,7 +55,7 @@ public class ServerState {
     public Set<String> getExtensions() {
         return this.extensions;
     }
-    
+
     public InetAddress getClient() {
         return this.client;
     }

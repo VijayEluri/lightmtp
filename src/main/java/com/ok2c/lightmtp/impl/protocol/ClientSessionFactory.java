@@ -22,7 +22,7 @@ import com.ok2c.lightnio.IOSession;
 public class ClientSessionFactory implements SessionFactory<ClientSession> {
 
     private final DeliveryRequestHandler deliveryRequestHandler;
-    
+
     public ClientSessionFactory(
             final DeliveryRequestHandler deliveryRequestHandler) {
         super();
@@ -31,10 +31,10 @@ public class ClientSessionFactory implements SessionFactory<ClientSession> {
         }
         this.deliveryRequestHandler = deliveryRequestHandler;
     }
-    
+
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
-        ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();        
+        ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();
         codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec(iobuffers));
         codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(iobuffers, false));
         codecs.register(ProtocolState.DATA.name(), new SendDataCodec(iobuffers, false));

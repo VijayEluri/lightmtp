@@ -22,7 +22,7 @@ public interface SMTPContent<T extends Channel> {
     T channel() throws IOException;
 
     long length();
-    
+
     void reset();
-    
+
 }

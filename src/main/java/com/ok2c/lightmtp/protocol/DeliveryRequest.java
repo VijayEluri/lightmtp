@@ -24,7 +24,7 @@ public interface DeliveryRequest {
     String getSender();
 
     List<String> getRecipients();
-    
+
     SMTPContent<ReadableByteChannel> getContent();
-    
+
 }

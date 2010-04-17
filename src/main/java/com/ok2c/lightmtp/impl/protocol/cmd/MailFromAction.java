@@ -29,9 +29,9 @@ class MailFromAction extends AbstractAsyncAction<ServerState> {
     private final String sender;
     private final MIMEEncoding mimeEncoding;
     private final EnvelopValidator validator;
-    
+
     public MailFromAction(
-            final String sender, 
+            final String sender,
             final MIMEEncoding mimeEncoding,
             final EnvelopValidator validator) {
         super();
@@ -43,7 +43,7 @@ class MailFromAction extends AbstractAsyncAction<ServerState> {
     @Override
     protected SMTPReply internalValidateState(final ServerState state) {
         if (state.getClientType() == null || state.getSender() != null) {
-            SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+            SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE,
                     new SMTPCode(5, 5, 1),
                     "bad sequence of commands");
             return reply;

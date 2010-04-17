@@ -32,18 +32,18 @@ import com.ok2c.lightnio.concurrent.FutureCallback;
 public class SimpleTestDeliveryHandler implements DeliveryHandler {
 
     private final Queue<SimpleTestDelivery> deliveries;
-    
+
     public SimpleTestDeliveryHandler() {
         super();
         this.deliveries = new ConcurrentLinkedQueue<SimpleTestDelivery>();
     }
-    
+
     public Queue<SimpleTestDelivery> getDeliveries() {
         return this.deliveries;
     }
 
     public Future<DeliveryResult> handle(
-            final DeliveryRequest request, 
+            final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
         BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
         try {

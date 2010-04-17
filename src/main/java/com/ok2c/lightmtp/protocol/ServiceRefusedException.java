@@ -22,7 +22,7 @@ public class ServiceRefusedException extends SMTPProtocolException {
     private static final long serialVersionUID = -3625373959884379256L;
 
     private final SMTPReply reply;
-    
+
     public ServiceRefusedException(final SMTPReply reply) {
         super(reply.getLine());
         this.reply = reply;

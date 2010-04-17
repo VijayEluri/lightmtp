@@ -29,22 +29,22 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
     private final CharArrayBuffer lineBuf;
     private final int maxLineLen;
     private final boolean useEnhancedCodes;
-    
+
     public SMTPReplyWriter(int maxLineLen, boolean useEnhancedCodes) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.maxLineLen = maxLineLen;
         this.useEnhancedCodes = useEnhancedCodes;
     }
-    
+
     public SMTPReplyWriter(boolean useEnhancedCodes) {
         this(SMTPConsts.MAX_REPLY_LEN, useEnhancedCodes);
     }
-    
+
     public SMTPReplyWriter() {
         this(false);
     }
-    
+
     public void reset() {
         this.lineBuf.clear();
     }
@@ -80,7 +80,7 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
             writeLine(buf);
         }
     }
-    
+
     private void writeLine(final SessionOutputBuffer buf) throws SMTPProtocolException {
         try {
             if (this.maxLineLen > 0 && this.lineBuf.length() > this.maxLineLen) {
@@ -91,5 +91,5 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
             throw new SMTPProtocolException("Invalid character coding", ex);
         }
     }
-    
+
 }

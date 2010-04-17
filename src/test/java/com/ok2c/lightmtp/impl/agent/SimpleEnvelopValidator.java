@@ -28,24 +28,24 @@ public class SimpleEnvelopValidator implements EnvelopValidator {
 
     public Future<SMTPReply> validateRecipient(
             final InetAddress client,
-            final String recipient, 
+            final String recipient,
             final FutureCallback<SMTPReply> callback) {
         BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
-        SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
-                "recipient <" + recipient + "> ok");        
+        SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5),
+                "recipient <" + recipient + "> ok");
         future.completed(reply);
         return future;
     }
 
     public Future<SMTPReply> validateSender(
             final InetAddress client,
-            final String sender, 
+            final String sender,
             final FutureCallback<SMTPReply> callback) {
         BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
-        SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0), 
-                "originator <" + sender + "> ok");        
+        SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0),
+                "originator <" + sender + "> ok");
         future.completed(reply);
         return future;
     }
-    
+
 }

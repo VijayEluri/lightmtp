@@ -29,17 +29,17 @@ public class DataAction extends AbstractAction<ServerState> {
     @Override
     protected SMTPReply internalExecute(final ServerState state) {
         if (state.getClientType() == null || state.getSender() == null) {
-            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE,
                     new SMTPCode(5, 5, 1),
                     "bad sequence of commands");
         } else if (state.getRecipients().isEmpty()) {
-            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE, 
+            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE,
                     new SMTPCode(5, 5, 1),
                     "no valid recipients");
         } else {
             state.setDataType(DataType.MIME);
-            return new SMTPReply(SMTPCodes.START_MAIL_INPUT, 
-                    null, 
+            return new SMTPReply(SMTPCodes.START_MAIL_INPUT,
+                    null,
                     "send message, ending in <CRLF>.<CRLF>");
         }
     }

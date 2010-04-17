@@ -19,5 +19,5 @@ public interface IOReactorThreadCallback {
     void terminated();
 
     void terminated(Exception ex);
-    
+
 }

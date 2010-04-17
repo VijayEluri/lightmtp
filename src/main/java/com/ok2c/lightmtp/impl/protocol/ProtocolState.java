@@ -22,7 +22,7 @@ public enum ProtocolState {
     DATA,
     QUIT,
     RSET;
-    
+
     public static final String ATTRIB = "com.ok2c.lightmtp.protocol-state";
-    
+
 }

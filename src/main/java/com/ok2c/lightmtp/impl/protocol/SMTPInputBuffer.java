@@ -41,5 +41,5 @@ public class SMTPInputBuffer extends SessionInputBufferImpl {
         }
         return -1;
     }
-    
+
 }

@@ -53,7 +53,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
     private boolean completed;
 
     public PipeliningReceiveEnvelopCodec(
-            final SMTPBuffers iobuffers, 
+            final SMTPBuffers iobuffers,
             final ProtocolHandler<ServerState> commandHandler) {
         super();
         if (iobuffers == null) {
@@ -92,14 +92,14 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
             if (cause == null) {
                 cause = ex;
             }
-            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0), 
+            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0),
                     ex.getMessage());
         } catch (InterruptedException ex) {
-            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0), 
+            return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0),
                     ex.getMessage());
         }
     }
-    
+
     public void produceData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
@@ -111,9 +111,9 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
         }
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
-        
+
         synchronized (sessionState) {
-            
+
             if (this.actionFuture != null) {
                 SMTPReply reply = getReply(this.actionFuture);
                 this.actionFuture = null;
@@ -135,7 +135,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                     }
                 }
             }
-            
+
             if (buf.hasData()) {
                 buf.flush(iosession.channel());
             }
@@ -170,7 +170,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                 try {
                     SMTPCommand command = this.parser.parse(buf, bytesRead == -1);
                     if (command == null) {
-                        if (bytesRead == -1 && !sessionState.isTerminated() 
+                        if (bytesRead == -1 && !sessionState.isTerminated()
                                 && this.pendingActions.isEmpty()) {
                             throw new UnexpectedEndOfStreamException();
                         } else {
@@ -180,22 +180,22 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                     Action<ServerState> action = this.commandHandler.handle(command);
                     this.pendingActions.add(action);
                 } catch (SMTPErrorException ex) {
-                    SMTPReply reply = new SMTPReply(ex.getCode(), 
-                            ex.getEnhancedCode(), 
+                    SMTPReply reply = new SMTPReply(ex.getCode(),
+                            ex.getEnhancedCode(),
                             ex.getMessage());
                     this.pendingActions.add(new SimpleAction(reply));
                 } catch (SMTPProtocolException ex) {
-                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND, 
-                            new SMTPCode(5, 3, 0), 
+                    SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_SYNTAX_ERR_COMMAND,
+                            new SMTPCode(5, 3, 0),
                             ex.getMessage());
                     this.pendingActions.add(new SimpleAction(reply));
                 }
             }
-            
+
             if (!this.pendingActions.isEmpty()) {
                 iosession.setEvent(SelectionKey.OP_WRITE);
             }
-        }        
+        }
     }
 
     public boolean isCompleted() {

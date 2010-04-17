@@ -31,7 +31,7 @@ import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 public class TestSMTPCommandWriter {
 
     private final static Charset ASCII = Charset.forName("ASCII");
-    
+
     @Test
     public void testConstructor() throws Exception {
         SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
@@ -41,7 +41,7 @@ public class TestSMTPCommandWriter {
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidConstructorParam1() throws Exception {
         SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         writer.write(null, outbuf);
     }
 
@@ -53,12 +53,12 @@ public class TestSMTPCommandWriter {
 
     @Test
     public void testBasicCommandWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
 
         SMTPCommand cmd = new SMTPCommand("NOOP");
         writer.write(cmd, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -68,12 +68,12 @@ public class TestSMTPCommandWriter {
 
     @Test
     public void testCommandWithArgWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
 
         SMTPCommand cmd = new SMTPCommand("MAIL", "FROM:<someone@pampa.com>");
         writer.write(cmd, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -83,13 +83,13 @@ public class TestSMTPCommandWriter {
 
     @Test
     public void testCommandWithArgAndParamsWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter();
 
         SMTPCommand cmd = new SMTPCommand("MAIL", "FROM:<someone@pampa.com>",
                 new ArrayList<String>(Arrays.asList("THIS", "AND", "THAT")));
         writer.write(cmd, outbuf);
-         
+
         WritableByteChannelMockup channel = new WritableByteChannelMockup(ASCII);
         outbuf.flush(channel);
 
@@ -99,7 +99,7 @@ public class TestSMTPCommandWriter {
 
     @Test(expected=SMTPProtocolException.class)
     public void testOverMaxLenCommandWriting() throws Exception {
-        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII); 
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(4096, 1024, ASCII);
         SMTPMessageWriter<SMTPCommand> writer = new SMTPCommandWriter(16);
 
         SMTPCommand cmd = new SMTPCommand("BLAHBLAHBLAHBLAHBLAH");

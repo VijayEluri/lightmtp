@@ -24,5 +24,5 @@ public final class SMTPConsts {
 
     public final static Charset ASCII = Charset.forName("ASCII");
     public final static Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
-    
+
 }

@@ -19,5 +19,5 @@ public final class SMTPExtensions {
     public static final String PIPELINING             = "PIPELINING";
     public static final String ENHANCEDSTATUSCODES    = "ENHANCEDSTATUSCODES";
     public static final String MIME_8BIT              = "8BITMIME";
-    
+
 }

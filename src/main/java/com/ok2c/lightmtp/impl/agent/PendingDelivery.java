@@ -23,9 +23,9 @@ class PendingDelivery {
 
     private final DeliveryRequest request;
     private final BasicFuture<DeliveryResult> deliveryFuture;
-    
+
     private ManagedIOSession managedSession;
-    
+
     public PendingDelivery(
             final DeliveryRequest request,
             final BasicFuture<DeliveryResult> deliveryFuture) {
@@ -49,5 +49,5 @@ class PendingDelivery {
     public void setManagedSession(final ManagedIOSession managedSession) {
         this.managedSession = managedSession;
     }
-    
+
 }

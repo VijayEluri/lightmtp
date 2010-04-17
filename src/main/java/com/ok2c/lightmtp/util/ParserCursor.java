@@ -15,7 +15,7 @@
 package com.ok2c.lightmtp.util;
 
 /**
- * This class represents a context of a parsing operation: 
+ * This class represents a context of a parsing operation:
  * <ul>
  *  <li>the current position the parsing operation is expected to start at</li>
  *  <li>the bounds limiting the scope of the parsing operation</li>
@@ -26,7 +26,7 @@ public class ParserCursor {
     private final int lowerBound;
     private final int upperBound;
     private int pos;
-    
+
     public ParserCursor(int lowerBound, int upperBound) {
         super();
         if (lowerBound < 0) {
@@ -61,7 +61,7 @@ public class ParserCursor {
         }
         this.pos = pos;
     }
-    
+
     public boolean atEnd() {
         return this.pos >= this.upperBound;
     }
@@ -77,5 +77,5 @@ public class ParserCursor {
         buffer.append(']');
         return buffer.toString();
     }
-    
+
 }

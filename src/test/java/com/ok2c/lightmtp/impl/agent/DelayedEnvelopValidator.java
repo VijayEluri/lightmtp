@@ -28,7 +28,7 @@ public class DelayedEnvelopValidator implements EnvelopValidator {
 
     public Future<SMTPReply> validateRecipient(
             final InetAddress client,
-            final String recipient, 
+            final String recipient,
             final FutureCallback<SMTPReply> callback) {
         final BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
         Thread t = new Thread() {
@@ -37,14 +37,14 @@ public class DelayedEnvelopValidator implements EnvelopValidator {
             public void run() {
                 try {
                     Thread.sleep(200);
-                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
-                            "recipient <" + recipient + "> ok");        
+                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5),
+                            "recipient <" + recipient + "> ok");
                     future.completed(reply);
                 } catch (InterruptedException ex) {
                     future.failed(ex);
                 }
             }
-            
+
         };
         t.start();
         return future;
@@ -52,7 +52,7 @@ public class DelayedEnvelopValidator implements EnvelopValidator {
 
     public Future<SMTPReply> validateSender(
             final InetAddress client,
-            final String sender, 
+            final String sender,
             final FutureCallback<SMTPReply> callback) {
         final BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
         Thread t = new Thread() {
@@ -61,17 +61,17 @@ public class DelayedEnvelopValidator implements EnvelopValidator {
             public void run() {
                 try {
                     Thread.sleep(200);
-                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0), 
-                            "originator <" + sender + "> ok");        
+                    SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0),
+                            "originator <" + sender + "> ok");
                     future.completed(reply);
                 } catch (InterruptedException ex) {
                     future.failed(ex);
                 }
             }
-            
+
         };
         t.start();
         return future;
     }
-    
+
 }

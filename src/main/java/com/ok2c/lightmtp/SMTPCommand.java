@@ -23,7 +23,7 @@ public class SMTPCommand {
     private final String verb;
     private final String argument;
     private final List<String> params;
-    
+
     public SMTPCommand(final String code, final String argument, final List<String> params) {
         super();
         if (code == null) {
@@ -70,5 +70,5 @@ public class SMTPCommand {
         }
         return buffer.toString();
     }
-    
+
 }

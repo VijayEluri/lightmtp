@@ -31,7 +31,7 @@ public class ClientState {
     private DeliveryRequest request;
     private SMTPReply reply;
     private boolean terminated;
-    
+
     public ClientState() {
         super();
         this.failures = new ArrayList<RcptResult>();

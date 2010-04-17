@@ -23,14 +23,14 @@ import com.ok2c.lightnio.IOSession;
 class IOSessionRegistry {
 
     private final Set<IOSession> sessions;
-    private final IOSessionRegistryCallback callback; 
-    
+    private final IOSessionRegistryCallback callback;
+
     public IOSessionRegistry(final IOSessionRegistryCallback callback) {
         super();
         this.callback = callback;
         this.sessions = new HashSet<IOSession>();
     }
-    
+
     public synchronized void add(final IOSession iosession) {
         if (iosession == null) {
             return;
@@ -56,14 +56,14 @@ class IOSessionRegistry {
     public synchronized boolean isEmpty() {
         return this.sessions.isEmpty();
     }
-    
+
     public Iterator<IOSession> iterator() {
         return this.sessions.iterator();
     }
-    
+
     @Override
     public synchronized String toString() {
         return this.sessions.toString();
     }
-    
+
 }

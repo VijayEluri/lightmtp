@@ -23,7 +23,7 @@ public final class InetAddressRange {
     private final int mask;
     private final int shiftBy;
     private final BigInteger bigint;
-    
+
     public InetAddressRange(final InetAddress address, int mask) {
         super();
         if (address == null) {
@@ -69,14 +69,14 @@ public final class InetAddressRange {
         }
         return this.bigint.compareTo(bigint2) == 0;
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
         if (obj == null) return false;
         if (this == obj) return true;
         if (obj instanceof InetAddressRange) {
             InetAddressRange that = (InetAddressRange) obj;
-            return this.address.equals(that.address) 
+            return this.address.equals(that.address)
                 && this.mask == that.mask;
         } else {
             return false;
@@ -103,5 +103,5 @@ public final class InetAddressRange {
             return this.address.getHostName();
         }
     }
-    
+
 }

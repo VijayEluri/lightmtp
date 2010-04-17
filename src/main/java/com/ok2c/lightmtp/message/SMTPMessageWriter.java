@@ -20,7 +20,7 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 public interface SMTPMessageWriter<T> {
 
     void reset();
-    
+
     void write(T message, SessionOutputBuffer buf) throws SMTPProtocolException;
-    
+
 }

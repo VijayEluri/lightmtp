@@ -24,12 +24,12 @@ import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 public class ProtocolCodecRegistry<T> implements ProtocolCodecs<T> {
 
     private final Map<String, ProtocolCodec<T>> codecs;
-    
+
     public ProtocolCodecRegistry() {
         super();
         this.codecs = new HashMap<String, ProtocolCodec<T>>();
     }
-    
+
     public void register(final String name, final ProtocolCodec<T> codec) {
         this.codecs.put(name, codec);
     }
@@ -41,7 +41,7 @@ public class ProtocolCodecRegistry<T> implements ProtocolCodecs<T> {
     public Set<String> getCodecNames() {
         return this.codecs.keySet();
     }
-    
+
     public ProtocolCodec<T> getCodec(final String name) {
         ProtocolCodec<T> codec = this.codecs.get(name);
         if (codec != null) {
@@ -50,5 +50,5 @@ public class ProtocolCodecRegistry<T> implements ProtocolCodecs<T> {
             throw new IllegalStateException(name + " is not available");
         }
     }
-    
+
 }

@@ -25,18 +25,18 @@ import com.ok2c.lightnio.concurrent.FutureCallback;
 public class SimpleAction implements Action<ServerState> {
 
     private final SMTPReply reply;
-    
+
     public SimpleAction(final SMTPReply reply) {
         super();
         this.reply = reply;
     }
 
     public Future<SMTPReply> execute(
-            final ServerState state, 
+            final ServerState state,
             final FutureCallback<SMTPReply> callback) {
         BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
         future.completed(this.reply);
         return future;
     }
-    
+
 }

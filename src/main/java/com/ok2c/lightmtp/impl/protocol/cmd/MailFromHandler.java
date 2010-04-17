@@ -38,7 +38,7 @@ public class MailFromHandler implements CommandHandler<ServerState> {
     }
 
     public Action<ServerState> handle(
-            final String argument, 
+            final String argument,
             final List<String> params) throws SMTPErrorException {
         String sender = this.argParser.parse(argument);
         MIMEEncoding mimeEncoding = null;
@@ -63,5 +63,5 @@ public class MailFromHandler implements CommandHandler<ServerState> {
         }
         return new MailFromAction(sender, mimeEncoding, this.validator);
     }
-    
+
 }

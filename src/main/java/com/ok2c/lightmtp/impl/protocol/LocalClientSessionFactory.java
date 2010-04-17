@@ -22,7 +22,7 @@ import com.ok2c.lightnio.IOSession;
 public class LocalClientSessionFactory implements SessionFactory<ClientSession> {
 
     private final DeliveryRequestHandler deliveryRequestHandler;
-    
+
     public LocalClientSessionFactory(
             final DeliveryRequestHandler deliveryRequestHandler) {
         super();
@@ -31,19 +31,19 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
         }
         this.deliveryRequestHandler = deliveryRequestHandler;
     }
-    
+
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
-        ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();        
-        codecs.register(ProtocolState.HELO.name(), 
+        ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();
+        codecs.register(ProtocolState.HELO.name(),
                 new SendLocalHeloCodec(iobuffers));
-        codecs.register(ProtocolState.MAIL.name(), 
+        codecs.register(ProtocolState.MAIL.name(),
                 new PipeliningSendEnvelopCodec(iobuffers, true));
-        codecs.register(ProtocolState.DATA.name(), 
+        codecs.register(ProtocolState.DATA.name(),
                 new SendDataCodec(iobuffers, true, DataAckMode.PER_RECIPIENT));
-        codecs.register(ProtocolState.QUIT.name(), 
+        codecs.register(ProtocolState.QUIT.name(),
                 new SendQuitCodec(iobuffers));
-        codecs.register(ProtocolState.RSET.name(), 
+        codecs.register(ProtocolState.RSET.name(),
                 new SendRsetCodec(iobuffers));
         return new ClientSession(iosession, iobuffers, this.deliveryRequestHandler, codecs);
     }

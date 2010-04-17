@@ -32,10 +32,10 @@ import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 public class TestSMTPCommandParser {
 
     private final static Charset ASCII = Charset.forName("ASCII");
-    
+
     @Test
     public void testConstructor() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
         Assert.assertNull(parser.parse(inbuf, false));
     }
@@ -48,13 +48,13 @@ public class TestSMTPCommandParser {
 
     @Test
     public void testBasicCommandParsing() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
-        
+
         String[] input = new String[] {
                 "NOOP\r\n"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
@@ -89,13 +89,13 @@ public class TestSMTPCommandParser {
 
     @Test
     public void testCommandParsingEndOfStream() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
-        
+
         String[] input = new String[] {
                 "NOOP"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         Assert.assertNull(parser.parse(inbuf, false));
@@ -109,13 +109,13 @@ public class TestSMTPCommandParser {
 
     @Test
     public void testComplexCommandParsing() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
-        
+
         String[] input = new String[] {
                 "MAIL FROM:<someone@pampa.com> BODY=8BITMIME THIS AND THAT\r\n"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
@@ -129,16 +129,16 @@ public class TestSMTPCommandParser {
 
     @Test
     public void testChunkedCommandParsing() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
-        
+
         String[] input = new String[] {
                 "MAIL FROM",
                 ":<someone@pamp",
                 "a.com> BODY=8BITMI",
                 "ME\r\n"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         Assert.assertNull(parser.parse(inbuf, false));
@@ -155,29 +155,29 @@ public class TestSMTPCommandParser {
         Assert.assertEquals(1, command.getParams().size());
         Assert.assertEquals("BODY=8BITMIME", command.getParams().get(0));
     }
-    
+
     @Test(expected=SMTPProtocolException.class)
     public void testEmptyCommandParsing() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
-        
+
         String[] input = new String[] {
                 "   \r\n"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         parser.parse(inbuf, false);
     }
 
     public void testLenientCommandParsingWithLeadingBlanks() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser();
-        
+
         String[] input = new String[] {
                 "  MAIL FROM:<someone@pampa.com>\r\n"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         SMTPCommand command = parser.parse(inbuf, false);
@@ -189,13 +189,13 @@ public class TestSMTPCommandParser {
 
     @Test(expected=SMTPProtocolException.class)
     public void testOverMaxLenCommandParsing() throws Exception {
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII); 
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(4096, 1024, ASCII);
         SMTPMessageParser<SMTPCommand> parser = new SMTPCommandParser(16);
-        
+
         String[] input = new String[] {
                 "BLAHBLAHBLAHBLAHBLAH\r\n"
         };
-        
+
         ReadableByteChannel channel = new ReadableByteChannelMockup(input, ASCII);
         inbuf.fill(channel);
         parser.parse(inbuf, false);

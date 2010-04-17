@@ -19,7 +19,7 @@ import java.io.IOException;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 
 class BasicExceptionHandler implements IOReactorExceptionHandler {
-    
+
     public boolean handle(final RuntimeException ex) {
         ex.printStackTrace(System.out);
         return false;
@@ -29,5 +29,5 @@ class BasicExceptionHandler implements IOReactorExceptionHandler {
         ex.printStackTrace(System.out);
         return false;
     }
-    
+
 }

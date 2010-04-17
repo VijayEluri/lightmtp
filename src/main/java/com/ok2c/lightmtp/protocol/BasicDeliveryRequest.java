@@ -26,7 +26,7 @@ public class BasicDeliveryRequest implements DeliveryRequest {
     private final String sender;
     private final List<String> recipients;
     private final SMTPContent<ReadableByteChannel> content;
-    
+
     public BasicDeliveryRequest(
             final String sender,
             final List<String> recipients,
@@ -49,7 +49,7 @@ public class BasicDeliveryRequest implements DeliveryRequest {
     public String getSender() {
         return this.sender;
     }
-    
+
     public List<String> getRecipients() {
         return this.recipients;
     }
@@ -68,5 +68,5 @@ public class BasicDeliveryRequest implements DeliveryRequest {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
 }

@@ -17,9 +17,9 @@ package com.ok2c.lightmtp.protocol;
 public interface SessionContext {
 
     void setAttribute(String name, Object obj);
-    
+
     Object getAttribute(String name);
 
     Object removeAttribute(String name);
-    
+
 }

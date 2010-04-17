@@ -23,7 +23,7 @@ public class SMTPReply {
     private final int code;
     private final SMTPCode enhancedCode;
     private final List<String> lines;
-    
+
     public SMTPReply(int code, final SMTPCode enhancedCode, final List<String> lines) {
         super();
         if (code <= 0) {
@@ -85,5 +85,5 @@ public class SMTPReply {
         buffer.append(getLine());
         return buffer.toString();
     }
-    
+
 }

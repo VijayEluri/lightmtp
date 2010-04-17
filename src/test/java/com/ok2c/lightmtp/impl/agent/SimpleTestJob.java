@@ -30,10 +30,10 @@ public class SimpleTestJob {
     private final LinkedList<DeliveryRequest> requests;
     private final LinkedList<DeliveryResult> results;
     private final BasicFuture<List<DeliveryResult>> future;
-    
+
     private final int total;
     private int completed;
-    
+
     public SimpleTestJob(final List<DeliveryRequest> requests) {
         super();
         this.requests = new LinkedList<DeliveryRequest>();
@@ -43,11 +43,11 @@ public class SimpleTestJob {
         this.total = this.requests.size();
         this.completed = 0;
     }
-    
+
     public synchronized DeliveryRequest removeRequest() {
         return this.requests.poll();
     }
-    
+
     public synchronized void addResult(final DeliveryResult result) {
         if (result == null) {
             return;
@@ -62,17 +62,17 @@ public class SimpleTestJob {
     public void failure(final Exception ex) {
         this.future.failed(ex);
     }
-    
+
     public void cancel() {
         this.future.cancel(true);
     }
-    
+
     public List<DeliveryResult> waitForResults(
-            long timeout, 
+            long timeout,
             final TimeUnit unit) throws TimeoutException, ExecutionException, InterruptedException {
         return this.future.get(timeout, unit);
     }
-    
+
     public List<DeliveryResult> waitForResults() throws ExecutionException, InterruptedException {
         return this.future.get();
     }

@@ -39,7 +39,7 @@ public class ServerIOEventDispatch implements IOEventDispatch {
         this.sessionRegistry = sessionRegistry;
         this.sessionFactory = sessionFactory;
     }
-    
+
     public void connected(final IOSession iosession) {
         ServerSession serverSession = this.sessionFactory.create(iosession);
         iosession.setAttribute(SERVER_SESSION, serverSession);

@@ -62,7 +62,7 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
 
         InetSocketAddress socketAddress = (InetSocketAddress) iosession.getRemoteAddress();
         InetAddress clientAddress = socketAddress.getAddress();
-        
+
         if (this.addressValidator != null) {
             if (!this.addressValidator.validateAddress(clientAddress)) {
                 sessionState.terminated();
@@ -70,9 +70,9 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
                 return;
             }
         }
-        
+
         sessionState.setClientAddress(clientAddress);
-        
+
         this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");
         this.iobuffers.setInputCharset(SMTPConsts.ASCII);

@@ -58,7 +58,7 @@ class MailIOSessionManager implements IOSessionManager<SocketAddress> {
             this.log.debug("Total: " + totals);
             this.log.debug("Route [" + route + "]: " + stats);
         }
-        
+
         BasicFuture<ManagedIOSession> future = new BasicFuture<ManagedIOSession>(
                 callback);
         this.pool.lease(route, state, new InternalPoolEntryCallback(future));
@@ -114,7 +114,7 @@ class MailIOSessionManager implements IOSessionManager<SocketAddress> {
     public PoolStats getStats(final SocketAddress route) {
         return this.pool.getStats(route);
     }
-    
+
     public void setTotalMax(int max) {
         this.pool.setTotalMax(max);
     }
@@ -126,9 +126,9 @@ class MailIOSessionManager implements IOSessionManager<SocketAddress> {
     public void setMaxPerHost(final SocketAddress route, int max) {
         this.pool.setMaxPerHost(route, max);
     }
-    
+
     public synchronized void shutdown() {
-        this.log.debug("I/O session manager shut down"); 
+        this.log.debug("I/O session manager shut down");
         this.pool.shutdown();
     }
 
@@ -143,23 +143,23 @@ class MailIOSessionManager implements IOSessionManager<SocketAddress> {
         }
 
     }
-    
+
     class InternalPoolEntryCallback implements PoolEntryCallback<SocketAddress> {
 
         private final BasicFuture<ManagedIOSession> future;
-        
+
         public InternalPoolEntryCallback(
                 final BasicFuture<ManagedIOSession> future) {
             super();
             this.future = future;
         }
-        
+
         public void completed(final PoolEntry<SocketAddress> entry) {
             if (log.isDebugEnabled()) {
                 log.debug("I/O session allocated: " + entry);
             }
             MailIOSession result = new MailIOSession(
-                    MailIOSessionManager.this.pool, 
+                    MailIOSessionManager.this.pool,
                     entry);
             if (!this.future.completed(result)) {
                 pool.release(entry, true);

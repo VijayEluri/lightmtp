@@ -19,7 +19,7 @@ public final class SMTPCode {
     private final int codeClass;
     private final int subject;
     private final int detail;
-    
+
     public SMTPCode(int codeClass, int subject, int detail) {
         super();
         if (codeClass <= 0) {
@@ -70,7 +70,7 @@ public final class SMTPCode {
             return false;
         }
         final SMTPCode that = (SMTPCode) obj;
-        if (this.codeClass == that.codeClass 
+        if (this.codeClass == that.codeClass
                 && this.detail == that.detail
                 && this.subject == that.subject) {
             return true;
@@ -89,5 +89,5 @@ public final class SMTPCode {
         buffer.append(this.detail);
         return buffer.toString();
     }
-    
+
 }

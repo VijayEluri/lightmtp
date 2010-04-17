@@ -23,5 +23,5 @@ public interface DeliveryResult {
     List<RcptResult> getFailures();
 
     SMTPReply getReply();
-    
+
 }

@@ -30,7 +30,7 @@ public interface MailServerTransport extends MailTransport {
 
     void start(
             RemoteAddressValidator addressValidator,
-            EnvelopValidator envelopValidator, 
+            EnvelopValidator envelopValidator,
             DeliveryHandler deliveryHandler);
 
 }

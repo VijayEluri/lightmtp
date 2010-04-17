@@ -61,7 +61,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private final LinkedList<SMTPReply> pendingReplies;
     private final CharArrayBuffer lineBuf;
     private final SessionOutputBufferImpl contentBuf;
-    
+
     private File tempFile;
     private FileStore fileStore;
     private boolean dataReceived;
@@ -69,8 +69,8 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private boolean completed;
 
     public ReceiveDataCodec(
-            final SMTPBuffers iobuffers, 
-            final File workingDir, 
+            final SMTPBuffers iobuffers,
+            final File workingDir,
             final DeliveryHandler handler,
             final DataAckMode mode) {
         super();
@@ -88,22 +88,22 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.handler = handler;
         this.mode = mode != null ? mode : DataAckMode.SINGLE;
         this.writer = new SMTPReplyWriter(true);
-        this.pendingReplies = new LinkedList<SMTPReply>();       
+        this.pendingReplies = new LinkedList<SMTPReply>();
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.contentBuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
-        
+
         this.dataReceived = false;
         this.pendingDelivery = null;
         this.completed = false;
     }
 
     public ReceiveDataCodec(
-            final SMTPBuffers iobuffers, 
-            final File workingDir, 
+            final SMTPBuffers iobuffers,
+            final File workingDir,
             final DeliveryHandler handler) {
         this(iobuffers, workingDir, handler, DataAckMode.SINGLE);
     }
-    
+
     @Override
     protected void finalize() throws Throwable {
         cleanUp();
@@ -134,10 +134,10 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.fileStore = new FileStore(this.tempFile);
         this.lineBuf.clear();
 
-        this.pendingReplies.clear();        
+        this.pendingReplies.clear();
         this.dataReceived = false;
         this.pendingDelivery = null;
-        
+
         MIMEEncoding enc = sessionState.getMimeEncoding();
         if (enc != null && enc.equals(MIMEEncoding.MIME_8BIT)) {
             this.iobuffers.setInputCharset(SMTPConsts.ISO_8859_1);
@@ -243,17 +243,17 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
     private SMTPReply createErrorReply(final Throwable ex) {
         if (ex instanceof IOException) {
-            return new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
+            return new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR,
                     new SMTPCode(4, 2, 0), ex.getMessage());
         } else if (ex instanceof InterruptedException) {
-            return new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR, 
+            return new SMTPReply(SMTPCodes.ERR_TRANS_PROCESSING_ERROR,
                     new SMTPCode(4, 2, 0), ex.getMessage());
         } else {
             return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED,
                     new SMTPCode(5, 2, 0), ex.getMessage());
         }
     }
-    
+
     public void consumeData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
@@ -301,7 +301,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
                         sessionState.getRecipients(),
                         content);
 
-                this.pendingDelivery = this.handler.handle(deliveryRequest, 
+                this.pendingDelivery = this.handler.handle(deliveryRequest,
                         new OutputTrigger<DeliveryResult>(sessionState, iosession));
             }
         }

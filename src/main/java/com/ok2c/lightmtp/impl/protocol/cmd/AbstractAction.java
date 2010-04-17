@@ -28,7 +28,7 @@ public abstract class AbstractAction<T> implements Action<T> {
     }
 
     public Future<SMTPReply> execute(
-            final T state, 
+            final T state,
             final FutureCallback<SMTPReply> callback) {
         synchronized (state) {
             BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
@@ -36,7 +36,7 @@ public abstract class AbstractAction<T> implements Action<T> {
             return future;
         }
     }
-    
+
     protected abstract SMTPReply internalExecute(T state);
-    
+
 }

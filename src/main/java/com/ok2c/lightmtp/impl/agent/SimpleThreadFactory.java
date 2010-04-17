@@ -22,13 +22,13 @@ class SimpleThreadFactory implements ThreadFactory {
     private static AtomicInteger COUNT = new AtomicInteger(0);
 
     private final String id;
-    
+
     public SimpleThreadFactory(final String id) {
         super();
         this.id = id;
     }
-    
-    
+
+
     public Thread newThread(final Runnable r) {
         return new Thread(r, this.id + " I/O dispatcher " + (COUNT.incrementAndGet()));
     }

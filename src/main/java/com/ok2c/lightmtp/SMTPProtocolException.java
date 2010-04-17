@@ -25,5 +25,5 @@ public class SMTPProtocolException extends Exception {
     public SMTPProtocolException(final String message, final Throwable cause) {
         super(message, cause);
     }
-    
+
 }

@@ -6,15 +6,15 @@ import org.slf4j.Logger;
 
 class Wire {
 
-    protected static final String WIRELOG_CAT = "com.ok2c.lightmtp.wire"; 
-    
+    protected static final String WIRELOG_CAT = "com.ok2c.lightmtp.wire";
+
     private final Logger log;
-    
+
     public Wire(final Logger log) {
         super();
         this.log = log;
     }
-    
+
     private void wire(final String header, final byte[] b, int pos, int off) {
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < off; i++) {
@@ -34,7 +34,7 @@ class Wire {
             } else {
                 buffer.append((char) ch);
             }
-        } 
+        }
         if (buffer.length() > 0) {
             buffer.append('\"');
             buffer.insert(0, '\"');
@@ -46,8 +46,8 @@ class Wire {
 
     public boolean isEnabled() {
         return this.log.isDebugEnabled();
-    }    
-    
+    }
+
     public void output(final byte[] b, int pos, int off) {
         wire(">> ", b, pos, off);
     }

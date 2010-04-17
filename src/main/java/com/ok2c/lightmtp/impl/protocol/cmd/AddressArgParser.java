@@ -52,5 +52,5 @@ class AddressArgParser {
                 new SMTPCode(5, 5, 1),
                 "Invalid argument: " + argument);
     }
-    
+
 }
