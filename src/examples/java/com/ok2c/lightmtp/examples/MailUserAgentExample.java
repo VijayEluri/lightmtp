@@ -56,26 +56,26 @@ public class MailUserAgentExample {
 
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(text1.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(text2.getBytes("US-ASCII"))));
         requests.add(new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(text3.getBytes("US-ASCII"))));
 
-        
+
         MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
         mua.start();
-        
+
         try {
 
             InetSocketAddress address = new InetSocketAddress("localhost", 2525);
-            
+
             Queue<Future<DeliveryResult>> queue = new LinkedList<Future<DeliveryResult>>();
             for (DeliveryRequest request: requests) {
                 queue.add(mua.deliver(address, request, null));
@@ -86,10 +86,10 @@ public class MailUserAgentExample {
                 DeliveryResult result = future.get();
                 System.out.println("Delivery result: " + result);
             }
-            
+
         } finally {
             mua.shutdown();
         }
     }
-    
+
 }

@@ -47,23 +47,23 @@ public class LocalMailServerTransportExample {
 
     public static void main(String[] args) throws Exception {
         final File workingDir = new File(".");
-        final IOReactorConfig config = new IOReactorConfig(); 
+        final IOReactorConfig config = new IOReactorConfig();
         config.setWorkerCount(1);
 
         final MailServerTransport mta = new LocalMailServerTransport(workingDir, config);
 
         final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
-        
+
         InetAddressRange iprange = new InetAddressRange(InetAddress.getByName("127.0.0.0"), 8);
-        
+
         mta.start(
                 new MyRemoteAddressValidator(iprange),
-                new MyEnvelopValidator(), 
+                new MyEnvelopValidator(),
                 new MyDeliveryHandler());
         mta.listen(sockaddress);
-        
-        System.out.println("LMTP server listening on "  + sockaddress); 
-        
+
+        System.out.println("LMTP server listening on "  + sockaddress);
+
         Runtime runtime = Runtime.getRuntime();
         runtime.addShutdownHook(new Thread() {
 
@@ -75,49 +75,49 @@ public class LocalMailServerTransportExample {
                     mta.forceShutdown();
                 }
             }
-            
+
         });
     }
-    
+
     static class MyRemoteAddressValidator implements RemoteAddressValidator {
 
         private final InetAddressRange iprange;
-        
+
         public MyRemoteAddressValidator(final InetAddressRange iprange) {
             super();
             this.iprange = iprange;
         }
-        
+
         public boolean validateAddress(final InetAddress address) {
             return this.iprange.contains(address);
         }
-        
+
     }
 
     static class MyEnvelopValidator implements EnvelopValidator {
 
         public Future<SMTPReply> validateRecipient(
                 final InetAddress client,
-                final String recipient, 
+                final String recipient,
                 final FutureCallback<SMTPReply> callback) {
             BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
-            SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5), 
-                    "recipient <" + recipient + "> ok");        
+            SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 5),
+                    "recipient <" + recipient + "> ok");
             future.completed(reply);
             return future;
         }
 
         public Future<SMTPReply> validateSender(
                 final InetAddress client,
-                final String sender, 
+                final String sender,
                 final FutureCallback<SMTPReply> callback) {
             BasicFuture<SMTPReply> future = new BasicFuture<SMTPReply>(callback);
-            SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0), 
-                    "originator <" + sender + "> ok");        
+            SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0),
+                    "originator <" + sender + "> ok");
             future.completed(reply);
             return future;
         }
-        
+
     }
 
     static class MyDeliveryHandler implements DeliveryHandler {
@@ -126,15 +126,15 @@ public class LocalMailServerTransportExample {
                 final DeliveryRequest request,
                 final FutureCallback<DeliveryResult> callback) {
             BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
-            
+
             try {
-                System.out.println("====================================="); 
-                System.out.println("Mail from " + request.getSender() + " to " + request.getRecipients()); 
-                System.out.println("====================================="); 
-                System.out.println(readAsString(request.getContent())); 
                 System.out.println("=====================================");
-                SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0), "ok");        
-                BasicDeliveryResult result = new BasicDeliveryResult(reply); 
+                System.out.println("Mail from " + request.getSender() + " to " + request.getRecipients());
+                System.out.println("=====================================");
+                System.out.println(readAsString(request.getContent()));
+                System.out.println("=====================================");
+                SMTPReply reply = new SMTPReply(SMTPCodes.OK, new SMTPCode(2, 1, 0), "ok");
+                BasicDeliveryResult result = new BasicDeliveryResult(reply);
                 future.completed(result);
             } catch (IOException ex) {
                 future.failed(ex);
@@ -167,7 +167,7 @@ public class LocalMailServerTransportExample {
             }
             return buffer.toString();
         }
-        
+
     }
-    
+
 }

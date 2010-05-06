@@ -38,7 +38,7 @@ public class SendMailExample {
             System.out.println("Usage: sender recipient1[;recipient2;recipient3;...] file");
             System.exit(0);
         }
-        
+
         String sender = args[0];
         List<String> recipients = new ArrayList<String>();
         StringTokenizer tokenizer = new StringTokenizer(args[1], ";");
@@ -49,30 +49,30 @@ public class SendMailExample {
                 recipients.add(s);
             }
         }
-        
+
         File src = new File(args[2]);
         if (!src.exists()) {
             System.out.println("File '" + src + "' does not exist");
             System.exit(0);
         }
-        
+
         DeliveryRequest request = new BasicDeliveryRequest(sender, recipients, new FileSource(src));
-        
+
         MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
         mua.start();
-        
+
         try {
-            
+
             InetSocketAddress address = new InetSocketAddress("localhost", 2525);
-            
+
             Future<DeliveryResult> future = mua.deliver(address, request, null);
-            
+
             DeliveryResult result = future.get();
             System.out.println("Delivery result: " + result);
-            
+
         } finally {
             mua.shutdown();
         }
     }
-    
+
 }

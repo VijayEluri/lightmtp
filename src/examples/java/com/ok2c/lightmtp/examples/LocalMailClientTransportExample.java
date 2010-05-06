@@ -55,40 +55,40 @@ public class LocalMailClientTransportExample {
                 "Subject: test message 3\r\n" +
                 "\r\n" +
                 "This is a short test message 3\r\n");
-        
+
         DeliveryRequest request1 = new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1"), 
+                "root",
+                Arrays.asList("testuser1"),
                 new ByteArraySource(text1.getBytes("US-ASCII")));
 
         DeliveryRequest request2 = new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2"),
                 new ByteArraySource(text2.getBytes("US-ASCII")));
-        
+
         DeliveryRequest request3 = new BasicDeliveryRequest(
-                "root", 
-                Arrays.asList("testuser1", "testuser2", "testuser3"), 
+                "root",
+                Arrays.asList("testuser1", "testuser2", "testuser3"),
                 new ByteArraySource(text3.getBytes("US-ASCII")));
-        
+
         Queue<DeliveryRequest> queue = new ConcurrentLinkedQueue<DeliveryRequest>();
         queue.add(request1);
         queue.add(request2);
         queue.add(request3);
-        
+
         final CountDownLatch messageCount = new CountDownLatch(queue.size());
 
-        final IOReactorConfig config = new IOReactorConfig(); 
+        final IOReactorConfig config = new IOReactorConfig();
         config.setWorkerCount(1);
-        
+
         final MailClientTransport mua = new LocalMailClientTransport(config);
         mua.start(new MyDeliveryRequestHandler(messageCount));
 
         final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
-        
+
         SessionRequest sessionRequest = mua.connect(sockaddress, queue, null);
         sessionRequest.waitFor();
-        
+
         IOSession iosession = sessionRequest.getSession();
         if (iosession != null) {
             messageCount.await();
@@ -98,7 +98,7 @@ public class LocalMailClientTransportExample {
                 System.out.println("Connection failed: " + ex.getMessage());
             }
         }
-        
+
         System.out.println("Shutting down I/O reactor");
         try {
             mua.shutdown();
@@ -111,7 +111,7 @@ public class LocalMailClientTransportExample {
     static class MyDeliveryRequestHandler implements DeliveryRequestHandler {
 
         private final CountDownLatch messageCount;
-        
+
         public MyDeliveryRequestHandler(final CountDownLatch messageCount) {
             super();
             this.messageCount = messageCount;
@@ -136,16 +136,16 @@ public class LocalMailClientTransportExample {
         }
 
         public void completed(
-                final DeliveryRequest request, 
-                final DeliveryResult result, 
+                final DeliveryRequest request,
+                final DeliveryResult result,
                 final SessionContext context) {
             this.messageCount.countDown();
             System.out.println("Message delivery succeeded: " + request + "; " + result);
         }
 
         public void failed(
-                final DeliveryRequest request, 
-                final DeliveryResult result, 
+                final DeliveryRequest request,
+                final DeliveryResult result,
                 final SessionContext context) {
             this.messageCount.countDown();
             System.out.println("Message delivery failed: " + request + "; " + result);
@@ -157,7 +157,7 @@ public class LocalMailClientTransportExample {
                     IOSession.ATTACHMENT_KEY);
             return queue.poll();
         }
-        
+
     }
-    
+
 }
