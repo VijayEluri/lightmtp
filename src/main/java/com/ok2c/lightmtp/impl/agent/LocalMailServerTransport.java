@@ -21,6 +21,7 @@ import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
+import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class LocalMailServerTransport extends DefaultMailServerTransport {
@@ -40,11 +41,13 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
     }
 
     public void start(
+            final UniqueIdGenerator idgenerator,
             final RemoteAddressValidator addressValidator,
             final EnvelopValidator envelopValidator,
             final DeliveryHandler deliveryHandler) {
         LocalServerSessionFactory sessionFactory = new LocalServerSessionFactory(
                 getWorkingDir(),
+                idgenerator,
                 addressValidator,
                 envelopValidator,
                 deliveryHandler);
@@ -52,9 +55,10 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
     }
 
     public void start(
+            final UniqueIdGenerator idgenerator,
             final EnvelopValidator envelopValidator,
             final DeliveryHandler deliveryHandler) {
-        start(null, envelopValidator, deliveryHandler);
+        start(idgenerator, null, envelopValidator, deliveryHandler);
     }
 
 }

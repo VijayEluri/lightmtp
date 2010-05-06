@@ -25,14 +25,19 @@ import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.CommandHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 
 public class MailFromHandler implements CommandHandler<ServerState> {
 
+    private final UniqueIdGenerator idgenerator;
     private final EnvelopValidator validator;
     private final AddressArgParser argParser;
 
-    public MailFromHandler(final EnvelopValidator validator) {
+    public MailFromHandler(
+            final UniqueIdGenerator idgenerator,
+            final EnvelopValidator validator) {
         super();
+        this.idgenerator = idgenerator;
         this.validator = validator;
         this.argParser = new AddressArgParser("FROM:");
     }
@@ -61,7 +66,7 @@ public class MailFromHandler implements CommandHandler<ServerState> {
                     new SMTPCode(5, 5, 4),
                     "invalid parameter(s): " + params);
         }
-        return new MailFromAction(sender, mimeEncoding, this.validator);
+        return new MailFromAction(sender, mimeEncoding, this.validator, this.idgenerator);
     }
 
 }

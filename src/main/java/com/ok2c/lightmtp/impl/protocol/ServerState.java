@@ -32,6 +32,7 @@ public class ServerState {
     private ClientType clientType;
     private InetAddress client;
     private String clientDomain;
+    private String messageId;
     private String sender;
     private DataType dataType;
     private MIMEEncoding mimeEncoding;
@@ -80,6 +81,14 @@ public class ServerState {
         this.clientDomain = clientDomain;
     }
 
+    public String getMessageId() {
+        return this.messageId;
+    }
+
+    public void setMessageId(final String messageId) {
+        this.messageId = messageId;
+    }
+
     public String getSender() {
         return this.sender;
     }
@@ -118,6 +127,7 @@ public class ServerState {
 
     public void reset() {
         this.sender = null;
+        this.messageId = null;
         this.recipients.clear();
         this.dataType = null;
     }
@@ -131,6 +141,8 @@ public class ServerState {
         buffer.append(this.clientType);
         buffer.append("][client id: ");
         buffer.append(this.clientDomain);
+        buffer.append("][message id: ");
+        buffer.append(this.messageId);
         buffer.append("][sender: ");
         buffer.append(this.sender);
         buffer.append("][recipients: ");

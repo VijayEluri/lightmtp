@@ -22,6 +22,7 @@ import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.MIMEEncoding;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
+import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
 class MailFromAction extends AbstractAsyncAction<ServerState> {
@@ -29,15 +30,18 @@ class MailFromAction extends AbstractAsyncAction<ServerState> {
     private final String sender;
     private final MIMEEncoding mimeEncoding;
     private final EnvelopValidator validator;
+    private final UniqueIdGenerator idgenerator;
 
     public MailFromAction(
             final String sender,
             final MIMEEncoding mimeEncoding,
-            final EnvelopValidator validator) {
+            final EnvelopValidator validator,
+            final UniqueIdGenerator idgenerator) {
         super();
         this.sender = sender;
         this.mimeEncoding = mimeEncoding;
         this.validator = validator;
+        this.idgenerator = idgenerator;
     }
 
     @Override
@@ -56,6 +60,7 @@ class MailFromAction extends AbstractAsyncAction<ServerState> {
     protected Future<SMTPReply> internalAsyncExecute(
             final ServerState state,
             final FutureCallback<SMTPReply> callback) {
+        state.setMessageId(this.idgenerator.generate());
         return this.validator.validateSender(state.getClient(), this.sender, callback);
     }
 

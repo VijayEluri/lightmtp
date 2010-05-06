@@ -31,23 +31,29 @@ import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.protocol.SessionFactory;
+import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 import com.ok2c.lightnio.IOSession;
 
 public class LocalServerSessionFactory implements SessionFactory<ServerSession> {
 
     private final File workingDir;
+    private final UniqueIdGenerator idgenerator;
     private final RemoteAddressValidator addressValidator;
     private final EnvelopValidator validator;
     private final DeliveryHandler deliveryHandler;
 
     public LocalServerSessionFactory(
             final File workingDir,
+            final UniqueIdGenerator idgenerator,
             final RemoteAddressValidator addressValidator,
             final EnvelopValidator validator,
             final DeliveryHandler deliveryHandler) {
         super();
         if (workingDir == null) {
             throw new IllegalArgumentException("Working dir may not be null");
+        }
+        if (idgenerator == null) {
+            throw new IllegalArgumentException("Id generator may not be null");
         }
         if (validator == null) {
             throw new IllegalArgumentException("Envelop validator may not be null");
@@ -56,6 +62,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
             throw new IllegalArgumentException("Delivery handler may not be null");
         }
         this.workingDir = workingDir;
+        this.idgenerator = idgenerator;
         this.addressValidator = addressValidator;
         this.validator = validator;
         this.deliveryHandler = deliveryHandler;
@@ -68,7 +75,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
                 new ServiceReadyCodec(iobuffers, this.addressValidator));
         codecs.register(ProtocolState.MAIL.name(),
                 new PipeliningReceiveEnvelopCodec(iobuffers,
-                        createProtocolHandler(this.validator)));
+                        createProtocolHandler(this.idgenerator, this.validator)));
         codecs.register(ProtocolState.DATA.name(),
                 new ReceiveDataCodec(iobuffers, this.workingDir, this.deliveryHandler,
                         DataAckMode.PER_RECIPIENT));
@@ -78,6 +85,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
     }
 
     protected ProtocolHandler<ServerState> createProtocolHandler(
+            final UniqueIdGenerator idgenerator,
             final EnvelopValidator validator) {
         DefaultProtocolHandler handler = new DefaultProtocolHandler();
         handler.register("LHLO", new EhloHandler());
@@ -85,7 +93,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
         handler.register("NOOP", new NoopHandler());
         handler.register("QUIT", new QuitHandler());
         handler.register("VRFY", new VrfyHandler(validator));
-        handler.register("MAIL", new MailFromHandler(validator));
+        handler.register("MAIL", new MailFromHandler(idgenerator, validator));
         handler.register("RCPT", new RcptToHandler(validator));
         handler.register("DATA", new DataHandler());
         return handler;

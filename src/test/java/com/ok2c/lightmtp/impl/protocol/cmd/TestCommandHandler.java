@@ -26,6 +26,7 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPErrorException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.agent.SimpleEnvelopValidator;
+import com.ok2c.lightmtp.impl.agent.SimpleIdGenerator;
 import com.ok2c.lightmtp.impl.protocol.ClientType;
 import com.ok2c.lightmtp.impl.protocol.DataType;
 import com.ok2c.lightmtp.impl.protocol.MIMEEncoding;
@@ -158,7 +159,8 @@ public class TestCommandHandler {
     public void testMailFromHandlerBasicResponse() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
-        MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
+        MailFromHandler handler = new MailFromHandler(
+                new SimpleIdGenerator(), new SimpleEnvelopValidator());
         Action<ServerState> action = handler.handle("from:<someone@somedomain.com>", null);
         Future<SMTPReply> future = action.execute(state, null);
         SMTPReply reply = future.get();
@@ -173,7 +175,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerClientTypeNotKnown() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(null);
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleIdGenerator(), null);
         try {
             handler.handle("from:<someone@somedomain.com>", null);
         } catch (SMTPErrorException ex) {
@@ -187,7 +189,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerSenderSet() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setSender("someone-else@somedomain.com");
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleIdGenerator(), null);
         try {
             handler.handle("from:<someone@somedomain.com>", null);
         } catch (SMTPErrorException ex) {
@@ -201,7 +203,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerInvalidArgument() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.BASIC);
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleIdGenerator(), null);
         try {
             handler.handle("from:me", null);
         } catch (SMTPErrorException ex) {
@@ -214,7 +216,8 @@ public class TestCommandHandler {
     public void testMailFromHandler7BitMime() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
+        MailFromHandler handler = new MailFromHandler(
+                new SimpleIdGenerator(), new SimpleEnvelopValidator());
         Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ",
                 Arrays.asList("body=7bit"));
         Future<SMTPReply> future = action.execute(state, null);
@@ -230,7 +233,8 @@ public class TestCommandHandler {
     public void testMailFromHandler8BitMime() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler(new SimpleEnvelopValidator());
+        MailFromHandler handler = new MailFromHandler(
+                new SimpleIdGenerator(), new SimpleEnvelopValidator());
         Action<ServerState> action = handler.handle("from:<someone@somedomain.com> ",
                 Arrays.asList("body=8bitmime"));
         Future<SMTPReply> future = action.execute(state, null);
@@ -246,7 +250,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerInvalidParam1() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleIdGenerator(), null);
         try {
             handler.handle("from:<someone@somedomain.com> ",
                     Arrays.asList("whatever"));
@@ -260,7 +264,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerInvalidParam2() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleIdGenerator(), null);
         try {
             handler.handle("from:<someone@somedomain.com> ",
                     Arrays.asList("body=whatever"));
@@ -274,7 +278,7 @@ public class TestCommandHandler {
     public void testMailFromHandlerInvalidParam3() throws Exception {
         ServerState state = new ServerState("whatever");
         state.setClientType(ClientType.EXTENDED);
-        MailFromHandler handler = new MailFromHandler(null);
+        MailFromHandler handler = new MailFromHandler(new SimpleIdGenerator(), null);
         try {
             handler.handle("from:<someone@somedomain.com> ",
                     Arrays.asList("body=7bit", "whatever"));

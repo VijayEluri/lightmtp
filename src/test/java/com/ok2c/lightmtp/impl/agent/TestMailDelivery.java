@@ -45,6 +45,7 @@ import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.RcptResult;
+import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionRequest;
@@ -94,7 +95,9 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
+        SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        this.mta.start(idgenerator, envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -175,7 +178,9 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         DelayedTestDeliveryHandler deliveryHandler = new DelayedTestDeliveryHandler();
-        this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
+        SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        this.mta.start(idgenerator, envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -237,16 +242,18 @@ public class TestMailDelivery extends BaseTransportTest {
     static class OldServerSessionFactory extends ServerSessionFactory {
 
         public OldServerSessionFactory(
+                final UniqueIdGenerator idgenerator,
                 final EnvelopValidator validator,
                 final DeliveryHandler deliveryHandler) {
-            super(TMP_DIR, null, validator, deliveryHandler);
+            super(TMP_DIR, idgenerator, null, validator, deliveryHandler);
         }
 
         @Override
         protected ProtocolHandler<ServerState> createProtocolHandler(
+                final UniqueIdGenerator idgenerator,
                 final EnvelopValidator validator) {
             DefaultProtocolHandler handler = (DefaultProtocolHandler) super.createProtocolHandler(
-                    validator);
+                    idgenerator, validator);
             handler.unregister("EHLO");
             return handler;
         }
@@ -274,7 +281,9 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerSessionFactory(new SimpleEnvelopValidator(), deliveryHandler));
+        SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        this.mta.start(new OldServerSessionFactory(idgenerator, envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -349,6 +358,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
             @Override
@@ -371,7 +382,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(envelopValidator, deliveryHandler);
+        this.mta.start(idgenerator, envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -436,6 +447,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
             @Override
@@ -458,7 +471,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerSessionFactory(envelopValidator, deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(idgenerator, envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -523,6 +536,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
             @Override
@@ -544,7 +559,7 @@ public class TestMailDelivery extends BaseTransportTest {
         };
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(envelopValidator, deliveryHandler);
+        this.mta.start(idgenerator, envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -605,6 +620,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+
         EnvelopValidator envelopValidator = new SimpleEnvelopValidator() {
 
             @Override
@@ -626,7 +643,7 @@ public class TestMailDelivery extends BaseTransportTest {
         };
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerSessionFactory(envelopValidator, deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(idgenerator, envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -672,8 +689,10 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        DelayedEnvelopValidator envelopValidator = new DelayedEnvelopValidator();
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new DelayedEnvelopValidator(), deliveryHandler);
+        this.mta.start(idgenerator, envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -720,8 +739,10 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        DelayedEnvelopValidator envelopValidator = new DelayedEnvelopValidator();
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
-        this.mta.start(new OldServerSessionFactory(new DelayedEnvelopValidator(), deliveryHandler));
+        this.mta.start(new OldServerSessionFactory(idgenerator, envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -768,6 +789,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
             public Future<DeliveryResult> handle(
@@ -780,7 +803,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
         };
 
-        this.mta.start(new SimpleEnvelopValidator(), deliveryHandler);
+        this.mta.start(idgenerator, envelopValidator, deliveryHandler);
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -834,7 +857,7 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestDeliveryHandler deliveryHandler = new SimpleTestDeliveryHandler();
         this.mta.start(new LocalServerSessionFactory(
-                TMP_DIR, null, new SimpleEnvelopValidator(), deliveryHandler));
+                TMP_DIR, new SimpleIdGenerator(), null, new SimpleEnvelopValidator(), deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
@@ -904,6 +927,8 @@ public class TestMailDelivery extends BaseTransportTest {
 
         SimpleTestJob testJob = new SimpleTestJob(requests);
 
+        SimpleIdGenerator idgenerator = new SimpleIdGenerator();
+        SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
             public Future<DeliveryResult> handle(
@@ -917,7 +942,7 @@ public class TestMailDelivery extends BaseTransportTest {
         };
 
         this.mta.start(new LocalServerSessionFactory(
-                TMP_DIR, null, new SimpleEnvelopValidator(), deliveryHandler));
+                TMP_DIR, idgenerator, null, envelopValidator, deliveryHandler));
         ListenerEndpoint endpoint = this.mta.listen(new InetSocketAddress("localhost", 0));
         endpoint.waitFor();
         SocketAddress address = endpoint.getAddress();
