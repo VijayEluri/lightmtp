@@ -74,12 +74,24 @@ public class ServerSession {
     }
 
     private void handleIOException(final IOException ex) {
+        String messageId = this.sessionState.getMessageId();
         terminate();
+        if (this.log.isInfoEnabled()) {
+            if (messageId != null) {
+                this.log.info("Failure receiving message %s", messageId);
+            }
+        }
         this.log.error("Fatal I/O error: " + ex.getMessage(), ex);
     }
 
     private void handleSMTPException(final SMTPProtocolException ex) {
+        String messageId = this.sessionState.getMessageId();
         terminate();
+        if (this.log.isInfoEnabled()) {
+            if (messageId != null) {
+                this.log.info("Failure receiving message %s", messageId);
+            }
+        }
         this.log.error("Fatal protocol error: " + ex.getMessage(), ex);
     }
 
