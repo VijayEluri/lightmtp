@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPProtocolException;
@@ -35,8 +34,7 @@ import com.ok2c.lightnio.IOSession;
 
 public class ClientSession {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
+    private final Logger log;
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
     private final ClientState sessionState;
@@ -49,11 +47,23 @@ public class ClientSession {
     private ProtocolState state;
 
     public ClientSession(
+            final Logger log,
+            final Logger iolog,
+            final Logger wirelog,
             final IOSession iosession,
             final SMTPBuffers iobuffers,
             final DeliveryRequestHandler handler,
             final ProtocolCodecs<ClientState> codecs) {
         super();
+        if (log == null) {
+            throw new IllegalArgumentException("Logger may not be null");
+        }
+        if (iolog == null) {
+            throw new IllegalArgumentException("IO Logger may not be null");
+        }
+        if (wirelog == null) {
+            throw new IllegalArgumentException("Wire Logger may not be null");
+        }
         if (iosession == null) {
             throw new IllegalArgumentException("IO session may not be null");
         }
@@ -66,10 +76,9 @@ public class ClientSession {
         if (codecs == null) {
             throw new IllegalArgumentException("Protocol codecs may not be null");
         }
-        Logger log = LoggerFactory.getLogger(iosession.getClass());
-        Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
-        if (log.isDebugEnabled() || wirelog.isDebugEnabled()) {
-            this.iosession = new LoggingIOSession(iosession, "client", log, new Wire(wirelog));
+        this.log = log;
+        if (iolog.isDebugEnabled() || wirelog.isDebugEnabled()) {
+            this.iosession = new LoggingIOSession(iosession, "client", iolog, new Wire(wirelog));
         } else {
             this.iosession = iosession;
         }

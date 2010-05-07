@@ -16,6 +16,9 @@ package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ok2c.lightmtp.impl.protocol.cmd.DataHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.DefaultProtocolHandler;
 import com.ok2c.lightmtp.impl.protocol.cmd.EhloHandler;
@@ -35,6 +38,10 @@ import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 import com.ok2c.lightnio.IOSession;
 
 public class LocalServerSessionFactory implements SessionFactory<ServerSession> {
+
+    private final Logger log = LoggerFactory.getLogger(ServerSession.class);
+    private final Logger iolog = LoggerFactory.getLogger(IOSession.class);
+    private final Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
 
     private final File workingDir;
     private final UniqueIdGenerator idgenerator;
@@ -81,7 +88,7 @@ public class LocalServerSessionFactory implements SessionFactory<ServerSession> 
                         DataAckMode.PER_RECIPIENT));
         codecs.register(ProtocolState.QUIT.name(),
                 new ServiceShutdownCodec(iobuffers));
-        return new ServerSession(iosession, iobuffers, codecs);
+        return new ServerSession(this.log, this.iolog, this.wirelog, iosession, iobuffers, codecs);
     }
 
     protected ProtocolHandler<ServerState> createProtocolHandler(

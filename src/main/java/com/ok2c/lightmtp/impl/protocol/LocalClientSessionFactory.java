@@ -14,12 +14,19 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightnio.IOSession;
 
 public class LocalClientSessionFactory implements SessionFactory<ClientSession> {
+
+    private final Logger log = LoggerFactory.getLogger(ServerSession.class);
+    private final Logger iolog = LoggerFactory.getLogger(IOSession.class);
+    private final Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
 
     private final DeliveryRequestHandler deliveryRequestHandler;
 
@@ -45,7 +52,8 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
                 new SendQuitCodec(iobuffers));
         codecs.register(ProtocolState.RSET.name(),
                 new SendRsetCodec(iobuffers));
-        return new ClientSession(iosession, iobuffers, this.deliveryRequestHandler, codecs);
+        return new ClientSession(this.log, this.iolog, this.wirelog,
+                iosession, iobuffers, this.deliveryRequestHandler, codecs);
     }
 
 }
