@@ -43,6 +43,7 @@ public class DelayedTestDeliveryHandler implements DeliveryHandler {
     }
 
     public Future<DeliveryResult> handle(
+            final String messageId,
             final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
         final BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);

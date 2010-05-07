@@ -300,8 +300,10 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
                         sessionState.getSender(),
                         sessionState.getRecipients(),
                         content);
-
-                this.pendingDelivery = this.handler.handle(deliveryRequest,
+                String messageId = sessionState.getMessageId();
+                this.pendingDelivery = this.handler.handle(
+                        messageId,
+                        deliveryRequest,
                         new OutputTrigger<DeliveryResult>(sessionState, iosession));
             }
         }

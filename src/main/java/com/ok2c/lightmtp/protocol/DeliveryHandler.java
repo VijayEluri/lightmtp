@@ -20,6 +20,7 @@ import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface DeliveryHandler {
 
-    Future<DeliveryResult> handle(DeliveryRequest request, FutureCallback<DeliveryResult> callback);
+    Future<DeliveryResult> handle(
+            String messageId, DeliveryRequest request, FutureCallback<DeliveryResult> callback);
 
 }

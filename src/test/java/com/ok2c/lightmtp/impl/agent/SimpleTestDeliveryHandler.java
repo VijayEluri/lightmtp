@@ -43,6 +43,7 @@ public class SimpleTestDeliveryHandler implements DeliveryHandler {
     }
 
     public Future<DeliveryResult> handle(
+            final String messageId,
             final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
         BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
