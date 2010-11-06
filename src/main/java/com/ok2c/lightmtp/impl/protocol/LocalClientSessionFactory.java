@@ -29,21 +29,27 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
     private final Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
 
     private final DeliveryRequestHandler deliveryRequestHandler;
+	private final String heloName;
 
     public LocalClientSessionFactory(
-            final DeliveryRequestHandler deliveryRequestHandler) {
+            final DeliveryRequestHandler deliveryRequestHandler, String heloName) {
         super();
         if (deliveryRequestHandler == null) {
             throw new IllegalArgumentException("Delivery request handler may not be null");
         }
         this.deliveryRequestHandler = deliveryRequestHandler;
+        this.heloName = heloName;
+    }
+    public LocalClientSessionFactory(
+            final DeliveryRequestHandler deliveryRequestHandler) {
+        this(deliveryRequestHandler, null);
     }
 
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();
         codecs.register(ProtocolState.HELO.name(),
-                new SendLocalHeloCodec(iobuffers));
+                new SendLocalHeloCodec(iobuffers, heloName));
         codecs.register(ProtocolState.MAIL.name(),
                 new PipeliningSendEnvelopCodec(iobuffers, true));
         codecs.register(ProtocolState.DATA.name(),

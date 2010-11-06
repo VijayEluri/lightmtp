@@ -52,8 +52,13 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
     private final SMTPMessageWriter<SMTPCommand> writer;
 
     private CodecState codecState;
+	private final String heloName;
 
     public SendLocalHeloCodec(final SMTPBuffers iobuffers) {
+        this(iobuffers, null);
+    }
+
+    public SendLocalHeloCodec(final SMTPBuffers iobuffers, String heloName) {
         super();
         if (iobuffers == null) {
             throw new IllegalArgumentException("IO buffers may not be null");
@@ -62,8 +67,9 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
+        this.heloName = heloName;
     }
-
+    
     public void reset(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
@@ -92,8 +98,12 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
 
         switch (this.codecState) {
         case LHLO_READY:
-            SMTPCommand ehlo = new SMTPCommand("LHLO",
-                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
+            String helo = heloName;
+            if (helo == null) {
+                helo = DNSUtils.getLocalDomain(iosession.getLocalAddress());
+            }
+            SMTPCommand ehlo = new SMTPCommand("LHLO", helo);
+                    
             this.writer.write(ehlo, buf);
             this.codecState = CodecState.LHLO_RESPONSE_EXPECTED;
             break;

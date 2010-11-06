@@ -55,6 +55,8 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
     private volatile boolean shutdown;
 
+	private String heloName;
+
     public DefaultMailUserAgent(
             final TransportType type,
             final IOReactorConfig config) throws IOException {
@@ -73,10 +75,10 @@ public class DefaultMailUserAgent implements MailUserAgent {
         SessionFactory<ClientSession> sessionFactory;
         switch (this.type) {
         case SMTP:
-            sessionFactory = new ClientSessionFactory(handler);
+            sessionFactory = new ClientSessionFactory(handler, heloName);
             break;
         case LMTP:
-            sessionFactory = new LocalClientSessionFactory(handler);
+            sessionFactory = new LocalClientSessionFactory(handler, heloName);
             break;
         default:
             sessionFactory = new ClientSessionFactory(handler);
@@ -85,6 +87,15 @@ public class DefaultMailUserAgent implements MailUserAgent {
         this.transport.start(sessionFactory);
     }
 
+    /**
+     * Set the helo name to use. Must be called before {@link #start()} to take affect
+     * 
+     * @param heloName
+     */
+    public void setHeloName(String heloName) {
+        this.heloName = heloName;
+    }
+    
     public Future<DeliveryResult> deliver(
             final InetSocketAddress address,
             final DeliveryRequest request,

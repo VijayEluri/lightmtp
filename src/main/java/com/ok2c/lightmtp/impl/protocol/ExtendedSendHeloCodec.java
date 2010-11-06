@@ -49,14 +49,16 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         COMPLETED
 
     }
-
+    
     private final SMTPBuffers iobuffers;
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
 
     private CodecState codecState;
 
-    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers) {
+	private String heloName;
+
+    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers, String heloName) {
         super();
         if (iobuffers == null) {
             throw new IllegalArgumentException("IO buffers may not be null");
@@ -65,8 +67,14 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
+        this.heloName = heloName;
     }
 
+
+    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers) {
+        this(iobuffers, null);
+    }
+    
     public void reset(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
@@ -92,17 +100,19 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         }
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
-
+        
+        String myHelo = heloName;
+        if (myHelo == null) {
+            myHelo = DNSUtils.getLocalDomain(iosession.getLocalAddress());
+        }
         switch (this.codecState) {
         case EHLO_READY:
-            SMTPCommand ehlo = new SMTPCommand("EHLO",
-                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
+            SMTPCommand ehlo = new SMTPCommand("EHLO", myHelo);
             this.writer.write(ehlo, buf);
             this.codecState = CodecState.EHLO_RESPONSE_EXPECTED;
             break;
         case HELO_READY:
-            SMTPCommand helo = new SMTPCommand("HELO",
-                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
+            SMTPCommand helo = new SMTPCommand("HELO", myHelo);
             this.writer.write(helo, buf);
             this.codecState = CodecState.HELO_RESPONSE_EXPECTED;
             break;
