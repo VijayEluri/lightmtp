@@ -53,6 +53,8 @@ public class DefaultMailUserAgent implements MailUserAgent {
     private final TransportType type;
     private final Set<PendingDelivery> pendingDeliveries;
 
+    private volatile boolean started;
+
     private volatile boolean shutdown;
 
 	private String heloName;
@@ -71,6 +73,7 @@ public class DefaultMailUserAgent implements MailUserAgent {
     }
 
     public void start() {
+        started = true;
         DeliveryRequestHandler handler = new InternalDeliveryRequestHandler();
         SessionFactory<ClientSession> sessionFactory;
         switch (this.type) {
@@ -93,6 +96,7 @@ public class DefaultMailUserAgent implements MailUserAgent {
      * @param heloName
      */
     public void setHeloName(String heloName) {
+        if (started) throw new IllegalStateException("Can only be set when not started");
         this.heloName = heloName;
     }
     
@@ -128,6 +132,7 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
     public void shutdown() throws IOException {
         this.shutdown = true;
+        this.started = false;
         this.transport.closeActiveSessions();
         this.sessionManager.shutdown();
         this.transport.shutdown();
@@ -161,11 +166,13 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
         public void terminated() {
             shutdown = true;
+            started = false;
             cancelDeliveries();
         }
 
         public void terminated(final Exception ex) {
             shutdown = true;
+            started = false;
             cancelDeliveries();
         }
 
