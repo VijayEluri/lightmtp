@@ -14,7 +14,6 @@
  */
 package com.ok2c.lightmtp.agent;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
 
@@ -23,15 +22,26 @@ import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface MailUserAgent extends MailTransport {
-
+    
+    
+    
+    /**
+     * Start transport
+     */
     void start();
-
+    
+    /**
+     * Deliver mail
+     * 
+     * @param remoteAddress
+     * @param localAddress or null if the default should get used
+     * @param request
+     * @param callback
+     * @return future
+     */
     Future<DeliveryResult> deliver(
             InetSocketAddress remoteAddress, 
             InetSocketAddress localAddress,
             DeliveryRequest request,
             FutureCallback<DeliveryResult> callback);
-
-    void shutdown() throws IOException;
-
 }
