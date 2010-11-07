@@ -104,13 +104,21 @@ public class DefaultMailUserAgent implements MailUserAgent {
             final InetSocketAddress address,
             final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
+        return deliver(address, null,  request, callback);
+    }
+    
+    public Future<DeliveryResult> deliver(
+            final InetSocketAddress address,
+            final InetSocketAddress localAdress,
+            final DeliveryRequest request,
+            final FutureCallback<DeliveryResult> callback) {
         if (this.shutdown) {
             throw new IllegalStateException("Mail transport has been shut down");
         }
         BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
         PendingDelivery delivery = new PendingDelivery(request, future);
         this.pendingDeliveries.add(delivery);
-        this.sessionManager.leaseSession(address, null, new IOSessionReadyCallback(delivery));
+        this.sessionManager.leaseSession(address, localAdress, new IOSessionReadyCallback(delivery));
         return future;
     }
 

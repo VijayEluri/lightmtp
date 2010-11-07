@@ -23,7 +23,7 @@ import com.ok2c.lightnio.SessionRequestCallback;
 public interface MailClientTransport extends MailTransport {
 
     SessionRequest connect(
-            SocketAddress remoteAddress, Object attachment, SessionRequestCallback callback);
+            SocketAddress remoteAddress, SocketAddress localAddress, Object attachment, SessionRequestCallback callback);
 
     void start(DeliveryRequestHandler deliveryRequestHandler);
 

@@ -63,12 +63,13 @@ public class DefaultMailClientTransport extends AbstractMailTransport
 
     public SessionRequest connect(
             final SocketAddress remoteAddress,
+            final SocketAddress localAddress,
             final Object attachment,
             final SessionRequestCallback callback) {
         if (this.log.isDebugEnabled()) {
             this.log.debug("Request new connection " + remoteAddress + " [" + attachment + "]");
         }
-        return this.ioReactor.connect(remoteAddress, null, attachment, callback);
+        return this.ioReactor.connect(remoteAddress, localAddress, attachment, callback);
     }
 
     protected void start(final SessionFactory<ClientSession> sessionFactory) {

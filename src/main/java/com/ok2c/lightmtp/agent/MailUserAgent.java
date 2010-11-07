@@ -27,7 +27,8 @@ public interface MailUserAgent extends MailTransport {
     void start();
 
     Future<DeliveryResult> deliver(
-            InetSocketAddress address,
+            InetSocketAddress remoteAddress, 
+            InetSocketAddress localAddress,
             DeliveryRequest request,
             FutureCallback<DeliveryResult> callback);
 
