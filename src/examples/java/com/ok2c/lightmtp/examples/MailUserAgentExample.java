@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Future;
 
-import com.ok2c.lightmtp.agent.MailUserAgent;
 import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
@@ -69,7 +68,7 @@ public class MailUserAgentExample {
                 new ByteArraySource(text3.getBytes("US-ASCII"))));
 
 
-        MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
+        DefaultMailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
         mua.start();
 
         try {

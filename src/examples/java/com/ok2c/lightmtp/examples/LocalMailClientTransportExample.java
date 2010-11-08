@@ -86,7 +86,7 @@ public class LocalMailClientTransportExample {
 
         final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
 
-        SessionRequest sessionRequest = mua.connect(sockaddress, queue, null);
+        SessionRequest sessionRequest = mua.connect(sockaddress, null, queue, null);
         sessionRequest.waitFor();
 
         IOSession iosession = sessionRequest.getSession();
