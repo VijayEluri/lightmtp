@@ -68,7 +68,7 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        } else if (modeString.equals(AuthMode.PLAIN.name())) {
            return AuthMode.PLAIN;
        }
-       throw new SMTPProtocolException("Unsupported AUTH type");
+       throw null;
    }
 
    public void reset(IOSession iosession, ClientState state)
@@ -96,17 +96,20 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        switch (this.codecState) {
        case AUTH_READY:
            String type = null;
+           AuthMode mode = null;
            Iterator<String> extensions = state.getExtensions().iterator();
            while(extensions.hasNext()) {
                String extension = extensions.next();
                if (extension.startsWith(ProtocolState.AUTH.name()) ) {
                    type = extension.substring(ProtocolState.AUTH.name().length() + 1 );
-                   AuthMode mode  = getAuthMode(type);
-                   iosession.setAttribute(AUTH_TYPE, mode);
-                   break;
+                   mode  = getAuthMode(type);
+                   if (mode != null) {
+                       iosession.setAttribute(AUTH_TYPE, mode);
+                       break;
+                   }
                }
            }
-
+           if (mode == null) new SMTPProtocolException("Unsupported AUTH types");
            
            SMTPCommand auth = new SMTPCommand("AUTH", type);
            this.writer.write(auth, buf);
