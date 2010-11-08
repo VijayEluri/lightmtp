@@ -115,8 +115,8 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
            this.writer.write(auth, buf);
            this.codecState = CodecState.AUTH_RESPONSE_READY;
            iosession.setEventMask(SelectionKey.OP_READ);
-
            break;
+           
        case AUTH_PLAIN_INPUT_READY:
            byte[] authdata = Base64.encodeBase64(("\0" + username + "\0" + password).getBytes(SMTPConsts.ASCII));
            buf.write(ByteBuffer.wrap(authdata));
@@ -129,13 +129,14 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
            buf.write(ByteBuffer.wrap(authUserData));
            this.codecState = CodecState.AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED;
            iosession.setEventMask(SelectionKey.OP_READ);
-
+           break;
        
        case AUTH_LOGIN_PASSWORD_INPUT_READY:
            byte[] authPassData = Base64.encodeBase64(password.getBytes(SMTPConsts.ASCII));
            buf.write(ByteBuffer.wrap(authPassData));
            this.codecState = CodecState.AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED;
            iosession.setEventMask(SelectionKey.OP_READ);
+           break;
        }
        
 
@@ -176,6 +177,8 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
                     this.codecState = CodecState.COMPLETED;
                     state.setReply(reply);
                 }
+                break;
+                
            case AUTH_PLAIN_INPUT_RESPONSE_EXPECTED:
                if (reply.getCode() == SMTPCodes.AUTH_OK) {
                    this.codecState = CodecState.COMPLETED;
@@ -187,6 +190,7 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
                    state.setReply(reply);
                }
                break;
+               
            case AUTH_LOGIN_USERNAME_INPUT_RESPONSE_EXPECTED:
                if (reply.getCode() == SMTPCodes.START_AUTH_INPUT) {
                    this.codecState = CodecState.AUTH_LOGIN_PASSWORD_INPUT_READY;
@@ -196,8 +200,8 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
                    throw new SMTPProtocolException("Unexpected reply:" + reply);
                }
               
-
                break;
+               
            case AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED:
                if (reply.getCode() == SMTPCodes.AUTH_OK) {
                    this.codecState = CodecState.COMPLETED;
@@ -206,6 +210,7 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
                    this.codecState = CodecState.AUTH_READY;
                    state.setReply(reply);
                }
+               break;
                
            default:
                if (reply.getCode() == SMTPCodes.ERR_TRANS_SERVICE_NOT_AVAILABLE) {
