@@ -37,5 +37,8 @@ public final class SMTPCodes {
     public static final int ERR_PERM_STORAGE_EXCEEDED            = 552;
     public static final int ERR_PERM_MAILBOX_NOT_ALLOWED         = 553;
     public static final int ERR_PERM_TRX_FAILED                  = 554;
+    
+    public static final int START_AUTH_INPUT                     = 334;
+    public static final int AUTH_OK                              = 235;
 
 }

@@ -21,7 +21,8 @@ public enum ProtocolState {
     MAIL,
     DATA,
     QUIT,
-    RSET;
+    RSET,
+    AUTH;
 
     public static final String ATTRIB = "com.ok2c.lightmtp.protocol-state";
 

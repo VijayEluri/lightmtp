@@ -59,6 +59,10 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
 	private String heloName;
 
+    private String username;
+
+    private String password;
+
     public DefaultMailUserAgent(
             final TransportType type,
             final IOReactorConfig config) throws IOException {
@@ -78,7 +82,7 @@ public class DefaultMailUserAgent implements MailUserAgent {
         SessionFactory<ClientSession> sessionFactory;
         switch (this.type) {
         case SMTP:
-            sessionFactory = new ClientSessionFactory(handler, heloName);
+            sessionFactory = new ClientSessionFactory(handler, heloName, username, password);
             break;
         case LMTP:
             sessionFactory = new LocalClientSessionFactory(handler, heloName);
@@ -98,6 +102,21 @@ public class DefaultMailUserAgent implements MailUserAgent {
     public void setHeloName(String heloName) {
         if (started) throw new IllegalStateException("Can only be set when not started");
         this.heloName = heloName;
+    }
+    
+    /**
+     * Set the authentication to use. Must be called before {@link #start()}
+     * 
+     * @param username
+     * @param password
+     */
+    public void setAuthentication(String username, String password) {
+        if (started) throw new IllegalStateException("Can only be set when not started");
+        if ((username == null || password == null) && (username != null || password != null)) {
+            throw new IllegalArgumentException("You need to set username and password to null or none of them");
+        }
+        this.username = username;
+        this.password = password;
     }
     
     public Future<DeliveryResult> deliver(

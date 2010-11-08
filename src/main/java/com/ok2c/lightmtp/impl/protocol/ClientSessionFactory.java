@@ -30,26 +30,34 @@ public class ClientSessionFactory implements SessionFactory<ClientSession> {
 
     private final DeliveryRequestHandler deliveryRequestHandler;
 	private final String heloName;
+    private String username;
+    private String password;
 
     public ClientSessionFactory(
             final DeliveryRequestHandler deliveryRequestHandler) {
-        this(deliveryRequestHandler, null);
+        this(deliveryRequestHandler, null, null, null);
     }
 
 
     public ClientSessionFactory(
-            final DeliveryRequestHandler deliveryRequestHandler, String heloName) {
+            final DeliveryRequestHandler deliveryRequestHandler, String heloName, String username, String password) {
         super();
         if (deliveryRequestHandler == null) {
             throw new IllegalArgumentException("Delivery request handler may not be null");
         }
         this.deliveryRequestHandler = deliveryRequestHandler;
         this.heloName = heloName;
+        this.username = username;
+        this.password = password;
     }
+    
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();
         codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec(iobuffers, heloName));
+        if (username != null && password != null) {
+            codecs.register(ProtocolState.AUTH.name(), new AuthCodec(iobuffers, username, password));
+        }
         codecs.register(ProtocolState.MAIL.name(), new SimpleSendEnvelopCodec(iobuffers, false));
         codecs.register(ProtocolState.DATA.name(), new SendDataCodec(iobuffers, false));
         codecs.register(ProtocolState.QUIT.name(), new SendQuitCodec(iobuffers));
