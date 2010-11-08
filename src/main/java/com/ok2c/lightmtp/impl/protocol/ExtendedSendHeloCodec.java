@@ -57,8 +57,9 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
     private CodecState codecState;
 
 	private String heloName;
+    private boolean useAuth;
 
-    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers, String heloName) {
+    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers, String heloName, boolean useAuth) {
         super();
         if (iobuffers == null) {
             throw new IllegalArgumentException("IO buffers may not be null");
@@ -68,11 +69,12 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         this.writer = new SMTPCommandWriter();
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
         this.heloName = heloName;
+        this.useAuth = useAuth;
     }
 
 
     public ExtendedSendHeloCodec(final SMTPBuffers iobuffers) {
-        this(iobuffers, null);
+        this(iobuffers, null, false);
     }
     
     public void reset(
@@ -213,8 +215,11 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
                 codecs.register(ProtocolState.DATA.name(),
                         new SendDataCodec(this.iobuffers, enhancedCodes));
             }
-
-            return ProtocolState.MAIL.name();
+            if (useAuth) {
+                return ProtocolState.AUTH.name();
+            } else {
+                return ProtocolState.MAIL.name();
+            }
         } else {
             return null;
         }

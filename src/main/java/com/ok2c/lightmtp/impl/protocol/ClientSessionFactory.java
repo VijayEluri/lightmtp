@@ -54,7 +54,7 @@ public class ClientSessionFactory implements SessionFactory<ClientSession> {
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();
-        codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec(iobuffers, heloName));
+        codecs.register(ProtocolState.HELO.name(), new ExtendedSendHeloCodec(iobuffers, heloName, (username != null && password != null)));
         if (username != null && password != null) {
             codecs.register(ProtocolState.AUTH.name(), new AuthCodec(iobuffers, username, password));
         }

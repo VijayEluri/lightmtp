@@ -60,13 +60,17 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        this.writer = new SMTPCommandWriter();
        this.username = username;
        this.password = password;
+       this.codecState = CodecState.AUTH_READY;
    }
 
-   private AuthMode getAuthMode(String modeString) throws SMTPProtocolException{
-       if (modeString.equals(AuthMode.LOGIN.name())) {
-           return AuthMode.LOGIN;
-       } else if (modeString.equals(AuthMode.PLAIN.name())) {
-           return AuthMode.PLAIN;
+   private AuthMode getAuthMode(String types) throws SMTPProtocolException{
+       String[] parts = types.split(" ");
+       for (int i = 0; i < parts.length; i++) {
+           if (parts[i].equals(AuthMode.LOGIN.name())) {
+               return AuthMode.LOGIN;
+           } else if (parts[i].equals(AuthMode.PLAIN.name())) {
+               return AuthMode.PLAIN;
+           }
        }
        throw null;
    }
@@ -78,7 +82,11 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        this.codecState = CodecState.AUTH_READY;
        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
 
-       iosession.setEventMask(SelectionKey.OP_READ);
+       if (state.getRequest() != null) {
+           iosession.setEvent(SelectionKey.OP_WRITE);
+       } else {
+           iosession.setEvent(SelectionKey.OP_READ);
+       }   
    }
 
    public void produceData(IOSession iosession, ClientState state)
@@ -101,15 +109,18 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
            while(extensions.hasNext()) {
                String extension = extensions.next();
                if (extension.startsWith(ProtocolState.AUTH.name()) ) {
-                   type = extension.substring(ProtocolState.AUTH.name().length() + 1 );
-                   mode  = getAuthMode(type);
+                   String types = extension.substring(ProtocolState.AUTH.name().length() + 1 );
+                   mode  = getAuthMode(types);
                    if (mode != null) {
-                       iosession.setAttribute(AUTH_TYPE, mode);
                        break;
                    }
                }
            }
-           if (mode == null) new SMTPProtocolException("Unsupported AUTH types");
+           if (mode == null) {
+               new SMTPProtocolException("Unsupported AUTH types");
+           } else {
+               iosession.setAttribute(AUTH_TYPE, mode);
+           }
            
            SMTPCommand auth = new SMTPCommand("AUTH", type);
            this.writer.write(auth, buf);
