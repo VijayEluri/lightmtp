@@ -1,8 +1,22 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 
 import org.apache.commons.codec.binary.Base64;
@@ -21,7 +35,12 @@ import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionInputBuffer;
 import com.ok2c.lightnio.SessionOutputBuffer;
+import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
+/**
+ * {@link ProtocolCodec} implementation which handles SMTP AUTH. See {@link AuthMode} for all supported modes
+ *
+ */
 public class AuthCodec implements ProtocolCodec<ClientState> {
 
    enum CodecState {
@@ -37,18 +56,24 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
    }
 
 
+   /**
+    * Auth types which are supported
+    *
+    */
    enum AuthMode {
        PLAIN, LOGIN
    }
 
+   private final static Charset AUTH_CHARSET = Charset.forName("UTF-8");
    private final static String AUTH_TYPE = "smtp.auth-type";
    private final SMTPBuffers iobuffers;
    private final SMTPMessageParser<SMTPReply> parser;
    private final SMTPMessageWriter<SMTPCommand> writer;
 
    private CodecState codecState;
-   private String username;
-   private String password;
+   private final String username;
+   private final String password;
+   private final CharArrayBuffer lineBuf;
 
    public AuthCodec(final SMTPBuffers iobuffers, final String username, final String password) {
        super();
@@ -61,9 +86,16 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        this.username = username;
        this.password = password;
        this.codecState = CodecState.AUTH_READY;
+       this.lineBuf = new CharArrayBuffer(1024);
    }
 
-   private AuthMode getAuthMode(String types) throws SMTPProtocolException{
+   /**
+    * Return the AuthMode to use
+    * 
+    * @param types
+    * @return type to use or null if no supported could be found
+    */
+   private AuthMode getAuthMode(String types) {
        String[] parts = types.split(" ");
        for (int i = 0; i < parts.length; i++) {
            if (parts[i].equals(AuthMode.LOGIN.name())) {
@@ -72,23 +104,28 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
                return AuthMode.PLAIN;
            }
        }
-       throw null;
+       return null;
    }
 
+   /*
+    * (non-Javadoc)
+    * @see com.ok2c.lightmtp.protocol.ProtocolCodec#reset(com.ok2c.lightnio.IOSession, java.lang.Object)
+    */
    public void reset(IOSession iosession, ClientState state)
            throws IOException, SMTPProtocolException {
        this.parser.reset();
        this.writer.reset();
        this.codecState = CodecState.AUTH_READY;
        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
+       this.lineBuf.clear();
+       iosession.setEvent(SelectionKey.OP_WRITE);
 
-       if (state.getRequest() != null) {
-           iosession.setEvent(SelectionKey.OP_WRITE);
-       } else {
-           iosession.setEvent(SelectionKey.OP_READ);
-       }   
    }
 
+   /*
+    * (non-Javadoc)
+    * @see com.ok2c.lightmtp.protocol.ProtocolCodec#produceData(com.ok2c.lightnio.IOSession, java.lang.Object)
+    */
    public void produceData(IOSession iosession, ClientState state)
            throws IOException, SMTPProtocolException {
        if (iosession == null) {
@@ -103,7 +140,6 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
 
        switch (this.codecState) {
        case AUTH_READY:
-           String type = null;
            AuthMode mode = null;
            Iterator<String> extensions = state.getExtensions().iterator();
            while(extensions.hasNext()) {
@@ -117,40 +153,43 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
                }
            }
            if (mode == null) {
+               // TODO: Maybe we should just skip auth then and call the next codec in the chain
                new SMTPProtocolException("Unsupported AUTH types");
            } else {
                iosession.setAttribute(AUTH_TYPE, mode);
            }
            
-           SMTPCommand auth = new SMTPCommand("AUTH", type);
+           SMTPCommand auth = new SMTPCommand("AUTH", mode.name());
            this.writer.write(auth, buf);
            this.codecState = CodecState.AUTH_RESPONSE_READY;
-           iosession.setEventMask(SelectionKey.OP_READ);
            break;
            
        case AUTH_PLAIN_INPUT_READY:
-           byte[] authdata = Base64.encodeBase64(("\0" + username + "\0" + password).getBytes(SMTPConsts.ASCII));
-           buf.write(ByteBuffer.wrap(authdata));
-           this.codecState = CodecState.AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED;
-           iosession.setEventMask(SelectionKey.OP_READ);
+           byte[] authdata = Base64.encodeBase64(("\0" + username + "\0" + password).getBytes(AUTH_CHARSET));
+           lineBuf.append(authdata, 0 , authdata.length);
+           this.codecState = CodecState.AUTH_PLAIN_INPUT_RESPONSE_EXPECTED;
            break;
 
        case AUTH_LOGIN_USERNAME_INPUT_READY:
-           byte[] authUserData = Base64.encodeBase64(username.getBytes(SMTPConsts.ASCII));
-           buf.write(ByteBuffer.wrap(authUserData));
-           this.codecState = CodecState.AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED;
-           iosession.setEventMask(SelectionKey.OP_READ);
+           byte[] authUserData = Base64.encodeBase64(username.getBytes(AUTH_CHARSET));
+           lineBuf.append(authUserData, 0, authUserData.length);
+
+           this.codecState = CodecState.AUTH_LOGIN_USERNAME_INPUT_RESPONSE_EXPECTED;
            break;
        
        case AUTH_LOGIN_PASSWORD_INPUT_READY:
-           byte[] authPassData = Base64.encodeBase64(password.getBytes(SMTPConsts.ASCII));
-           buf.write(ByteBuffer.wrap(authPassData));
+           byte[] authPassData = Base64.encodeBase64(password.getBytes(AUTH_CHARSET));
+           lineBuf.append(authPassData,0, authPassData.length);
+
            this.codecState = CodecState.AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED;
-           iosession.setEventMask(SelectionKey.OP_READ);
            break;
        }
        
 
+       if (lineBuf.isEmpty() == false) {
+           buf.writeLine(lineBuf);
+           lineBuf.clear();
+       }
        if (buf.hasData()) {
            buf.flush(iosession.channel());
        }
@@ -159,6 +198,10 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        }
    }
 
+   /*
+    * (non-Javadoc)
+    * @see com.ok2c.lightmtp.protocol.ProtocolCodec#consumeData(com.ok2c.lightnio.IOSession, java.lang.Object)
+    */
    public void consumeData(IOSession iosession, ClientState state)
            throws IOException, SMTPProtocolException {
        if (iosession == null) {
@@ -174,30 +217,40 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
        SMTPReply reply = this.parser.parse(buf, bytesRead == -1);
 
        if (reply != null) {
+
         switch (this.codecState) {
             case AUTH_RESPONSE_READY:
                 AuthMode mode = (AuthMode) iosession.getAttribute(AUTH_TYPE);
+               
                 if (reply.getCode() == SMTPCodes.START_AUTH_INPUT) {
                     if (mode == AuthMode.PLAIN) {
                         this.codecState = CodecState.AUTH_PLAIN_INPUT_READY;
                     } else if (mode == AuthMode.LOGIN) {
                         this.codecState = CodecState.AUTH_LOGIN_USERNAME_INPUT_READY;
                     }
+                    state.setReply(reply);
                     iosession.setEvent(SelectionKey.OP_WRITE);
                 } else {
+                    // TODO: should we set the failure here ?
+                    //       At the moment we just process as maybe its possible to send
+                    //       the mail even without auth
                     this.codecState = CodecState.COMPLETED;
                     state.setReply(reply);
                 }
                 break;
                 
            case AUTH_PLAIN_INPUT_RESPONSE_EXPECTED:
+
                if (reply.getCode() == SMTPCodes.AUTH_OK) {
                    this.codecState = CodecState.COMPLETED;
                    state.setReply(reply);
                    iosession.setEvent(SelectionKey.OP_WRITE);
                
                } else {
-                   this.codecState = CodecState.AUTH_READY;
+                   // TODO: should we set the failure here ?
+                   //       At the moment we just process as maybe its possible to send
+                   //       the mail even without auth
+                   this.codecState = CodecState.COMPLETED;
                    state.setReply(reply);
                }
                break;
@@ -216,10 +269,15 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
            case AUTH_LOGIN_PASSWORD_INPUT_RESPONSE_EXPECTED:
                if (reply.getCode() == SMTPCodes.AUTH_OK) {
                    this.codecState = CodecState.COMPLETED;
+                   state.setReply(reply);
                    iosession.setEvent(SelectionKey.OP_WRITE);
                } else {
-                   this.codecState = CodecState.AUTH_READY;
+                   // TODO: should we set the failure here ?
+                   //       At the moment we just process as maybe its possible to send
+                   //       the mail even without auth
+                   this.codecState = CodecState.COMPLETED;
                    state.setReply(reply);
+                   
                }
                break;
                
@@ -239,10 +297,18 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
    }
 
 
+   /*
+    * (non-Javadoc)
+    * @see com.ok2c.lightmtp.protocol.ProtocolCodec#isCompleted()
+    */
    public boolean isCompleted() {
        return this.codecState == CodecState.COMPLETED;
    }
    
+   /*
+    * (non-Javadoc)
+    * @see com.ok2c.lightmtp.protocol.ProtocolCodec#next(com.ok2c.lightmtp.protocol.ProtocolCodecs, java.lang.Object)
+    */
    public String next(ProtocolCodecs<ClientState> codecs, ClientState state) {
        if (isCompleted()) {
            return ProtocolState.MAIL.name();
@@ -252,6 +318,9 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
 
    }
 
+   /**
+    * Nothing todo here
+    */
    public void cleanUp() {
    }
 
