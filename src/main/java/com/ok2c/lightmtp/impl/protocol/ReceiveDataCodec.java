@@ -25,6 +25,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPConsts;
@@ -42,11 +48,6 @@ import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.RcptResult;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
 
@@ -60,7 +61,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
     private final SMTPMessageWriter<SMTPReply> writer;
     private final LinkedList<SMTPReply> pendingReplies;
     private final CharArrayBuffer lineBuf;
-    private final SessionOutputBufferImpl contentBuf;
+    private final SMTPOutputBuffer contentBuf;
 
     private File tempFile;
     private FileStore fileStore;
@@ -74,15 +75,9 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
             final DeliveryHandler handler,
             final DataAckMode mode) {
         super();
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
-        if (workingDir == null) {
-            throw new IllegalArgumentException("Working directory may not be null");
-        }
-        if (handler == null) {
-            throw new IllegalArgumentException("Devliry handler may not be null");
-        }
+        Args.notNull(iobuffers, "IO buffers");
+        Args.notNull(workingDir, "Working directory");
+        Args.notNull(handler, "Devliry handler");
         this.iobuffers = iobuffers;
         this.workingDir = workingDir;
         this.handler = handler;
@@ -90,7 +85,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.writer = new SMTPReplyWriter(true);
         this.pendingReplies = new LinkedList<SMTPReply>();
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
-        this.contentBuf = new SessionOutputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
+        this.contentBuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
 
         this.dataReceived = false;
         this.pendingDelivery = null;
@@ -110,15 +105,12 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         super.finalize();
     }
 
+    @Override
     public void reset(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         cleanUp();
 
@@ -137,16 +129,10 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         this.pendingReplies.clear();
         this.dataReceived = false;
         this.pendingDelivery = null;
-
-        MIMEEncoding enc = sessionState.getMimeEncoding();
-        if (enc != null && enc.equals(MIMEEncoding.MIME_8BIT)) {
-            this.iobuffers.setInputCharset(SMTPConsts.ISO_8859_1);
-        } else {
-            this.iobuffers.setInputCharset(SMTPConsts.ASCII);
-        }
         this.completed = false;
     }
 
+    @Override
     public void cleanUp() {
         if (this.fileStore != null) {
             this.fileStore.reset();
@@ -158,15 +144,12 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         }
     }
 
+    @Override
     public void produceData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
@@ -254,15 +237,12 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         }
     }
 
+    @Override
     public void consumeData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
@@ -325,10 +305,12 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
         }
     }
 
+    @Override
     public boolean isCompleted() {
         return this.completed;
     }
 
+    @Override
     public String next(
             final ProtocolCodecs<ServerState> codecs,
             final ServerState sessionState) {

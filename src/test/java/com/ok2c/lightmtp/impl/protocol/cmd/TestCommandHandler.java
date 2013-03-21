@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 
 import junit.framework.Assert;
 
+import org.apache.http.concurrent.FutureCallback;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
@@ -32,7 +33,6 @@ import com.ok2c.lightmtp.impl.protocol.DataType;
 import com.ok2c.lightmtp.impl.protocol.MIMEEncoding;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class TestCommandHandler {
 

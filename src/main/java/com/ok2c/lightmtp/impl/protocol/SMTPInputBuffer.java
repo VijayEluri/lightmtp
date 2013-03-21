@@ -14,32 +14,25 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
+import java.nio.charset.Charset;
+
+import org.apache.http.impl.nio.reactor.SessionInputBufferImpl;
+
 import com.ok2c.lightmtp.SMTPConsts;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
-import com.ok2c.lightnio.impl.TextConsts;
 
 public class SMTPInputBuffer extends SessionInputBufferImpl {
 
-    public SMTPInputBuffer(int buffersize, int linebuffersize) {
+    public SMTPInputBuffer(final int buffersize, final int linebuffersize, final Charset charset) {
+        super(buffersize, linebuffersize, charset);
+    }
+
+    public SMTPInputBuffer(final int buffersize, final int linebuffersize) {
         super(buffersize, linebuffersize, SMTPConsts.ASCII);
     }
 
+    @Override
     public void clear() {
         super.clear();
-    }
-
-    @Override
-    protected int findLineDelim() {
-        int prev = -1;
-        int cur = -1;
-        for (int i = this.buffer.position(); i < this.buffer.limit(); i++) {
-            prev = cur;
-            cur = this.buffer.get(i);
-            if (prev == TextConsts.CR && cur == TextConsts.LF) {
-                return i + 1;
-            }
-        }
-        return -1;
     }
 
 }

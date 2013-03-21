@@ -20,9 +20,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
@@ -32,9 +36,6 @@ import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.util.DNSUtils;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
 
@@ -58,41 +59,37 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
         this(iobuffers, null);
     }
 
-    public SendLocalHeloCodec(final SMTPBuffers iobuffers, String heloName) {
+    public SendLocalHeloCodec(final SMTPBuffers iobuffers, final String heloName) {
         super();
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
+        Args.notNull(iobuffers, "IO buffers");
         this.iobuffers = iobuffers;
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
         this.heloName = heloName;
     }
-    
+
+    @Override
     public void reset(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
-        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
 
         iosession.setEventMask(SelectionKey.OP_READ);
     }
 
+    @Override
     public void cleanUp() {
     }
 
+    @Override
     public void produceData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
@@ -103,7 +100,7 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
                 helo = DNSUtils.getLocalDomain(iosession.getLocalAddress());
             }
             SMTPCommand ehlo = new SMTPCommand("LHLO", helo);
-                    
+
             this.writer.write(ehlo, buf);
             this.codecState = CodecState.LHLO_RESPONSE_EXPECTED;
             break;
@@ -117,15 +114,12 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public void consumeData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
@@ -174,10 +168,12 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED;
     }
 
+    @Override
     public String next(
             final ProtocolCodecs<ClientState> codecs,
             final ClientState sessionState) {

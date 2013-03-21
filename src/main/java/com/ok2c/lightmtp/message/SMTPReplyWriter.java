@@ -17,12 +17,14 @@ package com.ok2c.lightmtp.message;
 import java.nio.charset.CharacterCodingException;
 import java.util.List;
 
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
 
@@ -30,14 +32,14 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
     private final int maxLineLen;
     private final boolean useEnhancedCodes;
 
-    public SMTPReplyWriter(int maxLineLen, boolean useEnhancedCodes) {
+    public SMTPReplyWriter(final int maxLineLen, final boolean useEnhancedCodes) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.maxLineLen = maxLineLen;
         this.useEnhancedCodes = useEnhancedCodes;
     }
 
-    public SMTPReplyWriter(boolean useEnhancedCodes) {
+    public SMTPReplyWriter(final boolean useEnhancedCodes) {
         this(SMTPConsts.MAX_REPLY_LEN, useEnhancedCodes);
     }
 
@@ -45,19 +47,17 @@ public class SMTPReplyWriter implements SMTPMessageWriter<SMTPReply> {
         this(false);
     }
 
+    @Override
     public void reset() {
         this.lineBuf.clear();
     }
 
+    @Override
     public void write(
             final SMTPReply message,
             final SessionOutputBuffer buf) throws SMTPProtocolException {
-        if (message == null) {
-            throw new IllegalArgumentException("Reply may not be null");
-        }
-        if (buf == null) {
-            throw new IllegalArgumentException("Session output buffer may not be null");
-        }
+        Args.notNull(message, "Reply");
+        Args.notNull(buf, "Session output buffer");
         List<String> lines = message.getLines();
         for (int i = 0; i < lines.size(); i++) {
             this.lineBuf.clear();

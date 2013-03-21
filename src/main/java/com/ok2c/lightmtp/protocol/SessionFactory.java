@@ -14,7 +14,7 @@
  */
 package com.ok2c.lightmtp.protocol;
 
-import com.ok2c.lightnio.IOSession;
+import org.apache.http.nio.reactor.IOSession;
 
 public interface SessionFactory<T> {
 

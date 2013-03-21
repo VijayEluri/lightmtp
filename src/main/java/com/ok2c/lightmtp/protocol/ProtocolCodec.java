@@ -16,8 +16,9 @@ package com.ok2c.lightmtp.protocol;
 
 import java.io.IOException;
 
+import org.apache.http.nio.reactor.IOSession;
+
 import com.ok2c.lightmtp.SMTPProtocolException;
-import com.ok2c.lightnio.IOSession;
 
 public interface ProtocolCodec<T> {
 

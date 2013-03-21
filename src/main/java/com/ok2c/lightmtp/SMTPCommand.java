@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.http.util.Args;
+
 public class SMTPCommand {
 
     private final String verb;
@@ -26,9 +28,7 @@ public class SMTPCommand {
 
     public SMTPCommand(final String code, final String argument, final List<String> params) {
         super();
-        if (code == null) {
-            throw new IllegalArgumentException("Code may not be null");
-        }
+        Args.notNull(code, "Code");
         this.verb = code;
         this.argument = argument;
         if (params == null || params.isEmpty()) {

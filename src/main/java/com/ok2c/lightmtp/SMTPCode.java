@@ -20,7 +20,7 @@ public final class SMTPCode {
     private final int subject;
     private final int detail;
 
-    public SMTPCode(int codeClass, int subject, int detail) {
+    public SMTPCode(final int codeClass, final int subject, final int detail) {
         super();
         if (codeClass <= 0) {
             throw new IllegalArgumentException("Code class may not be nagtive or zero");
@@ -59,7 +59,7 @@ public final class SMTPCode {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }

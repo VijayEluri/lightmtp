@@ -16,6 +16,8 @@ package com.ok2c.lightmtp.impl.protocol;
 
 import java.io.File;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.util.Args;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +38,9 @@ import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
-import com.ok2c.lightnio.IOSession;
 
 public class ServerSessionFactory implements SessionFactory<ServerSession> {
 
-    private final Logger log = LoggerFactory.getLogger(ServerSession.class);
     private final Logger iolog = LoggerFactory.getLogger(IOSession.class);
     private final Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
 
@@ -57,18 +57,10 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
             final EnvelopValidator validator,
             final DeliveryHandler deliveryHandler) {
         super();
-        if (workingDir == null) {
-            throw new IllegalArgumentException("Working dir may not be null");
-        }
-        if (idgenerator == null) {
-            throw new IllegalArgumentException("Id generator may not be null");
-        }
-        if (validator == null) {
-            throw new IllegalArgumentException("Envelop validator may not be null");
-        }
-        if (deliveryHandler == null) {
-            throw new IllegalArgumentException("Delivery handler may not be null");
-        }
+        Args.notNull(workingDir, "Working dir");
+        Args.notNull(idgenerator, "Id generator");
+        Args.notNull(validator, "Envelop validator");
+        Args.notNull(deliveryHandler, "Delivery handler");
         this.workingDir = workingDir;
         this.idgenerator = idgenerator;
         this.addressValidator = addressValidator;
@@ -76,6 +68,7 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
         this.deliveryHandler = deliveryHandler;
     }
 
+    @Override
     public ServerSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ServerState> codecs = new ProtocolCodecRegistry<ServerState>();
@@ -89,7 +82,13 @@ public class ServerSessionFactory implements SessionFactory<ServerSession> {
                         this.workingDir, this.deliveryHandler, DataAckMode.SINGLE));
         codecs.register(ProtocolState.QUIT.name(),
                 new ServiceShutdownCodec(iobuffers));
-        return new ServerSession(this.log, this.iolog, this.wirelog, iosession, iobuffers, codecs);
+        final IOSession localIOSession;
+        if (iolog.isDebugEnabled() || wirelog.isDebugEnabled()) {
+            localIOSession = new LoggingIOSession(iosession, "SMTP server", iolog, wirelog);
+        } else {
+            localIOSession = iosession;
+        }
+        return new ServerSession(localIOSession, iobuffers, codecs);
     }
 
     protected ProtocolHandler<ServerState> createProtocolHandler(

@@ -26,11 +26,17 @@ import java.util.concurrent.Future;
 
 import junit.framework.Assert;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.nio.reactor.IOReactorStatus;
+import org.apache.http.nio.reactor.ListenerEndpoint;
+import org.apache.http.nio.reactor.SessionRequest;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
+import com.ok2c.lightmtp.agent.SessionEndpoint;
 import com.ok2c.lightmtp.impl.BaseTransportTest;
 import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
@@ -46,11 +52,6 @@ import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.ProtocolHandler;
 import com.ok2c.lightmtp.protocol.RcptResult;
 import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
-import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.ListenerEndpoint;
-import com.ok2c.lightnio.SessionRequest;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class TestMailDelivery extends BaseTransportTest {
 
@@ -109,7 +110,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -192,7 +194,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -295,7 +298,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -394,7 +398,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -483,7 +488,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -571,7 +577,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address,  null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -655,7 +662,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -704,7 +712,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -754,7 +763,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -793,6 +803,7 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
+            @Override
             public Future<DeliveryResult> handle(
                     final String messageId,
                     final DeliveryRequest request,
@@ -816,7 +827,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(deliveryRequestHandler);
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -870,7 +882,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(new LocalClientSessionFactory(deliveryRequestHandler));
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -932,6 +945,7 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleEnvelopValidator envelopValidator = new SimpleEnvelopValidator();
         DeliveryHandler deliveryHandler = new DeliveryHandler() {
 
+            @Override
             public Future<DeliveryResult> handle(
                     final String messageId,
                     final DeliveryRequest request,
@@ -956,7 +970,8 @@ public class TestMailDelivery extends BaseTransportTest {
         SimpleTestDeliveryRequestHandler deliveryRequestHandler = new SimpleTestDeliveryRequestHandler();
         this.mua.start(new LocalClientSessionFactory(deliveryRequestHandler));
 
-        SessionRequest sessionRequest = this.mua.connect(address, null, testJob, null);
+        SessionEndpoint sessEndpoint = new SessionEndpoint(address);
+        SessionRequest sessionRequest = this.mua.connect(sessEndpoint, testJob, null);
         sessionRequest.waitFor();
         Assert.assertNotNull(sessionRequest.getSession());
         Assert.assertNull(sessionRequest.getException());
@@ -984,6 +999,6 @@ public class TestMailDelivery extends BaseTransportTest {
         Assert.assertEquals(451, res1.getReply().getCode());
         Assert.assertEquals(new SMTPCode(4, 2, 0), res1.getReply().getEnhancedCode());
     }
-    
+
 
 }

@@ -27,7 +27,7 @@ public class ParserCursor {
     private final int upperBound;
     private int pos;
 
-    public ParserCursor(int lowerBound, int upperBound) {
+    public ParserCursor(final int lowerBound, final int upperBound) {
         super();
         if (lowerBound < 0) {
             throw new IndexOutOfBoundsException("Lower bound cannot be negative");
@@ -52,7 +52,7 @@ public class ParserCursor {
         return this.pos;
     }
 
-    public void updatePos(int pos) {
+    public void updatePos(final int pos) {
         if (pos < this.lowerBound) {
             throw new IndexOutOfBoundsException();
         }
@@ -66,6 +66,7 @@ public class ParserCursor {
         return this.pos >= this.upperBound;
     }
 
+    @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder(16);
         buffer.append('[');

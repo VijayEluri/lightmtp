@@ -14,15 +14,23 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
+import java.nio.charset.Charset;
+
+import org.apache.http.impl.nio.reactor.SessionOutputBufferImpl;
+
 import com.ok2c.lightmtp.SMTPConsts;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 public class SMTPOutputBuffer extends SessionOutputBufferImpl {
 
-    public SMTPOutputBuffer(int buffersize, int linebuffersize) {
+    public SMTPOutputBuffer(final int buffersize, final int linebuffersize, final Charset charset) {
+        super(buffersize, linebuffersize, charset);
+    }
+
+    public SMTPOutputBuffer(final int buffersize, final int linebuffersize) {
         super(buffersize, linebuffersize, SMTPConsts.ASCII);
     }
 
+    @Override
     public void clear() {
         super.clear();
     }

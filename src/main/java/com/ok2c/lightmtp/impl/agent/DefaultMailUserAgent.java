@@ -16,16 +16,27 @@ package com.ok2c.lightmtp.impl.agent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.impl.nio.reactor.ExceptionEvent;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.nio.reactor.IOReactorExceptionHandler;
+import org.apache.http.nio.reactor.IOReactorStatus;
+import org.apache.http.nio.reactor.IOSession;
 
 import com.ok2c.lightmtp.agent.MailUserAgent;
+import com.ok2c.lightmtp.agent.SessionEndpoint;
 import com.ok2c.lightmtp.agent.TransportType;
+import com.ok2c.lightmtp.impl.pool.LeasedSession;
+import com.ok2c.lightmtp.impl.pool.MailIOSessionManager;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
@@ -34,21 +45,12 @@ import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.SessionContext;
 import com.ok2c.lightmtp.protocol.SessionFactory;
-import com.ok2c.lightnio.IOReactorExceptionHandler;
-import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
-import com.ok2c.lightnio.impl.ExceptionEvent;
-import com.ok2c.lightnio.impl.IOReactorConfig;
-import com.ok2c.lightnio.pool.IOSessionManager;
-import com.ok2c.lightnio.pool.ManagedIOSession;
 
 public class DefaultMailUserAgent implements MailUserAgent {
 
     private static final String PENDING_DELIVERY = "com.ok2c.lightmtp.delivery";
 
-    private final IOSessionManager<SocketAddress> sessionManager;
+    private final MailIOSessionManager sessionManager;
     private final DefaultMailClientTransport transport;
     private final TransportType type;
     private final Set<PendingDelivery> pendingDeliveries;
@@ -69,13 +71,14 @@ public class DefaultMailUserAgent implements MailUserAgent {
         super();
         this.type = type;
         this.transport = new DefaultMailClientTransport(
-                new InternalIOSessionRegistryCallback(),
+                null,
                 new InternalIOReactorThreadCallback(),
                 config);
         this.sessionManager = new MailIOSessionManager(this.transport.getIOReactor());
         this.pendingDeliveries = Collections.synchronizedSet(new HashSet<PendingDelivery>());
     }
 
+    @Override
     public void start() {
         started = true;
         DeliveryRequestHandler handler = new InternalDeliveryRequestHandler();
@@ -96,21 +99,21 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
     /**
      * Set the helo name to use. Must be called before {@link #start()} to take affect
-     * 
+     *
      * @param heloName
      */
-    public void setHeloName(String heloName) {
+    public void setHeloName(final String heloName) {
         if (started) throw new IllegalStateException("Can only be set when not started");
         this.heloName = heloName;
     }
-    
+
     /**
      * Set the authentication to use. Must be called before {@link #start()}
-     * 
+     *
      * @param username
      * @param password
      */
-    public void setAuthentication(String username, String password) {
+    public void setAuthentication(final String username, final String password) {
         if (started) throw new IllegalStateException("Can only be set when not started");
         if ((username == null || password == null) && (username != null || password != null)) {
             throw new IllegalArgumentException("You need to set username and password to null or none of them");
@@ -118,17 +121,18 @@ public class DefaultMailUserAgent implements MailUserAgent {
         this.username = username;
         this.password = password;
     }
-    
+
     public Future<DeliveryResult> deliver(
-            final InetSocketAddress address,
+            final InetSocketAddress remoteAddress,
             final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
-        return deliver(address, null,  request, callback);
+        return deliver(remoteAddress, request, callback);
     }
-    
+
+    @Override
     public Future<DeliveryResult> deliver(
-            final InetSocketAddress address,
-            final InetSocketAddress localAdress,
+            final SessionEndpoint endpoint,
+            final int connectTimeout,
             final DeliveryRequest request,
             final FutureCallback<DeliveryResult> callback) {
         if (this.shutdown) {
@@ -137,7 +141,9 @@ public class DefaultMailUserAgent implements MailUserAgent {
         BasicFuture<DeliveryResult> future = new BasicFuture<DeliveryResult>(callback);
         PendingDelivery delivery = new PendingDelivery(request, future);
         this.pendingDeliveries.add(delivery);
-        this.sessionManager.leaseSession(address, localAdress, new IOSessionReadyCallback(delivery));
+        this.sessionManager.leaseSession(endpoint,
+                connectTimeout, TimeUnit.MILLISECONDS,
+                new IOSessionReadyCallback(delivery));
         return future;
     }
 
@@ -145,18 +151,22 @@ public class DefaultMailUserAgent implements MailUserAgent {
         this.transport.setExceptionHandler(exceptionHandler);
     }
 
+    @Override
     public IOReactorStatus getStatus() {
         return this.transport.getStatus();
     }
 
+    @Override
     public Exception getException() {
         return this.transport.getException();
     }
 
+    @Override
     public List<ExceptionEvent> getAuditLog() {
         return this.transport.getAuditLog();
     }
 
+    @Override
     public void shutdown() throws IOException {
         this.shutdown = true;
         this.started = false;
@@ -165,19 +175,9 @@ public class DefaultMailUserAgent implements MailUserAgent {
         this.transport.shutdown();
     }
 
+    @Override
     public void forceShutdown() {
         this.transport.forceShutdown();
-    }
-
-    class InternalIOSessionRegistryCallback implements IOSessionRegistryCallback {
-
-        public void removed(final IOSession iosession) {
-            sessionManager.removeExpired(iosession);
-        }
-
-        public void added(final IOSession iosession) {
-        }
-
     }
 
     class InternalIOReactorThreadCallback implements IOReactorThreadCallback {
@@ -191,12 +191,14 @@ public class DefaultMailUserAgent implements MailUserAgent {
             }
         }
 
+        @Override
         public void terminated() {
             shutdown = true;
             started = false;
             cancelDeliveries();
         }
 
+        @Override
         public void terminated(final Exception ex) {
             shutdown = true;
             started = false;
@@ -205,7 +207,7 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
     }
 
-    class IOSessionReadyCallback implements FutureCallback<ManagedIOSession> {
+    class IOSessionReadyCallback implements FutureCallback<LeasedSession> {
 
         private final PendingDelivery pendingDelivery;
 
@@ -218,19 +220,22 @@ public class DefaultMailUserAgent implements MailUserAgent {
             pendingDeliveries.remove(this.pendingDelivery);
         }
 
-        public void completed(final ManagedIOSession managedSession) {
+        @Override
+        public void completed(final LeasedSession leasedSession) {
             deliveryDone();
-            this.pendingDelivery.setManagedSession(managedSession);
-            IOSession iosession = managedSession.getSession();
+            this.pendingDelivery.setLeasedSession(leasedSession);
+            IOSession iosession = leasedSession.getIOSession();
             iosession.setAttribute(PENDING_DELIVERY, this.pendingDelivery);
             iosession.setEvent(SelectionKey.OP_WRITE);
         }
 
+        @Override
         public void failed(final Exception ex) {
             deliveryDone();
             this.pendingDelivery.getDeliveryFuture().failed(ex);
         }
 
+        @Override
         public void cancelled() {
             deliveryDone();
             this.pendingDelivery.getDeliveryFuture().cancel(true);
@@ -244,25 +249,29 @@ public class DefaultMailUserAgent implements MailUserAgent {
             super();
         }
 
+        @Override
         public void connected(final SessionContext context) {
         }
 
+        @Override
         public void disconnected(final SessionContext context) {
             PendingDelivery delivery = (PendingDelivery) context.removeAttribute(PENDING_DELIVERY);
             if (delivery != null) {
                 delivery.getDeliveryFuture().cancel(true);
-                sessionManager.releaseSession(delivery.getManagedSession());
+                sessionManager.releaseSession(delivery.getLeasedSession());
             }
         }
 
+        @Override
         public void exception(final Exception ex, final SessionContext context) {
             PendingDelivery delivery = (PendingDelivery) context.removeAttribute(PENDING_DELIVERY);
             if (delivery != null) {
                 delivery.getDeliveryFuture().failed(ex);
-                sessionManager.releaseSession(delivery.getManagedSession());
+                sessionManager.releaseSession(delivery.getLeasedSession());
             }
         }
 
+        @Override
         public void completed(
                 final DeliveryRequest request,
                 final DeliveryResult result,
@@ -270,10 +279,11 @@ public class DefaultMailUserAgent implements MailUserAgent {
             PendingDelivery delivery = (PendingDelivery) context.removeAttribute(PENDING_DELIVERY);
             if (delivery != null) {
                 delivery.getDeliveryFuture().completed(result);
-                sessionManager.releaseSession(delivery.getManagedSession());
+                sessionManager.releaseSession(delivery.getLeasedSession());
             }
         }
 
+        @Override
         public void failed(
                 final DeliveryRequest request,
                 final DeliveryResult result,
@@ -281,6 +291,7 @@ public class DefaultMailUserAgent implements MailUserAgent {
             completed(request, result, context);
         }
 
+        @Override
         public DeliveryRequest submitRequest(final SessionContext context) {
             PendingDelivery delivery = (PendingDelivery) context.getAttribute(PENDING_DELIVERY);
             if (delivery != null) {
@@ -291,4 +302,5 @@ public class DefaultMailUserAgent implements MailUserAgent {
         }
 
     }
+
 }

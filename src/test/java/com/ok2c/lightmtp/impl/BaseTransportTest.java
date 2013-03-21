@@ -17,12 +17,12 @@ package com.ok2c.lightmtp.impl;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.junit.After;
 import org.junit.Before;
 
-import com.ok2c.lightmtp.impl.agent.DefaultMailServerTransport;
 import com.ok2c.lightmtp.impl.agent.DefaultMailClientTransport;
-import com.ok2c.lightnio.impl.IOReactorConfig;
+import com.ok2c.lightmtp.impl.agent.DefaultMailServerTransport;
 
 public abstract class BaseTransportTest {
 
@@ -34,8 +34,7 @@ public abstract class BaseTransportTest {
     @Before
     public void setUp() throws Exception {
 
-        IOReactorConfig config = new IOReactorConfig();
-        config.setWorkerCount(2);
+        IOReactorConfig config = IOReactorConfig.custom().setIoThreadCount(2).build();
         this.mta = new DefaultMailServerTransport(TMP_DIR, config);
         this.mta.setExceptionHandler(new BasicExceptionHandler());
 

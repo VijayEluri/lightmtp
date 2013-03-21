@@ -19,14 +19,14 @@ import java.nio.channels.SelectionKey;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.nio.reactor.IOEventDispatch;
+import org.apache.http.nio.reactor.IOReactor;
+import org.apache.http.nio.reactor.IOSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.agent.MailTransport;
 import com.ok2c.lightmtp.impl.protocol.ProtocolState;
-import com.ok2c.lightnio.IOEventDispatch;
-import com.ok2c.lightnio.IOReactor;
-import com.ok2c.lightnio.IOSession;
 
 abstract class AbstractMailTransport implements MailTransport {
 
@@ -57,6 +57,7 @@ abstract class AbstractMailTransport implements MailTransport {
         this.thread.start();
     }
 
+    @Override
     public Exception getException() {
         IOReactorThread t = this.thread;
         if (t != null) {
@@ -67,7 +68,7 @@ abstract class AbstractMailTransport implements MailTransport {
     }
 
     protected void closeActiveSessions(
-            int timeout, final TimeUnit unit) throws InterruptedException {
+            final int timeout, final TimeUnit unit) throws InterruptedException {
         this.log.debug("Terminate active sessions");
         synchronized (this.sessionRegistry) {
             Iterator<IOSession> sessions = this.sessionRegistry.iterator();
@@ -96,6 +97,7 @@ abstract class AbstractMailTransport implements MailTransport {
         }
     }
 
+    @Override
     public void shutdown() throws IOException {
         try {
             closeActiveSessions(30, TimeUnit.SECONDS);
@@ -104,7 +106,7 @@ abstract class AbstractMailTransport implements MailTransport {
         forceShutdown(30000);
     }
 
-    protected void forceShutdown(long gracePeriod) throws IOException {
+    protected void forceShutdown(final long gracePeriod) throws IOException {
         this.log.debug("Shut down I/O reactor");
         getIOReactor().shutdown(gracePeriod);
         IOReactorThread t = this.thread;
@@ -116,6 +118,7 @@ abstract class AbstractMailTransport implements MailTransport {
         }
     }
 
+    @Override
     public void forceShutdown() {
         try {
             forceShutdown(1000);

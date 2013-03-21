@@ -20,6 +20,15 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.http.impl.nio.reactor.DefaultListeningIOReactor;
+import org.apache.http.impl.nio.reactor.ExceptionEvent;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.nio.reactor.IOReactorExceptionHandler;
+import org.apache.http.nio.reactor.IOReactorStatus;
+import org.apache.http.nio.reactor.ListenerEndpoint;
+import org.apache.http.nio.reactor.ListeningIOReactor;
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.agent.MailServerTransport;
 import com.ok2c.lightmtp.impl.protocol.ServerSession;
 import com.ok2c.lightmtp.impl.protocol.ServerSessionFactory;
@@ -28,13 +37,6 @@ import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.protocol.SessionFactory;
 import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
-import com.ok2c.lightnio.IOReactorExceptionHandler;
-import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.ListenerEndpoint;
-import com.ok2c.lightnio.ListeningIOReactor;
-import com.ok2c.lightnio.impl.DefaultListeningIOReactor;
-import com.ok2c.lightnio.impl.ExceptionEvent;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class DefaultMailServerTransport extends AbstractMailTransport
                                         implements MailServerTransport {
@@ -48,9 +50,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
             final File workingDir,
             final IOReactorConfig config) throws IOException {
         super(sessionRegistryCallback, reactorThreadCallback);
-        if (workingDir == null) {
-            throw new IllegalArgumentException("Working dir may not be null");
-        }
+        Args.notNull(workingDir, "Working dir");
         this.workingDir = workingDir;
         this.ioReactor = new DefaultListeningIOReactor(config,
                 new SimpleThreadFactory("MTA"));
@@ -71,6 +71,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
         return this.workingDir;
     }
 
+    @Override
     public ListenerEndpoint listen(final SocketAddress address) {
         if (this.log.isDebugEnabled()) {
             this.log.debug("Start listener " + address);
@@ -78,6 +79,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
         return this.ioReactor.listen(address);
     }
 
+    @Override
     public Set<ListenerEndpoint> getEndpoints() {
         return this.ioReactor.getEndpoints();
     }
@@ -86,6 +88,7 @@ public class DefaultMailServerTransport extends AbstractMailTransport
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
+    @Override
     public void start(
             final UniqueIdGenerator idgenerator,
             final RemoteAddressValidator addressValidator,
@@ -114,10 +117,12 @@ public class DefaultMailServerTransport extends AbstractMailTransport
         start(iodispatch);
     }
 
+    @Override
     public IOReactorStatus getStatus() {
         return this.ioReactor.getStatus();
     }
 
+    @Override
     public List<ExceptionEvent> getAuditLog() {
         return this.ioReactor.getAuditLog();
     }

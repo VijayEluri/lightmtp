@@ -16,11 +16,12 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 class VrfyAction implements Action<ServerState> {
 
@@ -35,6 +36,7 @@ class VrfyAction implements Action<ServerState> {
         this.validator = validator;
     }
 
+    @Override
     public Future<SMTPReply> execute(
             final ServerState state,
             final FutureCallback<SMTPReply> callback) {

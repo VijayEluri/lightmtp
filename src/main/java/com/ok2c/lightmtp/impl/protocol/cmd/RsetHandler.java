@@ -26,6 +26,7 @@ public class RsetHandler implements CommandHandler<ServerState> {
         super();
     }
 
+    @Override
     public Action<ServerState> handle(final String argument, final List<String> params) {
         return new RsetAction();
     }

@@ -42,6 +42,7 @@ public class MailFromHandler implements CommandHandler<ServerState> {
         this.argParser = new AddressArgParser("FROM:");
     }
 
+    @Override
     public Action<ServerState> handle(
             final String argument,
             final List<String> params) throws SMTPErrorException {

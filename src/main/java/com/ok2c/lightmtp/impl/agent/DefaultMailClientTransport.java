@@ -15,23 +15,24 @@
 package com.ok2c.lightmtp.impl.agent;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
+import org.apache.http.impl.nio.reactor.ExceptionEvent;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.nio.reactor.ConnectingIOReactor;
+import org.apache.http.nio.reactor.IOReactorExceptionHandler;
+import org.apache.http.nio.reactor.IOReactorStatus;
+import org.apache.http.nio.reactor.SessionRequest;
+import org.apache.http.nio.reactor.SessionRequestCallback;
+
 import com.ok2c.lightmtp.agent.MailClientTransport;
+import com.ok2c.lightmtp.agent.SessionEndpoint;
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.impl.protocol.ClientSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.SessionFactory;
-import com.ok2c.lightnio.ConnectingIOReactor;
-import com.ok2c.lightnio.IOReactorExceptionHandler;
-import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.SessionRequest;
-import com.ok2c.lightnio.SessionRequestCallback;
-import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
-import com.ok2c.lightnio.impl.ExceptionEvent;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class DefaultMailClientTransport extends AbstractMailTransport
                                         implements MailClientTransport {
@@ -61,15 +62,16 @@ public class DefaultMailClientTransport extends AbstractMailTransport
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
+    @Override
     public SessionRequest connect(
-            final SocketAddress remoteAddress,
-            final SocketAddress localAddress,
+            final SessionEndpoint endpoint,
             final Object attachment,
             final SessionRequestCallback callback) {
         if (this.log.isDebugEnabled()) {
-            this.log.debug("Request new connection " + remoteAddress + " [" + attachment + "]");
+            this.log.debug("Request new connection to " + endpoint);
         }
-        return this.ioReactor.connect(remoteAddress, localAddress, attachment, callback);
+        return this.ioReactor.connect(endpoint.getRemoteAddress(), endpoint.getLocalAddress(),
+                attachment, callback);
     }
 
     protected void start(final SessionFactory<ClientSession> sessionFactory) {
@@ -79,19 +81,23 @@ public class DefaultMailClientTransport extends AbstractMailTransport
         start(iodispatch);
     }
 
+    @Override
     public void start(final DeliveryRequestHandler deliveryRequestHandler) {
         ClientSessionFactory sessionFactory = new ClientSessionFactory(deliveryRequestHandler);
         start(sessionFactory);
     }
 
+    @Override
     public IOReactorStatus getStatus() {
         return this.ioReactor.getStatus();
     }
 
+    @Override
     public List<ExceptionEvent> getAuditLog() {
         return this.ioReactor.getAuditLog();
     }
 
+    @Override
     public void closeActiveSessions() {
         try {
             closeActiveSessions(30, TimeUnit.SECONDS);

@@ -14,11 +14,10 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import org.apache.http.nio.reactor.IOEventDispatch;
+import org.apache.http.nio.reactor.IOReactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.ok2c.lightnio.IOEventDispatch;
-import com.ok2c.lightnio.IOReactor;
 
 class IOReactorThread extends Thread {
 

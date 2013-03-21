@@ -27,6 +27,7 @@ public class DataHandler implements CommandHandler<ServerState> {
         super();
     }
 
+    @Override
     public Action<ServerState> handle(
             final String argument, final List<String> params) throws SMTPErrorException {
         return new DataAction();

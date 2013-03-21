@@ -14,10 +14,12 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import org.apache.http.nio.reactor.IOEventDispatch;
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.impl.protocol.ClientSession;
 import com.ok2c.lightmtp.protocol.SessionFactory;
-import com.ok2c.lightnio.IOEventDispatch;
-import com.ok2c.lightnio.IOSession;
 
 public class ClientIOEventDispatch implements IOEventDispatch {
 
@@ -30,16 +32,13 @@ public class ClientIOEventDispatch implements IOEventDispatch {
             final IOSessionRegistry sessionRegistry,
             final SessionFactory<ClientSession> sessionFactory) {
         super();
-        if (sessionRegistry == null) {
-            throw new IllegalArgumentException("I/O session registry may not be null");
-        }
-        if (sessionFactory == null) {
-            throw new IllegalArgumentException("Session factory may not be null");
-        }
+        Args.notNull(sessionRegistry, "I/O session registry");
+        Args.notNull(sessionFactory, "Session factory");
         this.sessionRegistry = sessionRegistry;
         this.sessionFactory = sessionFactory;
     }
 
+    @Override
     public void connected(final IOSession iosession) {
         ClientSession clientSession = this.sessionFactory.create(iosession);
         iosession.setAttribute(CLIENT_SESSION, clientSession);
@@ -47,6 +46,7 @@ public class ClientIOEventDispatch implements IOEventDispatch {
         this.sessionRegistry.add(iosession);
     }
 
+    @Override
     public void disconnected(final IOSession iosession) {
         ClientSession clientSession = (ClientSession) iosession.getAttribute(CLIENT_SESSION);
         if (clientSession != null) {
@@ -55,16 +55,19 @@ public class ClientIOEventDispatch implements IOEventDispatch {
         this.sessionRegistry.remove(iosession);
     }
 
+    @Override
     public void inputReady(final IOSession iosession) {
         ClientSession clientSession = (ClientSession) iosession.getAttribute(CLIENT_SESSION);
         clientSession.consumeData();
     }
 
+    @Override
     public void outputReady(final IOSession iosession) {
         ClientSession clientSession = (ClientSession) iosession.getAttribute(CLIENT_SESSION);
         clientSession.produceData();
     }
 
+    @Override
     public void timeout(final IOSession iosession) {
         ClientSession clientSession = (ClientSession) iosession.getAttribute(CLIENT_SESSION);
         clientSession.timeout();

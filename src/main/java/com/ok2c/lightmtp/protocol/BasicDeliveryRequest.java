@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.message.SMTPContent;
 
 public class BasicDeliveryRequest implements DeliveryRequest {
@@ -32,28 +34,27 @@ public class BasicDeliveryRequest implements DeliveryRequest {
             final List<String> recipients,
             final SMTPContent<ReadableByteChannel> content) {
         super();
-        if (sender == null) {
-            throw new IllegalArgumentException("Sender may not be null");
-        }
+        Args.notNull(sender, "Sender");
         if (recipients == null || recipients.isEmpty()) {
             throw new IllegalArgumentException("List of recipients may not be null or empty");
         }
-        if (content == null) {
-            throw new IllegalArgumentException("Delivery content may not be null");
-        }
+        Args.notNull(content, "Delivery content");
         this.sender = sender;
         this.recipients = Collections.unmodifiableList(new ArrayList<String>(recipients));
         this.content = content;
     }
 
+    @Override
     public String getSender() {
         return this.sender;
     }
 
+    @Override
     public List<String> getRecipients() {
         return this.recipients;
     }
 
+    @Override
     public SMTPContent<ReadableByteChannel> getContent() {
         return this.content;
     }

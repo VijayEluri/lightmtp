@@ -16,11 +16,12 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class SimpleAction implements Action<ServerState> {
 
@@ -31,6 +32,7 @@ public class SimpleAction implements Action<ServerState> {
         this.reply = reply;
     }
 
+    @Override
     public Future<SMTPReply> execute(
             final ServerState state,
             final FutureCallback<SMTPReply> callback) {

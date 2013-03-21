@@ -29,6 +29,7 @@ public class EhloHandler implements CommandHandler<ServerState> {
         super();
     }
 
+    @Override
     public Action<ServerState> handle(
             final String argument, final List<String> params) throws SMTPErrorException {
         if (argument == null) {

@@ -16,10 +16,11 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 abstract class AbstractAsyncAction<T> implements Action<T> {
 
@@ -34,6 +35,7 @@ abstract class AbstractAsyncAction<T> implements Action<T> {
 
     protected abstract void internalUpdateState(SMTPReply reply, T state);
 
+    @Override
     public Future<SMTPReply> execute(
             final T state,
             final FutureCallback<SMTPReply> callback) {
@@ -61,6 +63,7 @@ abstract class AbstractAsyncAction<T> implements Action<T> {
             this.callback = callback;
         }
 
+        @Override
         public void completed(final SMTPReply reply) {
             synchronized (this.state) {
                 internalUpdateState(reply, this.state);
@@ -70,12 +73,14 @@ abstract class AbstractAsyncAction<T> implements Action<T> {
             }
         }
 
+        @Override
         public void cancelled() {
             if (this.callback != null) {
                 this.callback.cancelled();
             }
         }
 
+        @Override
         public void failed(final Exception ex) {
             if (this.callback != null) {
                 this.callback.failed(ex);

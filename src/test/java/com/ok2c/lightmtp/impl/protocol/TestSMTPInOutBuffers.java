@@ -19,11 +19,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.util.CharArrayBuffer;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 /**
  * Unit tests for {@link SMTPInputBuffer} and {@link SMTPOutputBuffer}.
@@ -52,7 +51,10 @@ public class TestSMTPInOutBuffers {
 
         line.clear();
         Assert.assertTrue(inbuf.readLine(line, false));
-        Assert.assertEquals("O\ne", line.toString());
+        Assert.assertEquals("O", line.toString());
+        line.clear();
+        Assert.assertTrue(inbuf.readLine(line, false));
+        Assert.assertEquals("e", line.toString());
 
         line.clear();
         Assert.assertTrue(inbuf.readLine(line, false));

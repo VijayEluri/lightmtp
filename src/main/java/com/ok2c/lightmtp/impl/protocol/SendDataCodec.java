@@ -20,6 +20,12 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
+
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
@@ -31,11 +37,6 @@ import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.RcptResult;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 
 public class SendDataCodec implements ProtocolCodec<ClientState> {
 
@@ -56,7 +57,7 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
     private final int maxLineLen;
     private final DataAckMode mode;
     private final SMTPMessageParser<SMTPReply> parser;
-    private final SessionInputBufferImpl contentBuf;
+    private final SMTPInputBuffer contentBuf;
     private final CharArrayBuffer lineBuf;
     private final LinkedList<String> recipients;
 
@@ -67,42 +68,38 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
 
     public SendDataCodec(
             final SMTPBuffers iobuffers,
-            int maxLineLen, boolean enhancedCodes, final DataAckMode mode) {
+            final int maxLineLen, final boolean enhancedCodes, final DataAckMode mode) {
         super();
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
+        Args.notNull(iobuffers, "IO buffers");
         this.iobuffers = iobuffers;
         this.maxLineLen = maxLineLen;
         this.mode = mode != null ? mode : DataAckMode.SINGLE;
         this.parser = new SMTPReplyParser(enhancedCodes);
-        this.contentBuf = new SessionInputBufferImpl(BUF_SIZE, LINE_SIZE, SMTPConsts.ASCII);
+        this.contentBuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
         this.lineBuf = new CharArrayBuffer(LINE_SIZE);
         this.recipients = new LinkedList<String>();
         this.codecState = CodecState.CONTENT_READY;
     }
 
     public SendDataCodec(final SMTPBuffers iobuffers,
-            boolean enhancedCodes, final DataAckMode mode) {
+            final boolean enhancedCodes, final DataAckMode mode) {
         this(iobuffers, SMTPConsts.MAX_LINE_LEN, enhancedCodes, mode);
     }
 
-    public SendDataCodec(final SMTPBuffers iobuffers, boolean enhancedCodes) {
+    public SendDataCodec(final SMTPBuffers iobuffers, final boolean enhancedCodes) {
         this(iobuffers, SMTPConsts.MAX_LINE_LEN, enhancedCodes, DataAckMode.SINGLE);
     }
 
+    @Override
     public void cleanUp() {
     }
 
+    @Override
     public void reset(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
         if (sessionState.getRequest() == null) {
             throw new IllegalArgumentException("Delivery request may not be null");
         }
@@ -120,21 +117,17 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         this.content = request.getContent();
         this.contentChannel = this.content.channel();
         this.contentSent = false;
-        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.CONTENT_READY;
 
         iosession.setEvent(SelectionKey.OP_WRITE);
     }
 
+    @Override
     public void produceData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
@@ -187,15 +180,12 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public void consumeData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
@@ -230,10 +220,12 @@ public class SendDataCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED;
     }
 
+    @Override
     public String next(
             final ProtocolCodecs<ClientState> codecs,
             final ClientState sessionState) {

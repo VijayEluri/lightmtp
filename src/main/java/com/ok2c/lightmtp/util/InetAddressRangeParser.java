@@ -20,7 +20,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
 
 public final class InetAddressRangeParser {
 
@@ -29,12 +30,8 @@ public final class InetAddressRangeParser {
             final ParserCursor cursor,
             final char delimiter) throws ParseException, UnknownHostException {
 
-        if (buffer == null) {
-            throw new IllegalArgumentException("Char array buffer may not be null");
-        }
-        if (cursor == null) {
-            throw new IllegalArgumentException("Parser cursor may not be null");
-        }
+        Args.notNull(buffer, "Char array buffer");
+        Args.notNull(cursor, "Parser cursor");
 
         int pos = cursor.getPos();
         int indexFrom = cursor.getPos();
@@ -90,12 +87,8 @@ public final class InetAddressRangeParser {
             final ParserCursor cursor,
             final char delimiter) throws ParseException, UnknownHostException {
 
-        if (buffer == null) {
-            throw new IllegalArgumentException("Char array buffer may not be null");
-        }
-        if (cursor == null) {
-            throw new IllegalArgumentException("Parser cursor may not be null");
-        }
+        Args.notNull(buffer, "Char array buffer");
+        Args.notNull(cursor, "Parser cursor");
 
         List<InetAddressRange> ranges = new ArrayList<InetAddressRange>();
         while (!cursor.atEnd()) {

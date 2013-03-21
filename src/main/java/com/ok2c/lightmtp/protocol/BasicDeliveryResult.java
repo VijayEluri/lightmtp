@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.SMTPReply;
 
 public class BasicDeliveryResult implements DeliveryResult {
@@ -25,11 +27,9 @@ public class BasicDeliveryResult implements DeliveryResult {
     private final SMTPReply reply;
     private final List<RcptResult> failures;
 
-    public BasicDeliveryResult(final SMTPReply reply, List<RcptResult> rcptFailures) {
+    public BasicDeliveryResult(final SMTPReply reply, final List<RcptResult> rcptFailures) {
         super();
-        if (reply == null) {
-            throw new IllegalArgumentException("SMTP reply may not be null");
-        }
+        Args.notNull(reply, "SMTP reply");
         this.reply = reply;
         ArrayList<RcptResult> list = new ArrayList<RcptResult>();
         if (rcptFailures != null) {
@@ -42,10 +42,12 @@ public class BasicDeliveryResult implements DeliveryResult {
         this(reply, null);
     }
 
+    @Override
     public SMTPReply getReply() {
         return this.reply;
     }
 
+    @Override
     public List<RcptResult> getFailures() {
         return this.failures;
     }

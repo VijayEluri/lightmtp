@@ -47,6 +47,7 @@ public class ReadableByteChannelMockup implements ReadableByteChannel {
         }
     }
 
+    @Override
     public int read(final ByteBuffer dst) throws IOException {
         prepareChunk();
         if (this.closed) {
@@ -60,10 +61,12 @@ public class ReadableByteChannelMockup implements ReadableByteChannel {
         return i;
     }
 
+    @Override
     public void close() throws IOException {
         this.closed = true;
     }
 
+    @Override
     public boolean isOpen() {
         return !this.closed;
     }

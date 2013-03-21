@@ -30,18 +30,22 @@ public class ProtocolCodecRegistry<T> implements ProtocolCodecs<T> {
         this.codecs = new HashMap<String, ProtocolCodec<T>>();
     }
 
+    @Override
     public void register(final String name, final ProtocolCodec<T> codec) {
         this.codecs.put(name, codec);
     }
 
+    @Override
     public void unregister(final String name) {
         this.codecs.remove(name);
     }
 
+    @Override
     public Set<String> getCodecNames() {
         return this.codecs.keySet();
     }
 
+    @Override
     public ProtocolCodec<T> getCodec(final String name) {
         ProtocolCodec<T> codec = this.codecs.get(name);
         if (codec != null) {

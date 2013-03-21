@@ -16,6 +16,8 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
@@ -23,7 +25,6 @@ import com.ok2c.lightmtp.impl.protocol.MIMEEncoding;
 import com.ok2c.lightmtp.impl.protocol.ServerState;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 class MailFromAction extends AbstractAsyncAction<ServerState> {
 

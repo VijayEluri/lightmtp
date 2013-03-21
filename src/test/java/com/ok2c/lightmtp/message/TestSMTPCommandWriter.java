@@ -20,13 +20,13 @@ import java.util.Arrays;
 
 import junit.framework.Assert;
 
+import org.apache.http.impl.nio.reactor.SessionOutputBufferImpl;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.mock.WritableByteChannelMockup;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 public class TestSMTPCommandWriter {
 

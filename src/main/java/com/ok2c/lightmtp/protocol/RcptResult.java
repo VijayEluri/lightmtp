@@ -14,6 +14,8 @@
  */
 package com.ok2c.lightmtp.protocol;
 
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.SMTPReply;
 
 public final class RcptResult {
@@ -23,12 +25,8 @@ public final class RcptResult {
 
     public RcptResult(final SMTPReply reply, final String recipient) {
         super();
-        if (reply == null) {
-            throw new IllegalArgumentException("SMTP reply may not be null");
-        }
-        if (recipient == null) {
-            throw new IllegalArgumentException("Recipient may not be null");
-        }
+        Args.notNull(reply, "SMTP reply");
+        Args.notNull(recipient, "Recipient");
         this.reply = reply;
         this.recipient = recipient;
     }

@@ -21,9 +21,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.http.concurrent.BasicFuture;
+
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
-import com.ok2c.lightnio.concurrent.BasicFuture;
 
 public class SimpleTestJob {
 
@@ -68,7 +69,7 @@ public class SimpleTestJob {
     }
 
     public List<DeliveryResult> waitForResults(
-            long timeout,
+            final long timeout,
             final TimeUnit unit) throws TimeoutException, ExecutionException, InterruptedException {
         return this.future.get(timeout, unit);
     }

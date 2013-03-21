@@ -17,15 +17,17 @@ package com.ok2c.lightmtp.impl.agent;
 import java.net.InetAddress;
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class DelayedEnvelopValidator implements EnvelopValidator {
 
+    @Override
     public Future<SMTPReply> validateRecipient(
             final InetAddress client,
             final String recipient,
@@ -50,6 +52,7 @@ public class DelayedEnvelopValidator implements EnvelopValidator {
         return future;
     }
 
+    @Override
     public Future<SMTPReply> validateSender(
             final InetAddress client,
             final String sender,

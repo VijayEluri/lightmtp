@@ -19,15 +19,13 @@ import java.nio.charset.Charset;
 
 import junit.framework.Assert;
 
+import org.apache.http.impl.nio.reactor.SessionInputBufferImpl;
+import org.apache.http.nio.reactor.SessionInputBuffer;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;
-import com.ok2c.lightmtp.message.SMTPCommandParser;
-import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.mock.ReadableByteChannelMockup;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 
 public class TestSMTPCommandParser {
 

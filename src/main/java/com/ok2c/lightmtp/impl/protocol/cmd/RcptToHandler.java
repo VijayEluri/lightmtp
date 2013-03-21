@@ -33,6 +33,7 @@ public class RcptToHandler implements CommandHandler<ServerState> {
         this.argParser = new AddressArgParser("TO:");
     }
 
+    @Override
     public Action<ServerState> handle(
             final String argument,
             final List<String> params) throws SMTPErrorException {

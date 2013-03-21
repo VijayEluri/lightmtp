@@ -18,22 +18,23 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPCommandWriter;
 import com.ok2c.lightmtp.message.SMTPMessageParser;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
+import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.RcptResult;
-import com.ok2c.lightmtp.protocol.DeliveryRequest;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
 
@@ -55,11 +56,9 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
     private CodecState codecState;
     private boolean deliveryFailed;
 
-    public PipeliningSendEnvelopCodec(final SMTPBuffers iobuffers, boolean enhancedCodes) {
+    public PipeliningSendEnvelopCodec(final SMTPBuffers iobuffers, final boolean enhancedCodes) {
         super();
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
+        Args.notNull(iobuffers, "IO buffers");
         this.iobuffers = iobuffers;
         this.parser = new SMTPReplyParser(enhancedCodes);
         this.writer = new SMTPCommandWriter();
@@ -68,22 +67,19 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
         this.deliveryFailed = false;
     }
 
+    @Override
     public void cleanUp() {
     }
 
+    @Override
     public void reset(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
         this.writer.reset();
         this.parser.reset();
         this.recipients.clear();
-        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.codecState = CodecState.MAIL_REQUEST_READY;
         this.deliveryFailed = false;
 
@@ -94,15 +90,12 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public void produceData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
         if (sessionState.getRequest() == null) {
             if (sessionState.isTerminated()) {
                 this.codecState = CodecState.COMPLETED;
@@ -139,15 +132,12 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public void consumeData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
@@ -199,10 +189,12 @@ public class PipeliningSendEnvelopCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED;
     }
 
+    @Override
     public String next(
             final ProtocolCodecs<ClientState> codecs,
             final ClientState sessionState) {

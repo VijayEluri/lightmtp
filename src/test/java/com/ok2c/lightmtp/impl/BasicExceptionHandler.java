@@ -16,15 +16,17 @@ package com.ok2c.lightmtp.impl;
 
 import java.io.IOException;
 
-import com.ok2c.lightnio.IOReactorExceptionHandler;
+import org.apache.http.nio.reactor.IOReactorExceptionHandler;
 
 class BasicExceptionHandler implements IOReactorExceptionHandler {
 
+    @Override
     public boolean handle(final RuntimeException ex) {
         ex.printStackTrace(System.out);
         return false;
     }
 
+    @Override
     public boolean handle(final IOException ex) {
         ex.printStackTrace(System.out);
         return false;

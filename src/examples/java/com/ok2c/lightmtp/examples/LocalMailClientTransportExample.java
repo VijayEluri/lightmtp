@@ -21,7 +21,12 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionRequest;
+
 import com.ok2c.lightmtp.agent.MailClientTransport;
+import com.ok2c.lightmtp.agent.SessionEndpoint;
 import com.ok2c.lightmtp.impl.agent.LocalMailClientTransport;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
@@ -29,13 +34,10 @@ import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.SessionContext;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionRequest;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class LocalMailClientTransportExample {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
 
         String text1 = new String(
                 "From: root\r\n" +
@@ -76,17 +78,18 @@ public class LocalMailClientTransportExample {
         queue.add(request2);
         queue.add(request3);
 
-        final CountDownLatch messageCount = new CountDownLatch(queue.size());
+        CountDownLatch messageCount = new CountDownLatch(queue.size());
 
-        final IOReactorConfig config = new IOReactorConfig();
-        config.setWorkerCount(1);
+        IOReactorConfig config = IOReactorConfig.custom()
+                .setIoThreadCount(1)
+                .build();
 
-        final MailClientTransport mua = new LocalMailClientTransport(config);
+        MailClientTransport mua = new LocalMailClientTransport(config);
         mua.start(new MyDeliveryRequestHandler(messageCount));
 
-        final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
+        SessionEndpoint endpoint = new SessionEndpoint(new InetSocketAddress("localhost", 2525));
 
-        SessionRequest sessionRequest = mua.connect(sockaddress, null, queue, null);
+        SessionRequest sessionRequest = mua.connect(endpoint, queue, null);
         sessionRequest.waitFor();
 
         IOSession iosession = sessionRequest.getSession();
@@ -117,10 +120,12 @@ public class LocalMailClientTransportExample {
             this.messageCount = messageCount;
         }
 
+        @Override
         public void connected(final SessionContext context) {
             System.out.println("Connected");
         }
 
+        @Override
         public void disconnected(final SessionContext context) {
             while (this.messageCount.getCount() > 0) {
                 this.messageCount.countDown();
@@ -128,6 +133,7 @@ public class LocalMailClientTransportExample {
             System.out.println("Disconnected");
         }
 
+        @Override
         public void exception(final Exception ex, final SessionContext context) {
             while (this.messageCount.getCount() > 0) {
                 this.messageCount.countDown();
@@ -135,6 +141,7 @@ public class LocalMailClientTransportExample {
             System.out.println("Error: " + ex.getMessage());
         }
 
+        @Override
         public void completed(
                 final DeliveryRequest request,
                 final DeliveryResult result,
@@ -143,6 +150,7 @@ public class LocalMailClientTransportExample {
             System.out.println("Message delivery succeeded: " + request + "; " + result);
         }
 
+        @Override
         public void failed(
                 final DeliveryRequest request,
                 final DeliveryResult result,
@@ -151,6 +159,7 @@ public class LocalMailClientTransportExample {
             System.out.println("Message delivery failed: " + request + "; " + result);
         }
 
+        @Override
         public DeliveryRequest submitRequest(final SessionContext context) {
             @SuppressWarnings("unchecked")
             Queue<DeliveryRequest> queue = (Queue<DeliveryRequest>) context.getAttribute(

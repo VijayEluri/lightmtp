@@ -19,8 +19,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.SMTPCodes;
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.message.SMTPMessageWriter;
@@ -28,8 +31,6 @@ import com.ok2c.lightmtp.message.SMTPReplyWriter;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
 
@@ -44,17 +45,17 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
             final SMTPBuffers iobuffers,
             final RemoteAddressValidator addressValidator) {
         super();
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
+        Args.notNull(iobuffers, "IO buffers");
         this.iobuffers = iobuffers;
         this.addressValidator = addressValidator;
         this.writer = new SMTPReplyWriter();
     }
 
+    @Override
     public void cleanUp() {
     }
 
+    @Override
     public void reset(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
@@ -75,21 +76,17 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
 
         this.pendingReply = new SMTPReply(SMTPCodes.SERVICE_READY, null,
                 sessionState.getServerId() + " service ready");
-        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
         this.completed = false;
 
         iosession.setEventMask(SelectionKey.OP_WRITE);
     }
 
+    @Override
     public void produceData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
 
@@ -107,15 +104,18 @@ public class ServiceReadyCodec implements ProtocolCodec<ServerState> {
         }
     }
 
+    @Override
     public void consumeData(
             final IOSession iosession,
             final ServerState sessionState) throws IOException, SMTPProtocolException {
     }
 
+    @Override
     public boolean isCompleted() {
         return this.completed;
     }
 
+    @Override
     public String next(
             final ProtocolCodecs<ServerState> codecs,
             final ServerState sessionState) {

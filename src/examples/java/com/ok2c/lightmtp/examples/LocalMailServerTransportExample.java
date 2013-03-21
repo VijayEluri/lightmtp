@@ -25,6 +25,10 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPConsts;
@@ -40,20 +44,18 @@ import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.util.InetAddressRange;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class LocalMailServerTransportExample {
 
-    public static void main(String[] args) throws Exception {
-        final File workingDir = new File(".");
-        final IOReactorConfig config = new IOReactorConfig();
-        config.setWorkerCount(1);
+    public static void main(final String[] args) throws Exception {
+        File workingDir = new File(".");
+        IOReactorConfig config = IOReactorConfig.custom()
+                .setIoThreadCount(1)
+                .build();
 
         final MailServerTransport mta = new LocalMailServerTransport(workingDir, config);
 
-        final InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
+        InetSocketAddress sockaddress = new InetSocketAddress("localhost", 2525);
 
         InetAddressRange iprange = new InetAddressRange(InetAddress.getByName("127.0.0.0"), 8);
 
@@ -90,6 +92,7 @@ public class LocalMailServerTransportExample {
             this.iprange = iprange;
         }
 
+        @Override
         public boolean validateAddress(final InetAddress address) {
             return this.iprange.contains(address);
         }
@@ -98,6 +101,7 @@ public class LocalMailServerTransportExample {
 
     static class MyEnvelopValidator implements EnvelopValidator {
 
+        @Override
         public Future<SMTPReply> validateRecipient(
                 final InetAddress client,
                 final String recipient,
@@ -109,6 +113,7 @@ public class LocalMailServerTransportExample {
             return future;
         }
 
+        @Override
         public Future<SMTPReply> validateSender(
                 final InetAddress client,
                 final String sender,
@@ -124,6 +129,7 @@ public class LocalMailServerTransportExample {
 
     static class MyDeliveryHandler implements DeliveryHandler {
 
+        @Override
         public Future<DeliveryResult> handle(
                 final String messageId,
                 final DeliveryRequest request,

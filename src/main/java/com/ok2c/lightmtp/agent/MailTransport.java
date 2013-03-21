@@ -17,8 +17,8 @@ package com.ok2c.lightmtp.agent;
 import java.io.IOException;
 import java.util.List;
 
-import com.ok2c.lightnio.IOReactorStatus;
-import com.ok2c.lightnio.impl.ExceptionEvent;
+import org.apache.http.impl.nio.reactor.ExceptionEvent;
+import org.apache.http.nio.reactor.IOReactorStatus;
 
 public interface MailTransport {
 

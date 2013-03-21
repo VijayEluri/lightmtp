@@ -21,17 +21,20 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+
+import com.ok2c.lightmtp.agent.MailUserAgent;
+import com.ok2c.lightmtp.agent.SessionEndpoint;
 import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
 import com.ok2c.lightmtp.message.content.FileSource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class SendMailExample {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
 
         if (args.length < 3) {
             System.out.println("Usage: sender recipient1[;recipient2;recipient3;...] file");
@@ -57,14 +60,14 @@ public class SendMailExample {
 
         DeliveryRequest request = new BasicDeliveryRequest(sender, recipients, new FileSource(src));
 
-        DefaultMailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
+        MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, IOReactorConfig.DEFAULT);
         mua.start();
 
         try {
 
             InetSocketAddress address = new InetSocketAddress("localhost", 2525);
 
-            Future<DeliveryResult> future = mua.deliver(address, request, null);
+            Future<DeliveryResult> future = mua.deliver(new SessionEndpoint(address), 0, request, null);
 
             DeliveryResult result = future.get();
             System.out.println("Delivery result: " + result);

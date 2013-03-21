@@ -33,6 +33,7 @@ public class ByteArraySource implements SMTPContent<ReadableByteChannel> {
         this.stream = null;
     }
 
+    @Override
     public ReadableByteChannel channel() {
         if (this.stream == null) {
             this.stream = new ByteArrayInputStream(this.content);
@@ -40,10 +41,12 @@ public class ByteArraySource implements SMTPContent<ReadableByteChannel> {
         return Channels.newChannel(this.stream);
     }
 
+    @Override
     public long length() {
         return this.content.length;
     }
 
+    @Override
     public void reset() {
         this.stream = null;
     }

@@ -16,8 +16,9 @@ package com.ok2c.lightmtp.protocol;
 
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface Action<T> {
 

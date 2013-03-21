@@ -14,8 +14,9 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
+import org.apache.http.nio.reactor.IOSession;
+
 import com.ok2c.lightmtp.protocol.SessionContext;
-import com.ok2c.lightnio.IOSession;
 
 class SessionContextImpl implements SessionContext {
 
@@ -26,15 +27,18 @@ class SessionContextImpl implements SessionContext {
         this.iosession = iosession;
     }
 
+    @Override
     public void setAttribute(final String name, final Object obj) {
         this.iosession.setAttribute(name, obj);
     }
 
+    @Override
     public Object getAttribute(final String name) {
         return this.iosession.getAttribute(name);
     }
 
-    public Object removeAttribute(String name) {
+    @Override
+    public Object removeAttribute(final String name) {
         return this.iosession.removeAttribute(name);
     }
 

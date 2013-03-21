@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.http.util.Args;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,26 +43,19 @@ public class DefaultProtocolHandler implements ProtocolHandler<ServerState> {
     }
 
     public void register(final String cmd, final CommandHandler<ServerState> handler) {
-        if (cmd == null) {
-            throw new IllegalArgumentException("Command name may not be null");
-        }
-        if (handler == null) {
-            throw new IllegalArgumentException("Command handler may not be null");
-        }
+        Args.notNull(cmd, "Command name");
+        Args.notNull(handler, "Command handler");
         this.map.put(cmd.toUpperCase(Locale.US), handler);
     }
 
     public void unregister(final String cmd) {
-        if (cmd == null) {
-            throw new IllegalArgumentException("Command name may not be null");
-        }
+        Args.notNull(cmd, "Command name");
         this.map.remove(cmd.toUpperCase(Locale.US));
     }
 
+    @Override
     public Action<ServerState> handle(final SMTPCommand command) throws SMTPErrorException {
-        if (command == null) {
-            throw new IllegalArgumentException("Command may not be null");
-        }
+        Args.notNull(command, "Command");
         String cmd = command.getVerb();
         CommandHandler<ServerState> handler = this.map.get(cmd.toUpperCase(Locale.US));
         if (handler != null) {

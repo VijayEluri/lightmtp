@@ -14,16 +14,17 @@
  */
 package com.ok2c.lightmtp.agent;
 
-import java.net.SocketAddress;
+import org.apache.http.nio.reactor.SessionRequest;
+import org.apache.http.nio.reactor.SessionRequestCallback;
 
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
-import com.ok2c.lightnio.SessionRequest;
-import com.ok2c.lightnio.SessionRequestCallback;
 
 public interface MailClientTransport extends MailTransport {
 
     SessionRequest connect(
-            SocketAddress remoteAddress, SocketAddress localAddress, Object attachment, SessionRequestCallback callback);
+            SessionEndpoint endpoint,
+            Object attachment,
+            SessionRequestCallback callback);
 
     void start(DeliveryRequestHandler deliveryRequestHandler);
 

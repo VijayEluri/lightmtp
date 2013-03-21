@@ -16,10 +16,11 @@ package com.ok2c.lightmtp.impl.protocol.cmd;
 
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.protocol.Action;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public abstract class AbstractAction<T> implements Action<T> {
 
@@ -27,6 +28,7 @@ public abstract class AbstractAction<T> implements Action<T> {
         super();
     }
 
+    @Override
     public Future<SMTPReply> execute(
             final T state,
             final FutureCallback<SMTPReply> callback) {

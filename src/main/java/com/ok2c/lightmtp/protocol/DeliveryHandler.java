@@ -16,7 +16,7 @@ package com.ok2c.lightmtp.protocol;
 
 import java.util.concurrent.Future;
 
-import com.ok2c.lightnio.concurrent.FutureCallback;
+import org.apache.http.concurrent.FutureCallback;
 
 public interface DeliveryHandler {
 

@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class TestInetAddressRange {
 
-    private static byte[] createIP(int n1, int n2, int n3, int n4) {
+    private static byte[] createIP(final int n1, final int n2, final int n3, final int n4) {
         byte[] ip = new byte[4];
         ip[0] = (byte) n1;
         ip[1] = (byte) n2;
@@ -32,7 +32,7 @@ public class TestInetAddressRange {
         return ip;
     }
 
-    private static InetAddress createAddressByIP(int n1, int n2, int n3, int n4) throws UnknownHostException {
+    private static InetAddress createAddressByIP(final int n1, final int n2, final int n3, final int n4) throws UnknownHostException {
         return InetAddress.getByAddress(createIP(n1, n2, n3, n4));
     }
 

@@ -16,9 +16,10 @@ package com.ok2c.lightmtp.impl.agent;
 
 import java.io.IOException;
 
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+
 import com.ok2c.lightmtp.impl.protocol.LocalClientSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class LocalMailClientTransport extends DefaultMailClientTransport {
 
@@ -34,6 +35,7 @@ public class LocalMailClientTransport extends DefaultMailClientTransport {
         this(null, null, config);
     }
 
+    @Override
     public void start(final DeliveryRequestHandler deliveryRequestHandler) {
         LocalClientSessionFactory sessionFactory = new LocalClientSessionFactory(
                 deliveryRequestHandler);

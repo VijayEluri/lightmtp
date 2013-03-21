@@ -47,6 +47,7 @@ public class BasicIdGenerator implements UniqueIdGenerator {
         this.rnd.setSeed(System.currentTimeMillis());
     }
 
+    @Override
     public synchronized String generate() {
         this.count++;
         int rndnum = this.rnd.nextInt();

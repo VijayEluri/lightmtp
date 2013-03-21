@@ -14,17 +14,18 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import org.apache.http.concurrent.BasicFuture;
+
+import com.ok2c.lightmtp.impl.pool.LeasedSession;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.pool.ManagedIOSession;
 
 class PendingDelivery {
 
     private final DeliveryRequest request;
     private final BasicFuture<DeliveryResult> deliveryFuture;
 
-    private ManagedIOSession managedSession;
+    private volatile LeasedSession leasedSession;
 
     public PendingDelivery(
             final DeliveryRequest request,
@@ -42,12 +43,12 @@ class PendingDelivery {
         return this.deliveryFuture;
     }
 
-    public ManagedIOSession getManagedSession() {
-        return this.managedSession;
+    public LeasedSession getLeasedSession() {
+        return this.leasedSession;
     }
 
-    public void setManagedSession(final ManagedIOSession managedSession) {
-        this.managedSession = managedSession;
+    public void setLeasedSession(final LeasedSession leasedSession) {
+        this.leasedSession = leasedSession;
     }
 
 }

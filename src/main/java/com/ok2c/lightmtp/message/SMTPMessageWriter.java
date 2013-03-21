@@ -14,8 +14,9 @@
  */
 package com.ok2c.lightmtp.message;
 
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+
 import com.ok2c.lightmtp.SMTPProtocolException;
-import com.ok2c.lightnio.SessionOutputBuffer;
 
 public interface SMTPMessageWriter<T> {
 

@@ -14,17 +14,17 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.util.Args;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.protocol.SessionFactory;
-import com.ok2c.lightnio.IOSession;
 
 public class LocalClientSessionFactory implements SessionFactory<ClientSession> {
 
-    private final Logger log = LoggerFactory.getLogger(ServerSession.class);
     private final Logger iolog = LoggerFactory.getLogger(IOSession.class);
     private final Logger wirelog = LoggerFactory.getLogger(Wire.WIRELOG_CAT);
 
@@ -32,11 +32,9 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
 	private final String heloName;
 
     public LocalClientSessionFactory(
-            final DeliveryRequestHandler deliveryRequestHandler, String heloName) {
+            final DeliveryRequestHandler deliveryRequestHandler, final String heloName) {
         super();
-        if (deliveryRequestHandler == null) {
-            throw new IllegalArgumentException("Delivery request handler may not be null");
-        }
+        Args.notNull(deliveryRequestHandler, "Delivery request handler");
         this.deliveryRequestHandler = deliveryRequestHandler;
         this.heloName = heloName;
     }
@@ -45,6 +43,7 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
         this(deliveryRequestHandler, null);
     }
 
+    @Override
     public ClientSession create(final IOSession iosession) {
         SMTPBuffers iobuffers = new SMTPBuffers();
         ProtocolCodecs<ClientState> codecs = new ProtocolCodecRegistry<ClientState>();
@@ -58,8 +57,13 @@ public class LocalClientSessionFactory implements SessionFactory<ClientSession> 
                 new SendQuitCodec(iobuffers));
         codecs.register(ProtocolState.RSET.name(),
                 new SendRsetCodec(iobuffers));
-        return new ClientSession(this.log, this.iolog, this.wirelog,
-                iosession, iobuffers, this.deliveryRequestHandler, codecs);
+        final IOSession localIOSession;
+        if (iolog.isDebugEnabled() || wirelog.isDebugEnabled()) {
+            localIOSession = new LoggingIOSession(iosession, "LMTP client", iolog, wirelog);
+        } else {
+            localIOSession = iosession;
+        }
+        return new ClientSession(localIOSession, iobuffers, this.deliveryRequestHandler, codecs);
     }
 
 }

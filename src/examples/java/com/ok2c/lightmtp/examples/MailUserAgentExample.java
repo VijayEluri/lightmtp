@@ -22,17 +22,20 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Future;
 
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+
+import com.ok2c.lightmtp.agent.MailUserAgent;
+import com.ok2c.lightmtp.agent.SessionEndpoint;
 import com.ok2c.lightmtp.agent.TransportType;
 import com.ok2c.lightmtp.impl.agent.DefaultMailUserAgent;
 import com.ok2c.lightmtp.message.content.ByteArraySource;
 import com.ok2c.lightmtp.protocol.BasicDeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class MailUserAgentExample {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
 
         String text1 = new String(
                 "From: root\r\n" +
@@ -68,7 +71,7 @@ public class MailUserAgentExample {
                 new ByteArraySource(text3.getBytes("US-ASCII"))));
 
 
-        DefaultMailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, new IOReactorConfig());
+        MailUserAgent mua = new DefaultMailUserAgent(TransportType.SMTP, IOReactorConfig.DEFAULT);
         mua.start();
 
         try {
@@ -77,7 +80,7 @@ public class MailUserAgentExample {
 
             Queue<Future<DeliveryResult>> queue = new LinkedList<Future<DeliveryResult>>();
             for (DeliveryRequest request: requests) {
-                queue.add(mua.deliver(address, request, null));
+                queue.add(mua.deliver(new SessionEndpoint(address), 0, request, null));
             }
 
             while (!queue.isEmpty()) {

@@ -20,9 +20,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPCommand;
-import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPExtensions;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
@@ -33,9 +37,6 @@ import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
 import com.ok2c.lightmtp.util.DNSUtils;
-import com.ok2c.lightnio.IOSession;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
 
 public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
 
@@ -49,21 +50,19 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         COMPLETED
 
     }
-    
+
     private final SMTPBuffers iobuffers;
     private final SMTPMessageParser<SMTPReply> parser;
     private final SMTPMessageWriter<SMTPCommand> writer;
 
     private CodecState codecState;
 
-	private String heloName;
-    private boolean useAuth;
+	private final String heloName;
+    private final boolean useAuth;
 
-    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers, String heloName, boolean useAuth) {
+    public ExtendedSendHeloCodec(final SMTPBuffers iobuffers, final String heloName, final boolean useAuth) {
         super();
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
+        Args.notNull(iobuffers, "IO buffers");
         this.iobuffers = iobuffers;
         this.parser = new SMTPReplyParser();
         this.writer = new SMTPCommandWriter();
@@ -76,33 +75,31 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
     public ExtendedSendHeloCodec(final SMTPBuffers iobuffers) {
         this(iobuffers, null, false);
     }
-    
+
+    @Override
     public void reset(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
         this.parser.reset();
         this.writer.reset();
         this.codecState = CodecState.SERVICE_READY_EXPECTED;
-        this.iobuffers.setInputCharset(SMTPConsts.ASCII);
 
         iosession.setEventMask(SelectionKey.OP_READ);
     }
 
+    @Override
     public void cleanUp() {
     }
 
+    @Override
     public void produceData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionOutputBuffer buf = this.iobuffers.getOutbuf();
-        
+
         String myHelo = heloName;
         if (myHelo == null) {
             myHelo = DNSUtils.getLocalDomain(iosession.getLocalAddress());
@@ -128,15 +125,12 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public void consumeData(
             final IOSession iosession,
             final ClientState sessionState) throws IOException, SMTPProtocolException {
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (sessionState == null) {
-            throw new IllegalArgumentException("Session state may not be null");
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(sessionState, "Session state");
 
         SessionInputBuffer buf = this.iobuffers.getInbuf();
 
@@ -195,10 +189,12 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
         }
     }
 
+    @Override
     public boolean isCompleted() {
         return this.codecState == CodecState.COMPLETED;
     }
 
+    @Override
     public String next(
             final ProtocolCodecs<ClientState> codecs,
             final ClientState sessionState) {

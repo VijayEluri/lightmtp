@@ -44,6 +44,7 @@ public class FileStore implements SMTPContent<WritableByteChannel> {
         return this.file;
     }
 
+    @Override
     public WritableByteChannel channel() throws FileNotFoundException {
         if (this.rafile == null) {
             this.rafile = new RandomAccessFile(this.file, "rw");
@@ -51,10 +52,12 @@ public class FileStore implements SMTPContent<WritableByteChannel> {
         return this.rafile.getChannel();
     }
 
+    @Override
     public long length() {
         return this.file.length();
     }
 
+    @Override
     public void reset() {
         if (this.rafile != null) {
             try {

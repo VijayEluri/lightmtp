@@ -17,18 +17,20 @@ package com.ok2c.lightmtp.message;
 import java.nio.charset.CharacterCodingException;
 import java.util.List;
 
+import org.apache.http.nio.reactor.SessionOutputBuffer;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
+
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
-import com.ok2c.lightnio.SessionOutputBuffer;
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
 
     private final CharArrayBuffer lineBuf;
     private final int maxLineLen;
 
-    public SMTPCommandWriter(int maxLineLen) {
+    public SMTPCommandWriter(final int maxLineLen) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.maxLineLen = maxLineLen;
@@ -38,19 +40,17 @@ public class SMTPCommandWriter implements SMTPMessageWriter<SMTPCommand> {
         this(SMTPConsts.MAX_COMMAND_LEN);
     }
 
+    @Override
     public void reset() {
         this.lineBuf.clear();
     }
 
+    @Override
     public void write(
             final SMTPCommand message,
             final SessionOutputBuffer buf) throws SMTPProtocolException {
-        if (message == null) {
-            throw new IllegalArgumentException("Command may not be null");
-        }
-        if (buf == null) {
-            throw new IllegalArgumentException("Session output buffer may not be null");
-        }
+        Args.notNull(message, "Command");
+        Args.notNull(buf, "Session output buffer");
         this.lineBuf.clear();
         this.lineBuf.append(message.getVerb());
         if (message.getArgument() != null) {

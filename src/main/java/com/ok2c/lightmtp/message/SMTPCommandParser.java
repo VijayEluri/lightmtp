@@ -17,18 +17,20 @@ package com.ok2c.lightmtp.message;
 import java.nio.charset.CharacterCodingException;
 import java.util.LinkedList;
 
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
+
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.buffer.CharArrayBuffer;
 
 public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
 
     private final CharArrayBuffer lineBuf;
     private final int maxLineLen;
 
-    public SMTPCommandParser(int maxLineLen) {
+    public SMTPCommandParser(final int maxLineLen) {
         super();
         this.lineBuf = new CharArrayBuffer(1024);
         this.maxLineLen = maxLineLen;
@@ -38,15 +40,15 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
         this(SMTPConsts.MAX_COMMAND_LEN);
     }
 
+    @Override
     public void reset() {
         this.lineBuf.clear();
     }
 
+    @Override
     public SMTPCommand parse(
-            final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
-        if (buf == null) {
-            throw new IllegalArgumentException("Session input buffer may not be null");
-        }
+            final SessionInputBuffer buf, final boolean endOfStream) throws SMTPProtocolException {
+        Args.notNull(buf, "Session input buffer");
         if (readLine(buf, endOfStream)) {
             LinkedList<String> lines = new LinkedList<String>();
             int i = 0;
@@ -86,7 +88,7 @@ public class SMTPCommandParser implements SMTPMessageParser<SMTPCommand> {
     }
 
     private boolean readLine(
-            final SessionInputBuffer buf, boolean endOfStream) throws SMTPProtocolException {
+            final SessionInputBuffer buf, final boolean endOfStream) throws SMTPProtocolException {
         try {
             boolean lineComplete = buf.readLine(this.lineBuf, endOfStream);
             if (this.maxLineLen > 0 &&

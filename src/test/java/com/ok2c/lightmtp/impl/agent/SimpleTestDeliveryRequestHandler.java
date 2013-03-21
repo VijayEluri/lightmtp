@@ -14,18 +14,21 @@
  */
 package com.ok2c.lightmtp.impl.agent;
 
+import org.apache.http.nio.reactor.IOSession;
+
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryRequestHandler;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
 import com.ok2c.lightmtp.protocol.SessionContext;
-import com.ok2c.lightnio.IOSession;
 
 public class SimpleTestDeliveryRequestHandler implements DeliveryRequestHandler {
 
+    @Override
     public void connected(
             final SessionContext context) {
     }
 
+    @Override
     public void disconnected(
             final SessionContext context) {
         SimpleTestJob job = (SimpleTestJob) context.getAttribute(IOSession.ATTACHMENT_KEY);
@@ -34,6 +37,7 @@ public class SimpleTestDeliveryRequestHandler implements DeliveryRequestHandler 
         }
     }
 
+    @Override
     public void completed(
             final DeliveryRequest request,
             final DeliveryResult result,
@@ -42,12 +46,14 @@ public class SimpleTestDeliveryRequestHandler implements DeliveryRequestHandler 
         job.addResult(result);
     }
 
+    @Override
     public void exception(
             final Exception ex, final SessionContext context) {
         SimpleTestJob job = (SimpleTestJob) context.getAttribute(IOSession.ATTACHMENT_KEY);
         job.failure(ex);
     }
 
+    @Override
     public void failed(
             final DeliveryRequest request,
             final DeliveryResult result,
@@ -56,6 +62,7 @@ public class SimpleTestDeliveryRequestHandler implements DeliveryRequestHandler 
         job.addResult(result);
     }
 
+    @Override
     public DeliveryRequest submitRequest(
             final SessionContext context) {
         SimpleTestJob job = (SimpleTestJob) context.getAttribute(IOSession.ATTACHMENT_KEY);

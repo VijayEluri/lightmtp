@@ -14,9 +14,9 @@
  */
 package com.ok2c.lightmtp.util;
 
-import org.junit.Test;
-
 import junit.framework.Assert;
+
+import org.junit.Test;
 
 public class TestInetAddressUtils {
 

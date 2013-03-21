@@ -19,6 +19,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 
+import org.apache.http.concurrent.BasicFuture;
+import org.apache.http.concurrent.FutureCallback;
+
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPCodes;
 import com.ok2c.lightmtp.SMTPReply;
@@ -26,8 +29,6 @@ import com.ok2c.lightmtp.protocol.BasicDeliveryResult;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.DeliveryRequest;
 import com.ok2c.lightmtp.protocol.DeliveryResult;
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public class DelayedTestDeliveryHandler implements DeliveryHandler {
 
@@ -42,6 +43,7 @@ public class DelayedTestDeliveryHandler implements DeliveryHandler {
         return this.deliveries;
     }
 
+    @Override
     public Future<DeliveryResult> handle(
             final String messageId,
             final DeliveryRequest request,

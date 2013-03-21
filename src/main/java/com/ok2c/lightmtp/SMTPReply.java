@@ -18,13 +18,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.http.util.Args;
+
 public class SMTPReply {
 
     private final int code;
     private final SMTPCode enhancedCode;
     private final List<String> lines;
 
-    public SMTPReply(int code, final SMTPCode enhancedCode, final List<String> lines) {
+    public SMTPReply(final int code, final SMTPCode enhancedCode, final List<String> lines) {
         super();
         if (code <= 0) {
             throw new IllegalArgumentException("Code may not be nagtive or zero");
@@ -38,14 +40,12 @@ public class SMTPReply {
         }
     }
 
-    public SMTPReply(int code, final SMTPCode enhancedCode, final String line) {
+    public SMTPReply(final int code, final SMTPCode enhancedCode, final String line) {
         super();
         if (code <= 0) {
             throw new IllegalArgumentException("Code may not be nagtive or zero");
         }
-        if (line == null) {
-            throw new IllegalArgumentException("Line may not be null");
-        }
+        Args.notNull(line, "Line");
         this.code = code;
         this.enhancedCode = enhancedCode;
         List<String> lines = new ArrayList<String>();

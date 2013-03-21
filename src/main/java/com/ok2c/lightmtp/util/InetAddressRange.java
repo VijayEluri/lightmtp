@@ -17,6 +17,8 @@ package com.ok2c.lightmtp.util;
 import java.math.BigInteger;
 import java.net.InetAddress;
 
+import org.apache.http.util.Args;
+
 public final class InetAddressRange {
 
     private final InetAddress address;
@@ -24,11 +26,9 @@ public final class InetAddressRange {
     private final int shiftBy;
     private final BigInteger bigint;
 
-    public InetAddressRange(final InetAddress address, int mask) {
+    public InetAddressRange(final InetAddress address, final int mask) {
         super();
-        if (address == null) {
-            throw new IllegalArgumentException("Address may not be null");
-        }
+        Args.notNull(address, "Address");
         if (mask < 0) {
             throw new IllegalArgumentException("Address mask may not be negative");
         }

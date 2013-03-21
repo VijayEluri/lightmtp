@@ -18,16 +18,19 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.util.List;
 
+import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.util.Args;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
-import com.ok2c.lightnio.IOSession;
 
 public class ServerSession {
 
-    private final Logger log;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final IOSession iosession;
     private final SMTPBuffers iobuffers;
     private final ServerState sessionState;
@@ -37,37 +40,14 @@ public class ServerSession {
     private ProtocolState state;
 
     public ServerSession(
-            final Logger log,
-            final Logger iolog,
-            final Logger wirelog,
             final IOSession iosession,
             final SMTPBuffers iobuffers,
             final ProtocolCodecs<ServerState> codecs) {
         super();
-        if (log == null) {
-            throw new IllegalArgumentException("Logger may not be null");
-        }
-        if (iolog == null) {
-            throw new IllegalArgumentException("IO Logger may not be null");
-        }
-        if (wirelog == null) {
-            throw new IllegalArgumentException("Wire Logger may not be null");
-        }
-        if (iosession == null) {
-            throw new IllegalArgumentException("IO session may not be null");
-        }
-        if (iobuffers == null) {
-            throw new IllegalArgumentException("IO buffers may not be null");
-        }
-        if (codecs == null) {
-            throw new IllegalArgumentException("Protocol codecs may not be null");
-        }
-        this.log = log;
-        if (iolog.isDebugEnabled() || wirelog.isDebugEnabled()) {
-            this.iosession = new LoggingIOSession(iosession, "server", iolog, new Wire(wirelog));
-        } else {
-            this.iosession = iosession;
-        }
+        Args.notNull(iosession, "IO session");
+        Args.notNull(iobuffers, "IO buffers");
+        Args.notNull(codecs, "Protocol codecs");
+        this.iosession = iosession;
         this.iobuffers = iobuffers;
         this.iosession.setBufferStatus(this.iobuffers);
         this.sessionState = new ServerState("LightMTP SMTP");

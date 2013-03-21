@@ -14,11 +14,11 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
-import java.nio.charset.Charset;
+import org.apache.http.nio.reactor.SessionBufferStatus;
+import org.apache.http.nio.reactor.SessionInputBuffer;
+import org.apache.http.nio.reactor.SessionOutputBuffer;
 
-import com.ok2c.lightnio.SessionBufferStatus;
-import com.ok2c.lightnio.SessionInputBuffer;
-import com.ok2c.lightnio.SessionOutputBuffer;
+import com.ok2c.lightmtp.SMTPConsts;
 
 public class SMTPBuffers implements SessionBufferStatus {
 
@@ -30,22 +30,20 @@ public class SMTPBuffers implements SessionBufferStatus {
 
     public SMTPBuffers() {
         super();
-        this.inbuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE);
-        this.outbuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE);
+        this.inbuf = new SMTPInputBuffer(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
+        this.outbuf = new SMTPOutputBuffer(BUF_SIZE, LINE_SIZE, SMTPConsts.ISO_8859_1);
     }
 
-    public void setInputCharset(final Charset charset) {
-        this.inbuf.resetCharset(charset);
+    public void reset() {
+
     }
 
-    public void setOutputCharset(final Charset charset) {
-        this.outbuf.resetCharset(charset);
-    }
-
+    @Override
     public boolean hasBufferedInput() {
         return this.inbuf.hasData();
     }
 
+    @Override
     public boolean hasBufferedOutput() {
         return this.outbuf.hasData();
     }

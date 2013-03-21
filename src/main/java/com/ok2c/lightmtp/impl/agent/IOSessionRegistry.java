@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.ok2c.lightnio.IOSession;
+import org.apache.http.nio.reactor.IOSession;
 
 class IOSessionRegistry {
 

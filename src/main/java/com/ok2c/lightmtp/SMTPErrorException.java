@@ -21,7 +21,7 @@ public class SMTPErrorException extends SMTPProtocolException {
     private final int code;
     private final SMTPCode enhancedCode;
 
-    public SMTPErrorException(int code, final SMTPCode enhancedCode, final String message) {
+    public SMTPErrorException(final int code, final SMTPCode enhancedCode, final String message) {
         super(message);
         int codeClass = code / 100;
         if (codeClass != 4 && codeClass != 5) {

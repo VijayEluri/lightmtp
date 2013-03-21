@@ -17,12 +17,13 @@ package com.ok2c.lightmtp.impl.agent;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+
 import com.ok2c.lightmtp.impl.protocol.LocalServerSessionFactory;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
 import com.ok2c.lightmtp.protocol.EnvelopValidator;
 import com.ok2c.lightmtp.protocol.RemoteAddressValidator;
 import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
-import com.ok2c.lightnio.impl.IOReactorConfig;
 
 public class LocalMailServerTransport extends DefaultMailServerTransport {
 
@@ -40,6 +41,7 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
         this(null, null, workingDir, config);
     }
 
+    @Override
     public void start(
             final UniqueIdGenerator idgenerator,
             final RemoteAddressValidator addressValidator,
@@ -54,6 +56,7 @@ public class LocalMailServerTransport extends DefaultMailServerTransport {
         start(sessionFactory);
     }
 
+    @Override
     public void start(
             final UniqueIdGenerator idgenerator,
             final EnvelopValidator envelopValidator,

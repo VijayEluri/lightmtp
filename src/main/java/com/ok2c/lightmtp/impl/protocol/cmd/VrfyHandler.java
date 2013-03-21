@@ -30,6 +30,7 @@ public class VrfyHandler implements CommandHandler<ServerState> {
         this.validator = validator;
     }
 
+    @Override
     public Action<ServerState> handle(final String argument, final List<String> params) {
         String recipient = null;
         int fromIdx = argument.indexOf('<');

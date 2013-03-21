@@ -39,6 +39,7 @@ public class WritableByteChannelMockup implements WritableByteChannel {
         this.closed = false;
     }
 
+    @Override
     public int write(final ByteBuffer src) throws IOException {
         if (this.closed) {
             throw new ClosedChannelException();
@@ -46,10 +47,12 @@ public class WritableByteChannelMockup implements WritableByteChannel {
         return this.channel.write(src);
     }
 
+    @Override
     public void close() throws IOException {
         this.closed = true;
     }
 
+    @Override
     public boolean isOpen() {
         return !this.closed;
     }
