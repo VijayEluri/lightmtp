@@ -32,7 +32,7 @@ import com.ok2c.lightmtp.message.SMTPMessageWriter;
 import com.ok2c.lightmtp.message.SMTPReplyParser;
 import com.ok2c.lightmtp.protocol.ProtocolCodec;
 import com.ok2c.lightmtp.protocol.ProtocolCodecs;
-import com.ok2c.lightmtp.util.DNSUtils;
+import com.ok2c.lightmtp.util.AddressUtils;
 
 public class SimpleSendHeloCodec implements ProtocolCodec<ClientState> {
 
@@ -87,7 +87,7 @@ public class SimpleSendHeloCodec implements ProtocolCodec<ClientState> {
         switch (this.codecState) {
         case HELO_READY:
             SMTPCommand helo = new SMTPCommand("HELO",
-                    DNSUtils.getLocalDomain(iosession.getLocalAddress()));
+                    AddressUtils.getLocalDomain(iosession.getLocalAddress()));
 
             this.writer.write(helo, buf);
             this.codecState = CodecState.HELO_RESPONSE_EXPECTED;

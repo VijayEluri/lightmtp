@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.http.message.ParserCursor;
 import org.apache.http.nio.reactor.SessionInputBuffer;
 import org.apache.http.util.Args;
 import org.apache.http.util.CharArrayBuffer;
@@ -27,7 +28,6 @@ import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPProtocolException;
 import com.ok2c.lightmtp.SMTPReply;
-import com.ok2c.lightmtp.util.ParserCursor;
 
 public class SMTPReplyParser implements SMTPMessageParser<SMTPReply> {
 
