@@ -87,7 +87,7 @@ public class SimpleSendHeloCodec implements ProtocolCodec<ClientState> {
         switch (this.codecState) {
         case HELO_READY:
             SMTPCommand helo = new SMTPCommand("HELO",
-                    AddressUtils.getLocalDomain(iosession.getLocalAddress()));
+                    AddressUtils.resolveLocalDomain(iosession.getLocalAddress()));
 
             this.writer.write(helo, buf);
             this.codecState = CodecState.HELO_RESPONSE_EXPECTED;

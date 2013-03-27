@@ -35,7 +35,7 @@ import com.ok2c.lightmtp.SMTPConsts;
 import com.ok2c.lightmtp.SMTPReply;
 import com.ok2c.lightmtp.agent.MailServerTransport;
 import com.ok2c.lightmtp.impl.agent.LocalMailServerTransport;
-import com.ok2c.lightmtp.impl.protocol.BasicIdGenerator;
+import com.ok2c.lightmtp.impl.protocol.DefaultIdGenerator;
 import com.ok2c.lightmtp.message.SMTPContent;
 import com.ok2c.lightmtp.protocol.BasicDeliveryResult;
 import com.ok2c.lightmtp.protocol.DeliveryHandler;
@@ -60,7 +60,7 @@ public class LocalMailServerTransportExample {
         InetAddressRange iprange = new InetAddressRange(InetAddress.getByName("127.0.0.0"), 8);
 
         mta.start(
-                new BasicIdGenerator(),
+                new DefaultIdGenerator(),
                 new MyRemoteAddressValidator(iprange),
                 new MyEnvelopValidator(),
                 new MyDeliveryHandler());

@@ -97,7 +97,7 @@ public class SendLocalHeloCodec implements ProtocolCodec<ClientState> {
         case LHLO_READY:
             String helo = heloName;
             if (helo == null) {
-                helo = AddressUtils.getLocalDomain(iosession.getLocalAddress());
+                helo = AddressUtils.resolveLocalDomain(iosession.getLocalAddress());
             }
             SMTPCommand ehlo = new SMTPCommand("LHLO", helo);
 

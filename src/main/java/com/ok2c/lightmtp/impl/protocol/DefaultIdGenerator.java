@@ -14,31 +14,24 @@
  */
 package com.ok2c.lightmtp.impl.protocol;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Formatter;
 import java.util.Locale;
 
 import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
+import com.ok2c.lightmtp.util.AddressUtils;
 
-public class BasicIdGenerator implements UniqueIdGenerator {
+public class DefaultIdGenerator implements UniqueIdGenerator {
 
     private final String hostname;
     private final SecureRandom rnd;
 
     private long count;
 
-    public BasicIdGenerator() {
+    public DefaultIdGenerator() {
         super();
-        String hostname;
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException ex) {
-            hostname = "localhost";
-        }
-        this.hostname = hostname;
+        this.hostname = AddressUtils.getLocalCanonicalHostName();
         try {
             this.rnd = SecureRandom.getInstance("SHA1PRNG");
         } catch (NoSuchAlgorithmException ex) {
@@ -51,7 +44,7 @@ public class BasicIdGenerator implements UniqueIdGenerator {
     public synchronized String generate() {
         StringBuilder buffer = new StringBuilder();
         Formatter formatter = new Formatter(buffer, Locale.US);
-        formatter.format("%016x-%x-%x", System.currentTimeMillis(), ++this.count, this.rnd.nextInt());
+        formatter.format("%1$016x-%2x-%3x", System.currentTimeMillis(), this.rnd.nextInt(), ++this.count);
         buffer.append('@');
         buffer.append(this.hostname);
         return buffer.toString();

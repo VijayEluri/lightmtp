@@ -14,10 +14,25 @@ import org.apache.http.util.Args;
 
 public final class AddressUtils {
 
-    public static String getLocalDomain(final SocketAddress address) {
-        Args.notNull(address, "Socket address");
+    public static String getLocalCanonicalHostName() {
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException ex) {
+        }
+        String hostname = null;
+        if (inetAddress != null) {
+            hostname = inetAddress.getCanonicalHostName();
+        }
+        if (hostname == null) {
+            hostname = "localhost.localdomain";
+        }
+        return hostname;
+    }
+
+    public static String resolveLocalDomain(final SocketAddress address) {
         InetAddress inetAddress;
-        if (address instanceof InetSocketAddress) {
+        if (address != null && address instanceof InetSocketAddress) {
             inetAddress = ((InetSocketAddress) address).getAddress();
         } else {
             try {

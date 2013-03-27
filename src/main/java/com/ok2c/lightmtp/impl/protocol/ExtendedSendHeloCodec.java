@@ -102,7 +102,7 @@ public class ExtendedSendHeloCodec implements ProtocolCodec<ClientState> {
 
         String myHelo = heloName;
         if (myHelo == null) {
-            myHelo = AddressUtils.getLocalDomain(iosession.getLocalAddress());
+            myHelo = AddressUtils.resolveLocalDomain(iosession.getLocalAddress());
         }
         switch (this.codecState) {
         case EHLO_READY:
