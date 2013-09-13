@@ -18,8 +18,7 @@ import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestInetAddressRangeParser {

@@ -18,11 +18,11 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.apache.http.impl.nio.reactor.SessionOutputBufferImpl;
 import org.apache.http.nio.reactor.SessionOutputBuffer;
-import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPProtocolException;

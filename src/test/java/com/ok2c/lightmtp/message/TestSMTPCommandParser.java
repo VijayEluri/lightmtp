@@ -17,11 +17,11 @@ package com.ok2c.lightmtp.message;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.apache.http.impl.nio.reactor.SessionInputBufferImpl;
 import org.apache.http.nio.reactor.SessionInputBuffer;
-import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCommand;
 import com.ok2c.lightmtp.SMTPProtocolException;

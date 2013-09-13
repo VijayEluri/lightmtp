@@ -14,8 +14,7 @@
  */
 package com.ok2c.lightmtp.impl.protocol.cmd;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPProtocolException;

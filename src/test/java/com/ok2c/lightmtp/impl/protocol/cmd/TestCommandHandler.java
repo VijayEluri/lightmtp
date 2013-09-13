@@ -18,10 +18,10 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.apache.http.concurrent.FutureCallback;
-import org.junit.Test;
 
 import com.ok2c.lightmtp.SMTPCode;
 import com.ok2c.lightmtp.SMTPErrorException;
