@@ -17,6 +17,6 @@ package com.ok2c.lightmtp.impl.protocol;
 public enum MIMEEncoding {
 
     MIME_7BIT,
-    MIME_8BIT;
+    MIME_8BIT
 
 }

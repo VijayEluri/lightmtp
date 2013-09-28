@@ -26,10 +26,23 @@ import org.apache.http.util.CharArrayBuffer;
 
 public final class InetAddressRangeParser {
 
+    private static final char[] COMMA = new char[] { ',' };
+
+    private static boolean isOneOf(char c, char[] delimiters) {
+        if (delimiters != null) {
+            for (char delimiter: delimiters) {
+                if (c == delimiter) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public InetAddressRange parse(
             final CharArrayBuffer buffer,
             final ParserCursor cursor,
-            final char delimiter) throws ParseException, UnknownHostException {
+            final char[] delimiters) throws ParseException, UnknownHostException {
 
         Args.notNull(buffer, "Char array buffer");
         Args.notNull(cursor, "Parser cursor");
@@ -43,7 +56,7 @@ public final class InetAddressRangeParser {
             if (ch == '/') {
                 break;
             }
-            if (ch == delimiter) {
+            if (isOneOf(ch, delimiters)) {
                 break;
             }
             pos++;
@@ -57,7 +70,7 @@ public final class InetAddressRangeParser {
             indexFrom = pos;
             while (pos < indexTo) {
                 char ch = buffer.charAt(pos);
-                if (ch == delimiter) {
+                if (isOneOf(ch, delimiters)) {
                     break;
                 }
                 pos++;
@@ -80,22 +93,24 @@ public final class InetAddressRangeParser {
         CharArrayBuffer buffer = new CharArrayBuffer(s.length());
         buffer.append(s);
         ParserCursor cursor = new ParserCursor(0, s.length());
-        return parse(buffer, cursor, (char) 0);
+        return parse(buffer, cursor, COMMA);
     }
 
     public List<InetAddressRange> parseAll(
             final CharArrayBuffer buffer,
             final ParserCursor cursor,
-            final char delimiter) throws ParseException, UnknownHostException {
+            final char[] delimiters) throws ParseException, UnknownHostException {
 
         Args.notNull(buffer, "Char array buffer");
         Args.notNull(cursor, "Parser cursor");
 
+        char[] delims = delimiters != null ? delimiters : COMMA;
+
         List<InetAddressRange> ranges = new ArrayList<InetAddressRange>();
         while (!cursor.atEnd()) {
-            ranges.add(parse(buffer, cursor, ','));
+            ranges.add(parse(buffer, cursor, delims));
             int pos = cursor.getPos();
-            if (pos < cursor.getUpperBound() && buffer.charAt(pos) == ',') {
+            if (pos < cursor.getUpperBound() && isOneOf(buffer.charAt(pos), delims)) {
                 cursor.updatePos(pos + 1);
             }
         }
@@ -107,7 +122,7 @@ public final class InetAddressRangeParser {
         CharArrayBuffer buffer = new CharArrayBuffer(s.length());
         buffer.append(s);
         ParserCursor cursor = new ParserCursor(0, s.length());
-        return parseAll(buffer, cursor, (char) 0);
+        return parseAll(buffer, cursor, null);
     }
 
 }

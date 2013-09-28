@@ -37,24 +37,21 @@ public class MailUserAgentExample {
 
     public static void main(final String[] args) throws Exception {
 
-        String text1 = new String(
-                "From: root\r\n" +
+        String text1 = "From: root\r\n" +
                 "To: testuser1\r\n" +
                 "Subject: test message 1\r\n" +
                 "\r\n" +
-                "This is a short test message 1\r\n");
-        String text2 = new String(
-                "From: root\r\n" +
+                "This is a short test message 1\r\n";
+        String text2 = "From: root\r\n" +
                 "To: testuser1, testuser2\r\n" +
                 "Subject: test message 2\r\n" +
                 "\r\n" +
-                "This is a short test message 2\r\n");
-        String text3 = new String(
-                "From: root\r\n" +
+                "This is a short test message 2\r\n";
+        String text3 = "From: root\r\n" +
                 "To: testuser1, testuser2, testuser3\r\n" +
                 "Subject: test message 3\r\n" +
                 "\r\n" +
-                "This is a short test message 3\r\n");
+                "This is a short test message 3\r\n";
 
         List<DeliveryRequest> requests = new ArrayList<DeliveryRequest>();
         requests.add(new BasicDeliveryRequest(

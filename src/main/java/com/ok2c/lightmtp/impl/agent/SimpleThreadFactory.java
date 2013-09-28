@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class SimpleThreadFactory implements ThreadFactory {
 
-    private static AtomicInteger COUNT = new AtomicInteger(0);
+    private final static AtomicInteger COUNT = new AtomicInteger(0);
 
     private final String id;
 

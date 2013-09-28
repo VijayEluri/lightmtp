@@ -91,7 +91,7 @@ public class PipeliningReceiveEnvelopCodec implements ProtocolCodec<ServerState>
                 cause = ex;
             }
             return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0),
-                    ex.getMessage());
+                    cause.getMessage());
         } catch (InterruptedException ex) {
             return new SMTPReply(SMTPCodes.ERR_PERM_TRX_FAILED, new SMTPCode(5, 3, 0),
                     ex.getMessage());

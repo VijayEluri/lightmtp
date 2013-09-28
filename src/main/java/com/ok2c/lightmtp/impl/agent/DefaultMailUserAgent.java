@@ -99,8 +99,6 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
     /**
      * Set the helo name to use. Must be called before {@link #start()} to take affect
-     *
-     * @param heloName
      */
     public void setHeloName(final String heloName) {
         if (started) throw new IllegalStateException("Can only be set when not started");
@@ -109,9 +107,6 @@ public class DefaultMailUserAgent implements MailUserAgent {
 
     /**
      * Set the authentication to use. Must be called before {@link #start()}
-     *
-     * @param username
-     * @param password
      */
     public void setAuthentication(final String username, final String password) {
         if (started) throw new IllegalStateException("Can only be set when not started");
@@ -120,13 +115,6 @@ public class DefaultMailUserAgent implements MailUserAgent {
         }
         this.username = username;
         this.password = password;
-    }
-
-    public Future<DeliveryResult> deliver(
-            final InetSocketAddress remoteAddress,
-            final DeliveryRequest request,
-            final FutureCallback<DeliveryResult> callback) {
-        return deliver(remoteAddress, request, callback);
     }
 
     @Override

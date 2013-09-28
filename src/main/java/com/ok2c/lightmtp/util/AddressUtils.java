@@ -18,7 +18,7 @@ public final class AddressUtils {
         InetAddress inetAddress = null;
         try {
             inetAddress = InetAddress.getLocalHost();
-        } catch (UnknownHostException ex) {
+        } catch (UnknownHostException ignore) {
         }
         String hostname = null;
         if (inetAddress != null) {

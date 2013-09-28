@@ -208,7 +208,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
                 }
             } catch (InterruptedException ex) {
                 SMTPReply reply = createErrorReply(ex);
-                for (int i = 0; i < recipients.size(); i++) {
+                for (String recipient : recipients) {
                     this.pendingReplies.add(reply);
                 }
             } catch (ExecutionException ex) {
@@ -217,7 +217,7 @@ public class ReceiveDataCodec implements ProtocolCodec<ServerState> {
                     cause = ex;
                 }
                 SMTPReply reply = createErrorReply(cause);
-                for (int i = 0; i < recipients.size(); i++) {
+                for (String recipient : recipients) {
                     this.pendingReplies.add(reply);
                 }
             }

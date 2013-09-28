@@ -30,12 +30,6 @@ public interface MailUserAgent extends MailTransport {
 
     /**
      * Deliver mail
-     *
-     * @param remoteAddress
-     * @param localAddress or null if the default should get used
-     * @param request
-     * @param callback
-     * @return future
      */
     Future<DeliveryResult> deliver(
             SessionEndpoint endpoint,

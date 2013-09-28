@@ -90,15 +90,14 @@ public class AuthCodec implements ProtocolCodec<ClientState> {
    /**
     * Return the AuthMode to use
     *
-    * @param types
     * @return type to use or null if no supported could be found
     */
    private AuthMode getAuthMode(final String types) {
        String[] parts = types.split(" ");
-       for (int i = 0; i < parts.length; i++) {
-           if (parts[i].equals(AuthMode.LOGIN.name())) {
+       for (final String part : parts) {
+           if (part.equals(AuthMode.LOGIN.name())) {
                return AuthMode.LOGIN;
-           } else if (parts[i].equals(AuthMode.PLAIN.name())) {
+           } else if (part.equals(AuthMode.PLAIN.name())) {
                return AuthMode.PLAIN;
            }
        }
@@ -136,12 +135,10 @@ public void produceData(final IOSession iosession, final ClientState state)
        switch (this.codecState) {
        case AUTH_READY:
            AuthMode mode = null;
-           Iterator<String> extensions = state.getExtensions().iterator();
-           while(extensions.hasNext()) {
-               String extension = extensions.next();
-               if (extension.startsWith(ProtocolState.AUTH.name()) ) {
-                   String types = extension.substring(ProtocolState.AUTH.name().length() + 1 );
-                   mode  = getAuthMode(types);
+           for (final String extension : state.getExtensions()) {
+               if (extension.startsWith(ProtocolState.AUTH.name())) {
+                   String types = extension.substring(ProtocolState.AUTH.name().length() + 1);
+                   mode = getAuthMode(types);
                    if (mode != null) {
                        break;
                    }
@@ -149,7 +146,7 @@ public void produceData(final IOSession iosession, final ClientState state)
            }
            if (mode == null) {
                // TODO: Maybe we should just skip auth then and call the next codec in the chain
-               new SMTPProtocolException("Unsupported AUTH types");
+               throw new SMTPProtocolException("Unsupported AUTH types");
            } else {
                iosession.setAttribute(AUTH_TYPE, mode);
            }
@@ -181,7 +178,7 @@ public void produceData(final IOSession iosession, final ClientState state)
        }
 
 
-       if (lineBuf.isEmpty() == false) {
+       if (!lineBuf.isEmpty()) {
            buf.writeLine(lineBuf);
            lineBuf.clear();
        }

@@ -55,25 +55,22 @@ import com.ok2c.lightmtp.protocol.UniqueIdGenerator;
 
 public class TestMailDelivery extends BaseTransportTest {
 
-    static String TEXT1 = new String(
-            "From: root\r\n" +
+    static String TEXT1 = "From: root\r\n" +
             "To: testuser1\r\n" +
             "Subject: test message 1\r\n" +
             "\r\n" +
-            "This is a short test message 1\r\n");
-    static String TEXT2 = new String(
-            "From: root\r\n" +
+            "This is a short test message 1\r\n";
+    static String TEXT2 = "From: root\r\n" +
             "To: testuser1, testuser2\r\n" +
             "Subject: test message 2\r\n" +
             "\r\n" +
-            "This is a short test message 2\r\n");
-    static String TEXT3 = new String(
-            "From: root\r\n" +
+            "This is a short test message 2\r\n";
+    static String TEXT3 = "From: root\r\n" +
             "To: testuser1, testuser2, testuser3\r\n" +
             "Subject: test message 3\r\n" +
             "\r\n" +
             "This is a short test message 3\r\n" +
-            ". Period.\r\n");
+            ". Period.\r\n";
 
     @Test
     public void testBasicPipelinedDelivery() throws Exception {
@@ -261,7 +258,7 @@ public class TestMailDelivery extends BaseTransportTest {
             return handler;
         }
 
-    };
+    }
 
     @Test
     public void testBasicNonPipelinedDelivery() throws Exception {

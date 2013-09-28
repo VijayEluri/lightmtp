@@ -70,13 +70,9 @@ public final class SMTPCode {
             return false;
         }
         final SMTPCode that = (SMTPCode) obj;
-        if (this.codeClass == that.codeClass
+        return this.codeClass == that.codeClass
                 && this.detail == that.detail
-                && this.subject == that.subject) {
-            return true;
-        } else {
-            return false;
-        }
+                && this.subject == that.subject;
     }
 
     @Override

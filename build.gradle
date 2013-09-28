@@ -4,7 +4,6 @@ group = 'com.ok2c.lightmtp'
 version = '0.1-SNAPSHOT'
 
 sourceCompatibility = 1.6
-deprecation = true
 
 repositories {
     mavenCentral()

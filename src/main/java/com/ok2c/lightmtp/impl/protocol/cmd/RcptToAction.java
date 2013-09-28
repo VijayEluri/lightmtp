@@ -38,10 +38,9 @@ class RcptToAction extends AbstractAsyncAction<ServerState> {
     @Override
     protected SMTPReply internalValidateState(final ServerState state) {
         if (state.getClientType() == null || state.getSender() == null) {
-            SMTPReply reply = new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE,
+            return new SMTPReply(SMTPCodes.ERR_PERM_BAD_SEQUENCE,
                     new SMTPCode(5, 5, 1),
                     "bad sequence of commands");
-            return reply;
         } else {
             return null;
         }
